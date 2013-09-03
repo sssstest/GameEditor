@@ -704,7 +704,7 @@ class MainWindow(QtGui.QMainWindow):
 	def __init__(self, app):
 		QtGui.QMainWindow.__init__(self)
 		self.app=app
-		self.ideTheme=1
+		self.ideTheme=0
 		self.projectModified=False
 		self.projectTitle="noname"
 		self.projectLoadPluginLib=False
