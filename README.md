@@ -21,24 +21,9 @@ That will create a game with 1 room and 1 object and the code in the event creat
 
 Requirements
 
-Linux and OS X
-
-You need Python 2.7 and PyQt4 installed
+You need Python and PyQt4 installed
 
 Windows
 
-Install Python 2.7 and PyQt4 for Python 2.7
 http://python.org/download/
 http://www.riverbankcomputing.com/software/pyqt/download
-
-x86
-
-http://python.org/ftp/python/2.7.5/python-2.7.5.msi
-http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.10.3/PyQt4-4.10.3-gpl-Py2.7-Qt4.8.5-x32.exe
-
-x64
-
-http://python.org/ftp/python/2.7.5/python-2.7.5.amd64.msi
-http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.10.3/PyQt4-4.10.3-gpl-Py2.7-Qt4.8.5-x64.exe
-
-
