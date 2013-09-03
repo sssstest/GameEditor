@@ -8,7 +8,7 @@
 #* Enigma Plugin is free software and comes with ABSOLUTELY NO WARRANTY.
 #* See LICENSE for details.
 
-import cStringIO
+import io
 import re
 from CliPrintColors import *
 
@@ -16,7 +16,7 @@ class Scanner(object):
 	def __init__(self,stream):
 		self.data=stream.read()
 		self.endpos=len(self.data)
-		self.stream=cStringIO.StringIO(self.data)
+		self.stream=io.StringIO(self.data.decode())
 
 	def nextLine(self):
 		return self.stream.readline()
@@ -46,7 +46,7 @@ class EEFReader(object):
 		def toFullString(self):
 			self.tostring_calls+=1
 			indent = ""
-			for i in xrange(self.tostring_calls):
+			for i in range(self.tostring_calls):
 				indent += "  "
 
 			res = indent
@@ -149,7 +149,7 @@ class EEFReader(object):
 					pos+=1
 					continue
 				if not self.isWordChar(line[pos]):
-					print "Child data must begin with identifier."
+					print("Child data must begin with identifier.")
 					break
 				spos = pos;
 				pos+=1
@@ -157,7 +157,7 @@ class EEFReader(object):
 					pos+=1
 				elementName = line[spos:pos]
 				if blockName != None and not re.match(elementName + "?i?e?s",blockName):
-					print self.LINES, " Warning: instance `", elementName, "' Does not appear to be a member of `", blockName, "'"
+					print(self.LINES, " Warning: instance `", elementName, "' Does not appear to be a member of `", blockName, "'")
 				while line[pos].isspace():
 					pos+=1
 				if line[pos] == '(':
@@ -165,8 +165,8 @@ class EEFReader(object):
 					res.ids = self.parseParenths(rpos,line,self.delimiter)
 					pos = rpos[0] + 1
 				if line[pos] != ':':
-					print self.LINES," Warning: Missing colon"
-					print "in `",line,"` at ",pos
+					print(self.LINES," Warning: Missing colon")
+					print("in `",line,"` at ",pos)
 				else:
 					pos+=1
 				break
@@ -233,7 +233,7 @@ class EEFReader(object):
 				while line[pos].isspace():
 					pos+=1
 				if not line[pos].isdigit():
-					print self.LINES," Expected number in []"
+					print(self.LINES," Expected number in []")
 				spos = pos
 				pos+=1
 				while line[pos].isdigit():
@@ -248,7 +248,7 @@ class EEFReader(object):
 				while line[pos].isspace():
 					pos+=1
 				if not line[pos].isdigit():
-					print self.LINES," Expected number in {}"
+					print(self.LINES," Expected number in {}")
 				spos = pos
 				pos+=1
 				while line[pos].isdigit():
@@ -317,9 +317,9 @@ class EEFReader(object):
 		if read_attrs.name != None:
 			e.blockName = read_attrs.name
 
-		for i in xrange(read_attrs.lineAttrs):
+		for i in range(read_attrs.lineAttrs):
 			e.lineAttribs.append(self.nextLine())
-		for i in xrange(read_attrs.children):
+		for i in range(read_attrs.children):
 			str = self.nextLine()
 			while str == "":
 				str = self.nextLine()
@@ -444,7 +444,7 @@ class YamlParser(object):
 
 			ret = value[1:]
 
-			for i in xrange(len(ret)):
+			for i in range(len(ret)):
 				if ret[i] == '\\':
 					if ret[i + 1] == 'r':
 							ret[i] = '\r'
@@ -552,7 +552,7 @@ class YamlParser(object):
 						cur.i = inds
 					else:
 						if latest != None: # If we've already assigned to this key happily
-							print "YamlParser.UNEXPECTED_INDENT",linenum
+							print("YamlParser.UNEXPECTED_INDENT",linenum)
 						else:
 							# There's indeed a key we didn't know what to do with. Now we do.
 							latest = YamlNode(unlowered) # Allocate a new data entry; we'll be populating the latest node

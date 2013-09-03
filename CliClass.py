@@ -145,7 +145,7 @@ def getActionsCode(actions):
 					code+=act.getMember("functionCode")
 			if act.getMember("type") == GameAction.EXEC_FUNCTION:
 				code+='('
-				for i in xrange(act.getMember("argumentsUsed")):
+				for i in range(act.getMember("argumentsUsed")):
 					if i != 0: code+=','
 					code+=argToString(act.argumentValue[i],act.argumentKind[i])
 				code+=')'
@@ -163,7 +163,7 @@ def getActionsCode(actions):
 
 	if numberOfBraces > 0:
 		#someone forgot the closing block action
-		for i in xrange(numberOfBraces):
+		for i in range(numberOfBraces):
 			code+="\n}"
 	return code
 
@@ -221,10 +221,10 @@ def ede_dia_progress(progress):
 	print_notice("ede_dia_progress "+str(progress))
 
 def ede_dia_progress_text(caption):
-	print_notice("ede_dia_progress_text "+caption)
+	print_notice("ede_dia_progress_text "+str(caption))
 
 def ede_output_redirect_file(filepath):
-	print_notice("ede_output_redirect_file "+filepath)
+	print_notice("ede_output_redirect_file "+str(filepath))
 
 def ede_output_redirect_reset():
 	print_notice("ede_output_redirect_reset")
@@ -272,7 +272,7 @@ class GameResource(object):
 			self.members["id"]=id
 
 	def ifDefault(self, member):
-		if not self.defaults.has_key(member):
+		if not member in self.defaults:
 			print_error("no defalt for "+member)
 		if self.defaults[member]==self.getMember(member):
 			return True
@@ -286,18 +286,19 @@ class GameResource(object):
 			return -1
 
 	def getMember(self, member):
-		if self.members.has_key(member):
+		if member in self.members:
 			return self.members[member]
-		elif self.defaults.has_key(member):
+		elif member in self.defaults:
 			return self.defaults[member]
 		else:
 			print_error("unsupported member "+member)
 
 	def setMember(self, member, val):
-		if not self.defaults.has_key(member):
+		if not member in self.defaults:
 			print_warning("setting member not in defaults "+member)
 		if type(self.defaults[member])!=type(val) and type(self.defaults[member])!=type(None):
-			print_error("changed type of "+member+" "+str(type(self.defaults[member]))+" "+str(type(val)))
+			if type(self.defaults[member])!=str and type(val)!=unicode:
+				print_error("changed type of "+member+" "+str(type(self.defaults[member]))+" "+str(type(val)))
 		if member not in self.members or self.members[member]!=val:
 			for callBack in self.listeners:
 				callBack("property",member,self.members[member],val)
@@ -366,11 +367,11 @@ class GameSprite(GameResource):
 		data=z.open(os.path.split(entry)[0]+"/"+data,'r')
 		a=ApngIO()
 		images = a.apngToBufferedImages(data)
-		for i in xrange(len(images)):
+		for i in range(len(images)):
 			q=QtGui.QImage()
 			q.loadFromData(images[i].read())
 			images[i]=q
-		for i in xrange(len(images)):
+		for i in range(len(images)):
 			subimage = GameSpriteSubimage()
 			subimage.setQImage(images[i])
 			self.subimages.append(subimage)
@@ -426,7 +427,7 @@ class GameSprite(GameResource):
 				for chil in child:
 					if chil.tag=="frame":
 						filep=emptyTextToString(chil.text).replace("\\","/")
-						data=open(os.path.join(gmxdir,filep),"r")
+						data=open(os.path.join(gmxdir,filep),"rb")
 						data=data.read()
 						q=QtGui.QImage()
 						q.loadFromData(data)
@@ -451,7 +452,7 @@ class GameSprite(GameResource):
 		self.setMember("xorigin",spriteStream.ReadDword())
 		self.setMember("yorigin",spriteStream.ReadDword())
 		count = spriteStream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			subimage = GameSpriteSubimage()
 			#GM version needed for the following info
 			spriteStream.ReadDword()
@@ -483,7 +484,7 @@ class GameSprite(GameResource):
 			spriteStream.WriteDword(self.getMember("xorigin"))
 			spriteStream.WriteDword(self.getMember("yorigin"))
 			spriteStream.WriteDword(len(self.subimages))
-			for i in xrange(len(self.subimages)):
+			for i in range(len(self.subimages)):
 				spriteStream.WriteDword(800)
 				spriteStream.WriteDword(self.subimages[i].width)
 				spriteStream.WriteDword(self.subimages[i].height)
@@ -511,7 +512,7 @@ class GameSprite(GameResource):
 
 	def WriteESSprite(self):
 		obj=ESSprite()
-		obj.name=self.getMember("name")
+		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
 		obj.transparent=self.getMember("transparent")
 		obj.shape=self.getMember("maskshape")
@@ -528,7 +529,7 @@ class GameSprite(GameResource):
 		obj.bbBottom=self.getMember("bbox_bottom")
 		obj.subImageCount=len(self.subimages)
 		ot=(ESSubImage*obj.subImageCount)()
-		for count in xrange(obj.subImageCount):
+		for count in range(obj.subImageCount):
 			me=self.subimages[count].WriteESSubImage(obj.transparent)
 			ot[count]=me
 		obj.subImages=cast(ot,POINTER(ESSubImage))
@@ -598,31 +599,32 @@ class GameSpriteSubimage(object):
 		self.gmkData.base_stream.seek(0)
 		size=self.gmkData.Size()
 		data=self.gmkData.base_stream.read()
-		cdata=""
+		cdata=bytearray(data)
 		#o.height - 1
-		transr = data[2]
-		transg = data[1]
-		transb = data[3]
-		for p in xrange(0,len(data),4):#Gmk BGRA ES RGBA
-			cdata += data[p+2]#R
-			cdata += data[p+1]#G
-			cdata += data[p]#B
-			if self.useTransp and data[p+2] == transr and data[p+1] == transg and data[p+3] == transb:
-				cdata += chr(0)
+		transr = cdata[2]
+		transg = cdata[1]
+		transb = cdata[3]
+		for p in range(0,len(cdata),4):#Gmk BGRA ES RGBA
+			cdata[p] = data[p+2]#R
+			cdata[p+1] = data[p+1]#G
+			cdata[p+2] = data[p]#B
+			if self.useTransp and cdata[p+2] == transr and cdata[p+1] == transg and cdata[p+3] == transb:
+				cdata[p+3] = 0
 			else:
-				cdata += data[p+3]
-		data = zlib.compress(cdata)
+				cdata[p+3] = data[p+3]
+		data = zlib.compress(bytes(cdata))
 		return data
 
 	def convertGmkDataIntoQImage(self):
 		self.getGmkData().base_stream.seek(0)
 		data=self.getGmkData().base_stream.read()
 		q=QtGui.QImage(self.width,self.height,QtGui.QImage.Format_ARGB32)
-		for p in xrange(0,len(data),4):#data from gmk is BGRA, ES gets RGBA
+		data=bytearray(data)
+		for p in range(0,len(data),4):#data from gmk is BGRA, ES gets RGBA
 			x=(p/4)%self.width
 			y=(p/4)/self.width
-			q.setPixel(x,y,ord(data[p+2])<<24 | ord(data[p+1])<<16 | ord(data[p])<<8 | ord(data[p+3]))
-			q.setPixel(x,y,ord(data[p+3])<<24 | ord(data[p+2])<<16 | ord(data[p+1])<<8 | ord(data[p]))
+			q.setPixel(x,y,data[p+2]<<24 | data[p+1]<<16 | data[p]<<8 | data[p+3])
+			q.setPixel(x,y,data[p+3]<<24 | data[p+2]<<16 | data[p+1]<<8 | data[p])
 		return q
 
 	@staticmethod
@@ -632,7 +634,7 @@ class GameSpriteSubimage(object):
 		print_notice("image "+str(q.width())+" "+str(q.height()))
 		datap=q.bits()
 		datap.setsize(q.byteCount())
-		data = BinaryStream(cStringIO.StringIO(datap))
+		data = BinaryStream(io.BytesIO(datap))
 		data.dd=q
 		return q.width(),q.height(),data
 
@@ -697,7 +699,7 @@ class GameSound(GameResource):
 		data=r.getMstr('Data')
 		data=z.open(os.path.split(entry)[0]+"/"+data,'r')#.read()
 		data=data.read()
-		self.setMember("data",BinaryStream(cStringIO.StringIO(data)))
+		self.setMember("data",BinaryStream(io.BytesIO(data)))
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
 		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir,name)+".sound.gmx")
@@ -729,9 +731,9 @@ class GameSound(GameResource):
 				self.setMember("preload",bool(int(child.text)))
 			elif child.tag=="data":#<data>snd_0.wav</data>
 				name=emptyTextToString(child.text)
-				data=open(os.path.join(gmxdir, "audio", name), "r")
+				data=open(os.path.join(gmxdir, "audio", name), "rb")
 				data=data.read()
-				self.setMember("data",BinaryStream(cStringIO.StringIO(data)))
+				self.setMember("data",BinaryStream(io.BytesIO(data)))
 			else:
 				print_error("unsupported tag "+child.tag)
 
@@ -785,11 +787,11 @@ class GameSound(GameResource):
 
 	def WriteESSound(self):
 		os=ESSound()
-		os.name = self.getMember("name")
+		os.name = self.getMember("name").encode()
 		os.id = self.getMember("id")
 		os.kind = self.getMember("kind")
-		os.fileType = self.getMember("extension")
-		os.fileName = self.getMember("origname")
+		os.fileType = self.getMember("extension").encode()
+		os.fileName = self.getMember("origname").encode()
 		os.chorus = False
 		os.echo = False
 		os.flanger = False
@@ -881,7 +883,7 @@ class GameBackground(GameResource):
 				self.setMember("height",int(child.text))
 			elif child.tag=="data":
 				filep=emptyTextToString(child.text).replace("\\","/")
-				data=open(os.path.join(gmxdir,filep),"r")
+				data=open(os.path.join(gmxdir,filep),"rb")
 				data=data.read()
 				image=QtGui.QImage()
 				image.loadFromData(data)
@@ -929,7 +931,7 @@ class GameBackground(GameResource):
 
 	def WriteESBackground(self):
 		obj=ESBackground()
-		obj.name=self.getMember("name")
+		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
 		obj.transparent=self.getMember("transparent")
 		obj.smoothEdges=self.getMember("smoothEdges")
@@ -996,7 +998,7 @@ class GamePath(GameResource):
 		self.setMember("snapX",pathStream.ReadDword())
 		self.setMember("snapY",pathStream.ReadDword())
 		count = pathStream.ReadDword()
-		for i in xrange(count):#Point x,y,speed
+		for i in range(count):#Point x,y,speed
 			x = pathStream.readDouble()
 			y = pathStream.readDouble()
 			speed = pathStream.readDouble()
@@ -1019,7 +1021,7 @@ class GamePath(GameResource):
 		pathStream.WriteDword(self.getMember("snapX"))
 		pathStream.WriteDword(self.getMember("snapY"))
 		pathStream.WriteDword(len(self.points))
-		for i in xrange(len(self.points)):
+		for i in range(len(self.points)):
 			pathStream.WriteDouble(points[i][0])
 			pathStream.WriteDouble(points[i][1])
 			pathStream.WriteDouble(points[i][2])
@@ -1037,7 +1039,7 @@ class GamePath(GameResource):
 
 	def WriteESPath(self):
 		obj=ESPath()
-		obj.name=self.getMember("name")
+		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
 		obj.smooth=self.getMember("connectionKind")
 		obj.closed=self.getMember("closed")
@@ -1046,7 +1048,7 @@ class GamePath(GameResource):
 		obj.snapY=self.getMember("snapY")
 		obj.pointCount=len(self.points)
 		ot=(ESPathPoint*obj.pointCount)()
-		for count in xrange(obj.pointCount):
+		for count in range(obj.pointCount):
 			me=ESPathPoint()
 			me.x=int(self.points[count][0])#gmk doubles
 			me.y=int(self.points[count][1])
@@ -1108,9 +1110,9 @@ class GameScript(GameResource):
 
 	def WriteESScript(self):
 		obj=ESScript()
-		obj.name=self.getMember("name")
+		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
-		obj.code=self.getMember("value")
+		obj.code=self.getMember("value").encode()
 		return obj
 
 class GameShader(GameResource):
@@ -1125,8 +1127,8 @@ class GameShader(GameResource):
 		y=YamlParser()
 		r=y.parseStream(stream)
 		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("vertex",z.open(os.path.split(entry)[0]+"/"+r.getMstr('vertex'),'r').read())
-		self.setMember("fragment",z.open(os.path.split(entry)[0]+"/"+r.getMstr('fragment'),'r').read())
+		self.setMember("vertex",z.open(os.path.split(entry)[0]+"/"+r.getMstr('vertex'),'r').read().decode())
+		self.setMember("fragment",z.open(os.path.split(entry)[0]+"/"+r.getMstr('fragment'),'r').read().decode())
 		self.setMember("type",r.getMstr('type'))
 		self.setMember("precompile",r.getMbool('precompile'))
 
@@ -1299,12 +1301,12 @@ class GameTimeline(GameResource):
 		timelineStream.ReadTimestamp()
 		timelineStream.ReadDword()
 		count = timelineStream.ReadDword()
-		for i in xrange(count):
+		for i in range(count):
 			moment=GameMoment()
 			moment.position = timelineStream.ReadDword()
 			timelineStream.ReadDword()
 			actionCount = timelineStream.ReadDword()
-			for i in xrange(actionCount):
+			for i in range(actionCount):
 				action = GameAction(self.gameFile)
 				action.Read(timelineStream)
 				moment.actions.append(action)
@@ -1338,7 +1340,7 @@ class GameTimeline(GameResource):
 		return obj
 
 	def Finalize(self):
-		for i in xrange(len(self.moments)):
+		for i in range(len(self.moments)):
 			for j in len(self.moments[i].actions):
 				self.moments[i].actions[j].Finalize()
 
@@ -1416,7 +1418,7 @@ class GameObject(GameResource):
 				action.setMember("libraryId",libraryId)
 				action.setMember("actionId",actionId)
 				if libraryId==1:
-					if GameAction.actionIdFunctionName.has_key(actionId):
+					if actionId in GameAction.actionIdFunctionName:
 						action.setMember("type",GameAction.EXEC_FUNCTION)
 						action.setMember("functionName",GameAction.actionIdFunctionName[actionId])
 						i=0
@@ -1424,11 +1426,11 @@ class GameObject(GameResource):
 							action.argumentKind[i]=a
 							i+=1
 						action.setMember("argumentsUsed",len(GameAction.actionIdArgumentKinds[actionId]))
-						if GameAction.actionIdKind.has_key(actionId):
+						if actionId in GameAction.actionIdKind:
 							action.setMember("kind",GameAction.actionIdKind[actionId])
-						if GameAction.actionIdQuestion.has_key(actionId):
+						if actionId in GameAction.actionIdQuestion:
 							action.setMember("question",GameAction.actionIdQuestion[actionId])
-						if GameAction.actionIdMayBeRelative.has_key(actionId):
+						if actionId in GameAction.actionIdMayBeRelative:
 							action.setMember("mayBeRelative",GameAction.actionIdMayBeRelative[actionId])
 					else:
 						print_error("unsupported actionId "+str(actionId))
@@ -1438,7 +1440,7 @@ class GameObject(GameResource):
 				if libraryId==1 and actionId==603:
 					action.argumentValue[0]="".join(eevent.lineAttribs)
 				else:
-					for i in xrange(len(eevent.lineAttribs)):
+					for i in range(len(eevent.lineAttribs)):
 						action.argumentValue[i]=eevent.lineAttribs[i].strip()
 						if GameAction.actionIdArgumentKinds[actionId][i] in [GameAction.ArgumentKindSprite,GameAction.ArgumentKindSound,GameAction.ArgumentKindBackground,GameAction.ArgumentKindPath,
 						GameAction.ArgumentKindScript,GameAction.ArgumentKindObject,GameAction.ArgumentKindRoom,GameAction.ArgumentKindFont,GameAction.ArgumentKindTimeline]:
@@ -1594,7 +1596,7 @@ class GameObject(GameResource):
 		self.setMember("parentIndex",objectStream.readInt32())
 		self.setMember("maskIndex",objectStream.readInt32())
 		count = objectStream.ReadDword() + 1
-		for i in xrange(count):
+		for i in range(count):
 			while 1:
 				first = objectStream.readInt32()
 
@@ -1698,18 +1700,18 @@ class GameObject(GameResource):
 				actionId=GameAction.actionNameId(actionName)
 				action.setMember("actionId",actionId)
 				#action.setMember("appliesToSomething",True)
-				if GameAction.actionIdKind.has_key(actionId):
+				if actionId in GameAction.actionIdKind:
 					action.setMember("kind",GameAction.actionIdKind[actionId])
 				action.setMember("functionName",actionName)
-				for i in xrange(len(GameAction.actionIdArgumentKinds[actionId])):
+				for i in range(len(GameAction.actionIdArgumentKinds[actionId])):
 					action.argumentKind[i]=GameAction.actionIdArgumentKinds[actionId][i]
 					action.argumentValue[i]=arguments[i]
 				action.setMember("argumentsUsed",len(GameAction.actionIdArgumentKinds[actionId]))
-				if GameAction.actionIdQuestion.has_key(actionId):
+				if actionId in GameAction.actionIdQuestion:
 					action.setMember("question",GameAction.actionIdQuestion[actionId])
-				if GameAction.actionIdMayBeRelative.has_key(actionId):
+				if actionId in GameAction.actionIdMayBeRelative:
 					action.setMember("mayBeRelative",GameAction.actionIdMayBeRelative[actionId])
-				if GameAction.actionIdType.has_key(actionId):
+				if actionId in GameAction.actionIdType:
 					action.setMember("type",GameAction.actionIdType[actionId])
 				else:
 					action.setMember("type",1)
@@ -1736,7 +1738,7 @@ class GameObject(GameResource):
 					action.setMember("libraryId",1)
 					actionId=603
 					action.setMember("actionId",actionId)
-					if GameAction.actionIdKind.has_key(actionId):
+					if actionId in GameAction.actionIdKind:
 						action.setMember("kind",GameAction.actionIdKind[actionId])
 					action.argumentValue[0]=code
 					action.setMember("argumentsUsed",len(GameAction.actionIdArgumentKinds[actionId]))
@@ -1750,7 +1752,6 @@ class GameObject(GameResource):
 					print_notice("line "+str(i)+" code")
 				else:
 					print_error("line "+str(i)+" new code")
-					print value[chil:]
 					i,level,plevel,type=GMLLexer(value[chil:],"")
 					codel=value[chil:chil+i-1]
 					code=""
@@ -1787,14 +1788,14 @@ class GameObject(GameResource):
 				objectStream.WriteDword(GameObject.MaskIndexNone)
 
 			objectStream.WriteDword(11)
-			for i in xrange(12):
-				for j in xrange(len(self.events)):
+			for i in range(12):
+				for j in range(len(self.events)):
 					if self.events[j].eventNumber == i:
 						objectStream.WriteDword(self.events[j].getMember("eventKind"))
 						objectStream.WriteDword(400)
 
 						objectStream.WriteDword(len(self.events[j].actions))
-						for k in xrange(len(self.events[j].actions)):
+						for k in range(len(self.events[j].actions)):
 							self.events[j].actions[k].WriteGmk(objectStream)
 
 				objectStream.WriteDword(-1)
@@ -1809,9 +1810,9 @@ class GameObject(GameResource):
 		if self.getMember("maskIndex") != GameObject.MaskIndexNone:
 			self.setMember("mask", self.gameFile.GetResource(GameFile.RtSprite, self.getMember("maskIndex")))
 
-		for i in xrange(len(self.events)):
+		for i in range(len(self.events)):
 			self.events[i].Finalize()
-			for j in xrange(len(self.events[i].actions)):
+			for j in range(len(self.events[i].actions)):
 				self.events[i].actions[j].Finalize()
 
 	def WriteGGG(self, ful=True):
@@ -1832,7 +1833,7 @@ class GameObject(GameResource):
 
 	def WriteESObject(self):
 		obj=ESObject()
-		obj.name=self.getMember("name")
+		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
 		obj.spriteId=self.getMemberId("sprite")
 		obj.solid=self.getMember("solid")
@@ -1847,19 +1848,19 @@ class GameObject(GameResource):
 		ot=(ESMainEvent*obj.mainEventCount)()
 		mes={}
 		for ec in self.events:
-			if not mes.has_key(ec.eventNumber):
+			if not ec.eventNumber in mes:
 				mes[ec.eventNumber]=[]
 			ev=ESEvent()
-			ev.code = getActionsCode(ec.actions)
+			ev.code = getActionsCode(ec.actions).encode()
 			ev.id = ec.getMember("eventKind")
 			mes[ec.eventNumber].append(ev)
-		for count in xrange(obj.mainEventCount):
+		for count in range(obj.mainEventCount):
 			es=mes.get(count,[])
 			me=ESMainEvent()
 			me.id=count
 			me.eventCount=len(es)
 			ote=(ESEvent*me.eventCount)()
-			for counte in xrange(me.eventCount):
+			for counte in range(me.eventCount):
 				ote[counte]=es[counte]
 			me.events=cast(pointer(ote),POINTER(ESEvent))
 			ot[count]=me
@@ -2078,13 +2079,13 @@ class GameEvent(GameResource):
 
 	@staticmethod
 	def eventNameNumber(name):
-		for i in xrange(len(GameEvent.eventNames)):
+		for i in range(len(GameEvent.eventNames)):
 			if GameEvent.eventNames[i].lower()==name.lower():
 				return i
 		print_error("unsupported event name "+name)
 
 	def eventNumberName(self, n):
-		if n in xrange(13):
+		if n in range(13):
 			return self.eventNames[n].lower()
 		return str(n)
 
@@ -2563,7 +2564,7 @@ class GameAction(GameResource):
 		v=v[:self.getMember("argumentsUsed")]
 		stri="@action "+str(self.getMember("libraryId"))+" "+str(self.getMember("actionId"))+"{\n"
 		if self.getMember("libraryId")==1:
-			if self.actionIdFunctionName.has_key(self.getMember("actionId")):
+			if self.getMember("actionId") in self.actionIdFunctionName:
 				f=self.actionIdFunctionName[self.getMember("actionId")]
 				if self.getMember("functionName")==f:
 					if f=="" and self.getMember("libraryId")==1:
@@ -2648,12 +2649,12 @@ class GameAction(GameResource):
 		self.setMember("functionCode",stream.ReadString())
 		self.setMember("argumentsUsed",stream.ReadDword())
 		count = stream.ReadDword()
-		for i in xrange(count):
+		for i in range(count):
 			self.argumentKind[i]=stream.ReadDword()
 		self.setMember("appliesToObject",stream.readInt32())
 		self.setMember("relative",stream.ReadBoolean())
 		count = stream.ReadDword()
-		for i in xrange(count):
+		for i in range(count):
 			self.argumentValue[i]=stream.ReadString()
 		self.setMember("notFlag",stream.ReadBoolean())
 
@@ -2670,7 +2671,7 @@ class GameAction(GameResource):
 		stream.WriteString(self.getMember("functionCode"))
 		stream.WriteDword(self.getMember("argumentsUsed"))
 		stream.WriteDword(GameAction.ARGUMENT_COUNT)
-		for i in xrange(GameAction.ARGUMENT_COUNT):
+		for i in range(GameAction.ARGUMENT_COUNT):
 			stream.WriteDword(self.argumentKind[i])
 		if self.appliesObject == None:
 			stream.WriteDword(self.getMember("appliesToObject"))
@@ -2678,7 +2679,7 @@ class GameAction(GameResource):
 			stream.WriteDword(self.appliesObject.getMember("id"))
 		stream.WriteBoolean(self.getMember("relative"))
 		stream.WriteDword(GameAction.ARGUMENT_COUNT)
-		for i in xrange(GameAction.ARGUMENT_COUNT):
+		for i in range(GameAction.ARGUMENT_COUNT):
 			if self.argumentLink[i]:
 				stream.WriteString(str(self.argumentLink[i].getMember("id")))
 			else:
@@ -2740,7 +2741,7 @@ class GameAction(GameResource):
 		else:
 			self.appliesObject = None
 
-		for i in xrange(GameAction.ARGUMENT_COUNT):
+		for i in range(GameAction.ARGUMENT_COUNT):
 			self.argumentLink[i] = self.GetArgumentReference(i)
 
 class GameRoomBackground(GameResource):
@@ -2940,7 +2941,7 @@ class GameRoomInstance(GameResource):
 		obj.y=self.getMember("y")
 		obj.objectId=self.getMemberId("object")
 		obj.id=self.getMember("id")
-		obj.creationCode=self.getMember("creationCode")
+		obj.creationCode=self.getMember("creationCode").encode()
 		obj.locked=self.getMember("locked")
 		return obj
 
@@ -3107,12 +3108,12 @@ class GameRoom(GameResource):
 		stream = BinaryStream(data)
 		stream.ReadString()
 		nobackgrounds=stream.ReadDword()
-		for count in xrange(nobackgrounds):
+		for count in range(nobackgrounds):
 			background = self.newBackground()
 			background.setMember("visible",stream.ReadBoolean())
 			background.setMember("foreground",stream.ReadBoolean())
 			imageName=stream.ReadString()
-			if imageName!="":
+			if len(imageName)>0:
 				background.setMember("imageIndex",gmkfile.egmNameId[imageName])
 			background.setMember("x",stream.ReadDword())
 			background.setMember("y",stream.ReadDword())
@@ -3122,7 +3123,7 @@ class GameRoom(GameResource):
 			background.setMember("speedVertical",stream.ReadDword())
 			background.setMember("stretch",stream.ReadBoolean())
 		noviews=stream.ReadDword()
-		for count in xrange(noviews):
+		for count in range(noviews):
 			view = self.newView()
 			view.setMember("visible",stream.ReadBoolean())
 			view.setMember("viewX",stream.ReadDword())
@@ -3139,7 +3140,7 @@ class GameRoom(GameResource):
 			view.setMember("horizontalSpeed",stream.ReadDword())
 			view.setMember("verticalSpeed",stream.ReadDword())
 		noinstances=stream.ReadDword()
-		for count in xrange(noinstances):
+		for count in range(noinstances):
 			instance = self.newInstance()
 			instance.setMember("x",stream.ReadDword())
 			instance.setMember("y",stream.ReadDword())
@@ -3152,7 +3153,7 @@ class GameRoom(GameResource):
 			instance.setMember("creationCode",stream.ReadString())
 			instance.setMember("locked",stream.ReadBoolean())
 		notiles=stream.ReadDword()
-		for count in xrange(notiles):
+		for count in range(notiles):
 			tile=self.newTile()
 			background.setMember("x",stream.ReadDword())
 			background.setMember("y",stream.ReadDword())
@@ -3407,17 +3408,17 @@ class GameRoom(GameResource):
 			roomStream.WriteDword(((not self.getMember("clearViewBackground") & 0x01) << 1) | (self.getMember("showcolor") & 0x01))
 			roomStream.WriteString(self.getMember("code"))
 			roomStream.WriteDword(len(self.backgrounds))
-			for i in xrange(len(self.backgrounds)):
+			for i in range(len(self.backgrounds)):
 				self.backgrounds[i].WriteGmk(roomStream)
 			roomStream.WriteBoolean(self.getMember("enableViews"))
 			roomStream.WriteDword(len(self.views))
-			for i in xrange(len(self.views)):
+			for i in range(len(self.views)):
 				self.views[i].WriteGmk(roomStream)
 			roomStream.WriteDword(len(self.instances))
-			for i in xrange(len(self.instances)):
+			for i in range(len(self.instances)):
 				self.instances[i].WriteGmk(roomStream)
 			roomStream.WriteDword(len(self.tiles))
-			for i in xrange(len(self.tiles)):
+			for i in range(len(self.tiles)):
 				self.tiles[i].WriteGmk(roomStream)
 			roomStream.WriteBoolean(self.getMember("rememberRoomEditorInfo"))
 			roomStream.WriteDword(self.getMember("roomEditorWidth"))
@@ -3436,13 +3437,13 @@ class GameRoom(GameResource):
 		stream.Serialize(roomStream)
 
 	def Finalize(self):
-		for i in xrange(len(self.backgrounds)):
+		for i in range(len(self.backgrounds)):
 			self.backgrounds[i].Finalize()
-		for i in xrange(len(self.views)):
+		for i in range(len(self.views)):
 			self.views[i].Finalize()
-		for i in xrange(len(self.instances)):
+		for i in range(len(self.instances)):
 			self.instances[i].Finalize()
-		for i in xrange(len(self.tiles)):
+		for i in range(len(self.tiles)):
 			self.tiles[i].Finalize()
 
 	def WriteGGG(self):
@@ -3463,9 +3464,9 @@ class GameRoom(GameResource):
 
 	def WriteESRoom(self):
 		obj=ESRoom()
-		obj.name=self.getMember("name")
+		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
-		obj.caption=self.getMember("caption")
+		obj.caption=self.getMember("caption").encode()
 		obj.width=self.getMember("width")
 		obj.height=self.getMember("height")
 		obj.snapX=self.getMember("hsnap")
@@ -3475,7 +3476,7 @@ class GameRoom(GameResource):
 		obj.persistent=self.getMember("persistent")
 		obj.backgroundColor=0xff|ARGBtoRGBA(self.getMember("color"))
 		obj.drawBackgroundColor=self.getMember("showcolor")
-		obj.creationCode=self.getMember("code")
+		obj.creationCode=self.getMember("code").encode()
 		obj.rememberWindowSize=self.getMember("rememberRoomEditorInfo")
 		obj.editorWidth=self.getMember("roomEditorWidth")
 		obj.editorHeight=self.getMember("roomEditorHeight")
@@ -3492,25 +3493,25 @@ class GameRoom(GameResource):
 		obj.enableViews=self.getMember("enableViews")
 		obj.backgroundDefCount=len(self.backgrounds)
 		ot=(ESRoomBackground*obj.backgroundDefCount)()
-		for count in xrange(obj.backgroundDefCount):
+		for count in range(obj.backgroundDefCount):
 			me=self.backgrounds[count].WriteESRoomBackground()
 			ot[count]=me
 		obj.backgroundDefs=cast(ot,POINTER(ESRoomBackground))
 		obj.viewCount=len(self.views)
 		ot=(ESRoomView*obj.viewCount)()
-		for count in xrange(obj.viewCount):
+		for count in range(obj.viewCount):
 			me=self.views[count].WriteESRoomView()
 			ot[count]=me
 		obj.views=cast(ot,POINTER(ESRoomView))
 		obj.instanceCount=len(self.instances)
 		ot=(ESRoomInstance*obj.instanceCount)()
-		for count in xrange(obj.instanceCount):
+		for count in range(obj.instanceCount):
 			me=self.instances[count].WriteESRoomInstance()
 			ot[count]=me
 		obj.instances=cast(ot,POINTER(ESRoomInstance))
 		obj.tileCount=len(self.tiles)
 		ot=(ESRoomTile*obj.tileCount)()
-		for count in xrange(obj.tileCount):
+		for count in range(obj.tileCount):
 			me=self.tiles[count].WriteESRoomTile()
 			ot[count]=me
 		obj.tiles=cast(ot,POINTER(ESRoomTile))
@@ -3624,7 +3625,7 @@ class GameSettings(GameResource):
 		icon=r.getMstr('Icon')
 		iconStream=z.open(icon,"r")
 		icon=iconStream.read()
-		self.iconImage				= BinaryStream(cStringIO.StringIO(icon))
+		self.iconImage = BinaryStream(io.BytesIO(icon))
 		self.setMember("displayerrors",r.getMbool('DISPLAY_ERRORS'))
 		self.setMember("writeerrors",r.getMbool('WRITE_TO_LOG'))
 		self.setMember("aborterrors",r.getMbool('ABORT_ON_ERROR'))
@@ -3959,9 +3960,9 @@ class GameSettings(GameResource):
 		og.writeToLog = self.getMember("writeerrors")
 		og.abortOnError = self.getMember("aborterrors")
 		og.treatUninitializedAs0 = self.getMember("treatUninitializedVariablesAsZero")
-		og.author = self.getMember("author")
-		og.version = self.getMember("version")
-		og.information = self.getMember("version_information")
+		og.author = self.getMember("author").encode()
+		og.version = self.getMember("version").encode()
+		og.information = self.getMember("version_information").encode()
 		#og.includeFolder = GmFile.GS_INCFOLDER_CODE.get(ig.get(PGameSettings.INCLUDE_FOLDER));
 		#og.overwriteExisting = ig.get(PGameSettings.OVERWRITE_EXISTING);
 		#og.removeAtGameEnd = ig.get(PGameSettings.REMOVE_AT_GAME_END);
@@ -3969,10 +3970,10 @@ class GameSettings(GameResource):
 		og.versionMinor = self.getMember("version_minor")
 		og.versionRelease = self.getMember("version_release")
 		og.versionBuild = self.getMember("version_build")
-		og.company = self.getMember("version_company")
-		og.product = self.getMember("version_product")
-		og.copyright = self.getMember("version_copyright")
-		og.description = self.getMember("version_description")
+		og.company = self.getMember("version_company").encode()
+		og.product = self.getMember("version_product").encode()
+		og.copyright = self.getMember("version_copyright").encode()
+		og.description = self.getMember("version_description").encode()
 		#All this shit is just to write the icon to a temp file and provide the filename...
 		"""ICOFile ico = ig.get(PGameSettings.GAME_ICON);
 		OutputStream os = null;
@@ -4148,7 +4149,7 @@ class GameTreeNode(object):
 			GameFile.RtUnknown,
 			GameFile.RtShader]
 		self.resource = parent.gameFile.GetResource(groupKind[self.group], self.index)
-		for i in xrange(len(self.contents)):
+		for i in range(len(self.contents)):
 			self.contents[i].Finalize(parent)
 
 	def AddResource(self,resource):
@@ -4191,7 +4192,7 @@ class GameTree(GameResource):
 		self.contents=[]
 
 	def ReadGmk(self, stream):
-		for i in xrange(12):
+		for i in range(12):
 			status = stream.ReadDword()
 			group = stream.ReadDword()
 			stream.ReadDword()
@@ -4201,7 +4202,7 @@ class GameTree(GameResource):
 			self.contents.append(node)
 
 	def ReadRecursiveTree(self, stream, parent, count):
-		for c in xrange(count):
+		for c in range(count):
 			status = stream.ReadDword()
 			group = stream.ReadDword()
 			index = stream.ReadDword()
@@ -4211,7 +4212,7 @@ class GameTree(GameResource):
 			parent.contents.append(node)
 
 	def WriteGmk(self, stream):
-		for i in xrange(12):
+		for i in range(12):
 			stream.WriteDword(self.contents[i].status)
 			stream.WriteDword(self.contents[i].group)
 			stream.WriteDword(0)
@@ -4220,7 +4221,7 @@ class GameTree(GameResource):
 			self.WriteRecursiveTree(stream, self.contents[i], len(self.contents[i].contents))
 
 	def WriteRecursiveTree(self, stream, parent, count):
-		for i in xrange(count):
+		for i in range(count):
 			if parent.contents[i].resource == None and parent.contents[i].status != GameTree.StatusGroup:
 				if parent.contents[i].status == GameTree.StatusPrimary:
 					print_warning("StatusPrimary")
@@ -4238,7 +4239,7 @@ class GameTree(GameResource):
 			self.WriteRecursiveTree(stream, parent.contents[i], len(parent.contents[i].contents))
 
 	def Finalize(self):
-		for i in xrange(len(self.contents)):
+		for i in range(len(self.contents)):
 			self.contents[i].Finalize(self)
 
 	def PrimaryGroupName(self, name):
@@ -4331,10 +4332,10 @@ class GameFile(GameResource):
 		RtCount=10
 
 		try:
-			EnigmaSettingsEy=open(cliDir+"gamesettings.ey","r").read()
+			EnigmaSettingsEy=open(cliDir+"gamesettings.ey","rU").read()
 		except:
 			try:
-				EnigmaSettingsEy=open("gamesettings.ey","r").read()
+				EnigmaSettingsEy=open("gamesettings.ey","rU").read()
 			except:
 				print_error("can't find gamesettings.ey")
 		#extensions: Universal_System/Extensions/Alarms,Universal_System/Extensions/Timelines,Universal_System/Extensions/Paths,Universal_System/Extensions/MotionPlanning,Universal_System/Extensions/DateTime,Universal_System/Extensions/ParticleSystems,Universal_System/Extensions/DataStructures
@@ -4418,7 +4419,7 @@ class GameFile(GameResource):
 		
 	@staticmethod
 	def compileRunES(es, exePath, emode):
-		result=definitionsModified("", GameFile.EnigmaSettingsEy)
+		result=definitionsModified(b"", GameFile.EnigmaSettingsEy.encode())
 		print_notice("definitions "+str(result[0].err_str))
 		if Class:#trick compileEGMf into using fixed make
 			gcliDir=os.path.join(os.getcwd(),cliDir)
@@ -4427,7 +4428,7 @@ class GameFile(GameResource):
 				os.environ["PATH"]=path
 				if os.getenv("PATH")!=path:
 					print_error("can't set PATH "+path)
-		cError = compileEGMf(es, exePath, emode)
+		cError = compileEGMf(es, exePath.encode(), emode)
 		if cError>0:
 			print_error("compileEGMf error "+str(cError))
 		else:
@@ -4461,12 +4462,12 @@ class GameFile(GameResource):
 
 	def egmReadNodeChildren(self, z, parent, kind, dir):
 		if dir=="":
-			f=z.open("toc.txt",'r')
+			f=z.open("toc.txt",'rU')
 		else:
-			f=z.open(dir+"/toc.txt",'r')
+			f=z.open(dir+"/toc.txt",'rU')
 		toc=[]
 		for t in f.readlines():
-			entry = t.strip()
+			entry = t.decode().strip()
 			if len(entry) > 4 and entry[3] == ' ':
 				kind,entry = entry[0:3],entry[4:]
 			toc.append((kind,entry))
@@ -4476,6 +4477,7 @@ class GameFile(GameResource):
 		for kind,entry in entries:
 			if dir!="":
 				entry = dir + '/' + entry
+			print(entry)
 			if entry+"/toc.txt" in self.egmNames:
 				parent[entry]={}
 				self.egmReadNodeChildren(z,parent[entry],kind,entry);
@@ -4780,7 +4782,7 @@ class GameFile(GameResource):
 		# Read header
 		self.gameId = stream.ReadDword()
 		self.guid=[]
-		for i in xrange(self.GMK_GUID_LENGTH):
+		for i in range(self.GMK_GUID_LENGTH):
 			self.guid.append(stream.readUChar())
 		# Load settings
 		gmVersionGameSettings=stream.ReadDword()
@@ -4791,7 +4793,7 @@ class GameFile(GameResource):
 		gmVersionTriggers=stream.ReadDword()
 		if gmVersionTriggers != 800:print_error("unsupported gmk version "+str(gmVersionTriggers))
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			trigger = GmkTrigger(self,c)
 			trigger.ReadGmk(stream)
 			self.triggers.append(trigger)
@@ -4801,7 +4803,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			name = stream.ReadString()
 			value = stream.ReadString()
 			self.constants.append((name, value))
@@ -4811,7 +4813,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			sound = GameSound(self,c)
 			sound.ReadGmk(stream)
 			if sound.exists:
@@ -4820,7 +4822,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			sprite = GameSprite(self,c)
 			sprite.ReadGmk(stream)
 			if sprite.exists:
@@ -4829,7 +4831,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			background = GameBackground(self,c)
 			background.ReadGmk(stream)
 			if background.exists:
@@ -4838,7 +4840,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			path = GamePath(self,c)
 			path.ReadGmk(stream)
 			self.paths.append(path)
@@ -4846,7 +4848,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			script = GameScript(self,c)
 			script.ReadGmk(stream)
 			self.scripts.append(script)
@@ -4854,7 +4856,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			font = GameFont(self,c)
 			font.ReadGmk(stream)
 			self.fonts.append(font)
@@ -4862,7 +4864,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			timeline = GameTimeline(self,c)
 			timeline.ReadGmk(stream)
 			if timeline.exists:
@@ -4872,7 +4874,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			gmObject = GameObject(self,c)
 			gmObject.ReadGmk(stream)
 			if gmObject.exists:
@@ -4881,7 +4883,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			room = GameRoom(self,c)
 			room.ReadGmk(stream)
 			if room.exists:
@@ -4893,7 +4895,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			includeFile = GameIncludeFile(self,c)
 			includeFile.ReadGmk(stream)
 			self.includeFiles.append(includeFile)
@@ -4901,7 +4903,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			self.packages.append(stream.ReadString())
 		# Read game information
 		#GM version needed for Resource
@@ -4912,13 +4914,13 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			print_warning("library creation code "+stream.ReadString())
 		# Read room execution order -- this too
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
-		for c in xrange(count):
+		for c in range(count):
 			print_warning("room execution order "+str(stream.ReadDword()))
 		# Read resource tree
 		self.resourceTree = GameTree(self)
@@ -4968,7 +4970,7 @@ class GameFile(GameResource):
 		stream.WriteDword(810)
 		# Write header
 		stream.WriteDword(self.gameId)
-		for i in xrange(self.GMK_GUID_LENGTH):
+		for i in range(self.GMK_GUID_LENGTH):
 			guidByte = self.gameId >> i / 4
 			guidByte %= ((i >> 6) + guidByte & 0x7F) + 0xFF
 			guidByte ^= (i * guidByte >> 3) & 0xAB
@@ -4983,60 +4985,60 @@ class GameFile(GameResource):
 		# Write triggers
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.triggers))
-		for i in xrange(len(self.triggers)):
+		for i in range(len(self.triggers)):
 			self.triggers[i].WriteGmk(stream)
 		stream.WriteTimestamp()
 		# Write constants
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.constants))
-		for i in xrange(len(self.constants)):
+		for i in range(len(self.constants)):
 			stream.WriteString(self.constants[i][0])
 			stream.WriteString(self.constants[i][1])
 		stream.WriteTimestamp()
 		# Write sounds
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.sounds))
-		for i in xrange(len(self.sounds)):
+		for i in range(len(self.sounds)):
 			self.sounds[i].WriteGmk(stream)
 		# Write sprites
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.sprites))
-		for i in xrange(len(self.sprites)):
+		for i in range(len(self.sprites)):
 			self.sprites[i].WriteGmk(stream)
 		# Write backgrounds
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.backgrounds))
-		for i in xrange(len(self.backgrounds)):
+		for i in range(len(self.backgrounds)):
 			self.backgrounds[i].WriteGmk(stream)
 		# Write paths
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.paths))
-		for i in xrange(len(self.paths)):
+		for i in range(len(self.paths)):
 			self.paths[i].WriteGmk(stream)
 		# Write scripts
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.scripts))
-		for i in xrange(len(self.scripts)):
+		for i in range(len(self.scripts)):
 			self.scripts[i].WriteGmk(stream)
 		# Write fonts
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.fonts))
-		for i in xrange(len(self.fonts)):
+		for i in range(len(self.fonts)):
 			self.fonts[i].WriteGmk(stream)
 		# Write timelines
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.timelines))
-		for i in xrange(len(self.timelines)):
+		for i in range(len(self.timelines)):
 			self.timelines[i].WriteGmk(stream)
 		# Write objects
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.objects))
-		for i in xrange(len(self.objects)):
+		for i in range(len(self.objects)):
 			self.objects[i].WriteGmk(stream)
 		# Write rooms
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.rooms))
-		for i in xrange(len(self.rooms)):
+		for i in range(len(self.rooms)):
 			self.rooms[i].WriteGmk(stream)
 		# Write last ids
 		stream.WriteDword(self.lastInstancePlacedId)
@@ -5044,12 +5046,12 @@ class GameFile(GameResource):
 		# Write include files
 		stream.WriteDword(800)
 		stream.WriteDword(len(self.includeFiles))
-		for i in xrange(len(self.includeFiles)):
+		for i in range(len(self.includeFiles)):
 			self.includeFiles[i].WriteGmk(stream)
 		# Write packages
 		stream.WriteDword(700)
 		stream.WriteDword(len(self.packages))
-		for i in xrange(len(self.packages)):
+		for i in range(len(self.packages)):
 			stream.WriteString(self.packages[i])
 		# Write game information
 		stream.WriteDword(800)
@@ -5084,16 +5086,16 @@ class GameFile(GameResource):
 
 	def Finalize(self):
 		# Finalize paths
-		for i in xrange(len(self.paths)):
+		for i in range(len(self.paths)):
 			self.paths[i].Finalize()
 		# Finalize timelines
-		for i in xrange(len(self.timelines)):
+		for i in range(len(self.timelines)):
 			self.timelines[i].Finalize()
 		# Finalize objects
-		for i in xrange(len(self.objects)):
+		for i in range(len(self.objects)):
 			self.objects[i].Finalize()
 		# Finalize rooms
-		for i in xrange(len(self.rooms)):
+		for i in range(len(self.rooms)):
 			self.rooms[i].Finalize()
 		# Finalize resource tree
 		if self.resourceTree:
@@ -5317,7 +5319,7 @@ class GameFile(GameResource):
 		self.es.spriteCount=len(self.sprites)
 		if self.es.spriteCount>0:
 			ot=(ESSprite*self.es.spriteCount)()
-			for count in xrange(self.es.spriteCount):
+			for count in range(self.es.spriteCount):
 				tobj=self.sprites[count]
 				eobj=tobj.WriteESSprite()
 				ot[count]=eobj
@@ -5327,7 +5329,7 @@ class GameFile(GameResource):
 		self.es.soundCount=len(self.sounds)
 		if self.es.spriteCount>0:
 			ot=(ESSound*self.es.soundCount)()
-			for count in xrange(self.es.soundCount):
+			for count in range(self.es.soundCount):
 				tobj=self.sounds[count]
 				eobj=tobj.WriteESSound()
 				ot[count]=eobj
@@ -5337,7 +5339,7 @@ class GameFile(GameResource):
 		self.es.backgroundCount=len(self.backgrounds)
 		if self.es.backgroundCount>0:
 			ot=(ESBackground*self.es.backgroundCount)()
-			for count in xrange(self.es.backgroundCount):
+			for count in range(self.es.backgroundCount):
 				tobj=self.backgrounds[count]
 				eobj=tobj.WriteESBackground()
 				ot[count]=eobj
@@ -5347,7 +5349,7 @@ class GameFile(GameResource):
 		self.es.pathCount=len(self.paths)
 		if self.es.pathCount>0:
 			ot=(ESPath*self.es.pathCount)()
-			for count in xrange(self.es.pathCount):
+			for count in range(self.es.pathCount):
 				tobj=self.paths[count]
 				eobj=tobj.WriteESPath()
 				ot[count]=eobj
@@ -5357,7 +5359,7 @@ class GameFile(GameResource):
 		self.es.scriptCount=len(self.scripts)
 		if self.es.scriptCount>0:
 			ot=(ESScript*self.es.scriptCount)()
-			for count in xrange(self.es.scriptCount):
+			for count in range(self.es.scriptCount):
 				tobj=self.scripts[count]
 				eobj=tobj.WriteESScript()
 				ot[count]=eobj
@@ -5367,7 +5369,7 @@ class GameFile(GameResource):
 		self.es.shaderCount=len(self.shaders)
 		if self.es.shaderCount>0:
 			ot=(ESShader*self.es.shaderCount)()
-			for count in xrange(self.es.shaderCount):
+			for count in range(self.es.shaderCount):
 				tobj=self.shaders[count]
 				eobj=tobj.WriteESShader()
 				ot[count]=eobj
@@ -5377,9 +5379,9 @@ class GameFile(GameResource):
 		if not self.app:
 			print_error("initialize Qt")
 		oF = ESFont()
-		oF.name = "EnigmaDefault"
+		oF.name = "EnigmaDefault".encode()
 		oF.id = -1
-		oF.fontName = "Arial"
+		oF.fontName = "Arial".encode()
 		oF.size = 12
 		oF.bold = False
 		oF.italic = False
@@ -5391,12 +5393,12 @@ class GameFile(GameResource):
 		ot=(ESFont*self.es.fontCount)()
 		ot[0]=oF
 		if self.es.fontCount>1:
-			for count in xrange(1,self.es.fontCount):
+			for count in range(1,self.es.fontCount):
 				ifont=self.fonts[count-1]
 				oF = ESFont()
-				oF.name = ifont.getMember("name")
+				oF.name = ifont.getMember("name").encode()
 				oF.id = ifont.getMember("id")
-				oF.fontName = ifont.getMember("fontName")
+				oF.fontName = ifont.getMember("fontName").encode()
 				oF.size = ifont.getMember("size")
 				oF.bold = ifont.getMember("bold")
 				oF.italic = ifont.getMember("italic")
@@ -5409,12 +5411,12 @@ class GameFile(GameResource):
 
 	def populateGlyphs(self, fnt, rangeMin, rangeMax, aa):
 		glyphs = (ESGlyph*(rangeMax - rangeMin + 1))()
-		for c in xrange(rangeMin,rangeMax):
+		for c in range(rangeMin,rangeMax):
 			self.populateGlyph(glyphs[c - rangeMin],fnt,chr(c),aa)
 		return glyphs
 
 	def populateGlyph(self, og, fnt, c, aa):
-		font = QtGui.QFont(fnt.fontName,fnt.size)
+		font = QtGui.QFont(str(fnt.fontName.decode()),fnt.size)
 		metrics = QtGui.QFontMetrics(font)
 		r=metrics.boundingRect(c)
 		if r.width()==0:
@@ -5433,10 +5435,10 @@ class GameFile(GameResource):
 		og.baseline = r.y() # bump image down X pixels (usually negative, since baseline is at bottom)
 		og.advance = r.width() # advance X pixels from origin
 		# Copy over the raster
-		raster = ""
-		for y in xrange(r.height()):
-			for x in xrange(r.width()):
-				raster+=chr(i.pixel(x,y)&0xff)
+		raster = b""
+		for y in range(r.height()):
+			for x in range(r.width()):
+				raster+=bytes([i.pixel(x,y)&0xff])
 		og.width = r.width()
 		og.height = r.height()
 		og.data = raster
@@ -5445,7 +5447,7 @@ class GameFile(GameResource):
 		self.es.timelineCount=len(self.timelines)
 		if self.es.scriptCount>0:
 			ot=(ESTimeline*self.es.timelineCount)()
-			for count in xrange(self.es.timelineCount):
+			for count in range(self.es.timelineCount):
 				tobj=self.timelines[count]
 				eobj=tobj.WriteESTimeline()
 				ot[count]=eobj
@@ -5455,7 +5457,7 @@ class GameFile(GameResource):
 		self.es.gmObjectCount=len(self.objects)
 		if self.es.gmObjectCount>0:
 			ot=(ESObject*self.es.gmObjectCount)()
-			for count in xrange(self.es.gmObjectCount):
+			for count in range(self.es.gmObjectCount):
 				tobj=self.objects[count]
 				eobj=tobj.WriteESObject()
 				ot[count]=eobj
@@ -5465,7 +5467,7 @@ class GameFile(GameResource):
 		self.es.roomCount=len(self.rooms)
 		if self.es.roomCount>0:
 			ot=(ESRoom*self.es.roomCount)()
-			for count in xrange(self.es.roomCount):
+			for count in range(self.es.roomCount):
 				tobj=self.rooms[count]
 				eobj=tobj.WriteESRoom()
 				ot[count]=eobj

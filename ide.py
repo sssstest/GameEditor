@@ -125,9 +125,9 @@ class RoomView(QWidget):
 		self.gridY=160
 		self.updateBrush()
 		self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
-		for c in xrange(self.roomWindow.tree.topLevelItemCount()):
+		for c in range(self.roomWindow.tree.topLevelItemCount()):
 			item=self.roomWindow.tree.topLevelItem(c)
-			for c in xrange(item.childCount()):
+			for c in range(item.childCount()):
 				x=item.child(c)
 				if x.res and type(x.res)==CliClass.GameRoomInstance:
 					i=x.res
@@ -270,7 +270,7 @@ class RoomView(QWidget):
 				if type(c)==RoomViewInstance and c.selected:
 					c.selected=False
 					c.update()
-				if self.origin<event.pos():
+				if self.origin.x()<event.pos().x() and self.origin.y()<event.pos().y():
 					rect=QRect(self.origin,event.pos())
 				else:
 					rect=QRect(event.pos(),self.origin)
@@ -340,11 +340,11 @@ class LexerGame(QsciLexerCPP):
 		17: 0xff3060a0,18: 0xff804020,19: 0xff3c3c3c,20: 0xff7f007f,40: 0xffb090b0,64: 0xffc0c0c0,65: 0xff90b090,66: 0xff90b090,67: 0xffd0d0d0,
 		68: 0xff90b090,69: 0xff9090b0,70: 0xffb090b0,71: 0xffb090b0,72: 0xffc0c0c0,73: 0xffb0b090,74: 0xffb0b0b0,75: 0xffb0b0b0,76: 0xff000000,
 		77: 0xff90b090,78: 0xff7faf7f,79: 0xffc0c0c0,80: 0xffc0c0c0,81: 0xffc0c0c0,82: 0xffc0c0c0,83: 0xffb0b0b0}
-		colorsbg = {32: 0xffc3c3c3L,0: 0xff7f7f7fL,1: 0xffff80ffL,2: 0xffff80ffL,3: 0xffc08fc0L,4: 0xffff8080L,5: 0xff80ff80L,6: 0xffffff80L,7: 0xff80ff80L,
-		8: 0xffc3c3c3L,9: 0xff8080ffL,10: 0xffffffffL,11: 0xffc3c3c3L,12: 0xffffffffL,13: 0xffff80ffL,14: 0xffc080c0L,15: 0xffc08fc0L,16: 0xffc3c3c3L,
-		17: 0xffcf9f5fL,18: 0xff7fbfdfL,19: 0xffc3c3c3L,20: 0xff80ff80L,40: 0xff4f6f4fL,64: 0xff3f3f3fL,65: 0xff6f4f6fL,66: 0xff6f4f6fL,67: 0xff2f2f2fL,
-		68: 0xff6f4f6fL,69: 0xff6f6f4fL,70: 0xff4f6f4fL,71: 0xff4f6f4fL,72: 0xff3f3f3fL,73: 0xff4f4f6fL,74: 0xff4f4f4fL,75: 0xff4f4f4fL,76: 0xffffffffL,
-		77: 0xff6f4f6fL,78: 0xff805080L,79: 0xff3f3f3fL,80: 0xff3f3f3fL,81: 0xff3f3f3fL,82: 0xff3f3f3fL,83: 0xff4f4f4fL}
+		colorsbg = {32: 0xffc3c3c3,0: 0xff7f7f7f,1: 0xffff80ff,2: 0xffff80ff,3: 0xffc08fc0,4: 0xffff8080,5: 0xff80ff80,6: 0xffffff80,7: 0xff80ff80,
+		8: 0xffc3c3c3,9: 0xff8080ff,10: 0xffffffff,11: 0xffc3c3c3,12: 0xffffffff,13: 0xffff80ff,14: 0xffc080c0,15: 0xffc08fc0,16: 0xffc3c3c3,
+		17: 0xffcf9f5f,18: 0xff7fbfdf,19: 0xffc3c3c3,20: 0xff80ff80,40: 0xff4f6f4f,64: 0xff3f3f3f,65: 0xff6f4f6f,66: 0xff6f4f6f,67: 0xff2f2f2f,
+		68: 0xff6f4f6f,69: 0xff6f6f4f,70: 0xff4f6f4f,71: 0xff4f6f4f,72: 0xff3f3f3f,73: 0xff4f4f6f,74: 0xff4f4f4f,75: 0xff4f4f4f,76: 0xffffffff,
+		77: 0xff6f4f6f,78: 0xff805080,79: 0xff3f3f3f,80: 0xff3f3f3f,81: 0xff3f3f3f,82: 0xff3f3f3f,83: 0xff4f4f4f}
 		if self.mainwindow.ideTheme==1:
 			return QColor(colorsbg[style])
 		else:
@@ -391,8 +391,8 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 			propertiesList=self.res.members
 		for m in propertiesList:
 			r=self.res.getMember(m)
-			if type(r)==str and r.count("\n")>0:
-				CliClass.print_warning("not inserting property "+m)
+			if type(r) not in [str,int,float,unicode] or (type(r)==str and r.count("\n")>0):
+				CliClass.print_warning("not inserting property "+m+" "+str(type(r))
 				continue
 			ind=self.mainwindow.propertiesTable.rowCount()-1
 			self.mainwindow.propertiesTable.insertRow(ind)
@@ -1030,9 +1030,9 @@ class MainWindow(QtGui.QMainWindow):
 		self.handleItemActivated(i,0)
 
 	def findTreeItemRes(self, res):
-		for c in xrange(self.hierarchyTree.topLevelItemCount()):
+		for c in range(self.hierarchyTree.topLevelItemCount()):
 			i=self.hierarchyTree.topLevelItem(c)
-			for c in xrange(i.childCount()):
+			for c in range(i.childCount()):
 				x=i.child(c)
 				if x.res==res:
 					return x
@@ -1136,7 +1136,7 @@ class MainWindow(QtGui.QMainWindow):
 			resName=res[0]
 		else:
 			resName=res.getMember("name")
-		for c in xrange(self.hierarchyTree.topLevelItemCount()):
+		for c in range(self.hierarchyTree.topLevelItemCount()):
 			i=self.hierarchyTree.topLevelItem(c)
 			if i.text(0)==groupName:
 				treeItem = QTreeWidgetItem(i,[resName])
@@ -1345,7 +1345,7 @@ class MainWindow(QtGui.QMainWindow):
 if __name__ == '__main__':
 	app = QtGui.QApplication(sys.argv)
 	#app.setStyleSheet(open(resourcePath+"theme.qss").read())
-	app.setStyleSheet(" QTabBar::tab { height: 24px; } QStatusBar::item { border: 0px solid black; }");
+	app.setStyleSheet(" QTabBar::tab { height: 16; icon-size: 18px; } QStatusBar::item { border: 0px solid black; }");
 	window = MainWindow(app)
 	window.show()
 	if len(sys.argv)>1:

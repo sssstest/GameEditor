@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from struct import *
-import cStringIO
+import io
 import zlib
 import time
 from CliPrintColors import *
@@ -11,7 +11,7 @@ class BinaryStream:
 		if base_stream:
 			self.base_stream = base_stream
 		else:
-			self.base_stream = cStringIO.StringIO()
+			self.base_stream = io.BytesIO()
 
 	def readByte(self):
 		return self.base_stream.read(1)
@@ -57,7 +57,7 @@ class BinaryStream:
 		if length>10000000:
 			print_error("too big")
 			sys.exit(1)
-		return self.unpack(str(length) + 's', length)
+		return self.unpack(str(length) + 's', length).decode()
 
 	def writeBytes(self, value):
 		self.base_stream.write(value)
@@ -119,20 +119,20 @@ class BinaryStream:
 	def Deflate(self):
 		self.base_stream.seek(0)
 		deflatedBuffer = zlib.compress(self.base_stream.read())
-		self.base_stream = cStringIO.StringIO()
+		self.base_stream = io.BytesIO()
 		self.base_stream.write(deflatedBuffer)
 		self.base_stream.seek(0)
 		#self.position = 0
 
 	def Inflate(self):
 		inflatedBuffer = zlib.decompress(self.base_stream.read())
-		self.base_stream = cStringIO.StringIO()
+		self.base_stream = io.BytesIO()
 		self.base_stream.write(inflatedBuffer)
 		self.base_stream.seek(0)
 		#self.position = 0
 
 	def Deserialize(self, decompress=True):
-		value = cStringIO.StringIO()
+		value = io.BytesIO()
 		value = BinaryStream(value)
 
 		length = self.readUInt32()
@@ -167,7 +167,7 @@ class BinaryStream:
 
 	def ReadString(self):
 		length = self.readUInt32()
-		return self.unpack(str(length) + 's', length)
+		return self.unpack(str(length) + 's', length).decode("windows-1252")
 
 	def ReadTimestamp(self):
 		GmTimestampEpoch = 0xFFFFFFFF7C5316BF

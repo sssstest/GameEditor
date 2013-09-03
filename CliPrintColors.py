@@ -23,6 +23,7 @@
 #* You should have received a copy of the GNU General Public License along
 #* with this code. If not, see <http://www.gnu.org/licenses/>
 
+from __future__ import print_function
 import sys
 
 RESET          = 0
@@ -46,26 +47,26 @@ def RGBA2DWORD(iR, iG, iB, iA):
 	return (((((iR << 8) + iG) << 8) + iB) << 8) + iA
 
 def textcolor(attr, fg, bg):
-	print "%c[%d;%d;%dm" % (0x1B, attr, fg + 30, bg + 40),
+	print("%c[%d;%d;%dm" % (0x1B, attr, fg + 30, bg + 40), end=" ")
 
 def textcolorbg(attr, bg):
-	print "%c[%d;%dm" % (0x1B, attr, bg + 40),
+	print("%c[%d;%dm" % (0x1B, attr, bg + 40), end=" ")
 
 def textcolorfg(attr, fg):
-	print "%c[%d;%dm" % (0x1B, attr, fg + 30),
+	print("%c[%d;%dm" % (0x1B, attr, fg + 30), end=" ")
 
 def textcolorreset():
-	print "%c[%dm" % (0x1B, colorCodes.RESET),
+	print("%c[%dm" % (0x1B, colorCodes.RESET), end=" ")
 
 def printfln(msg):
-	print msg
+	print(msg)
 
 def println():
-	print ""
+	print("")
 
 def printcolor(msg, attr, fg):
 	textcolorfg(attr, fg)
-	print msg,
+	print(msg, end=" ")
 
 def printfcln(msg, attr, fg):
 	printcolor(msg, attr, fg)
@@ -73,10 +74,10 @@ def printfcln(msg, attr, fg):
 
 def printfc(msg, attr, bg, fg):
 	textcolor(attr, fg, bg)
-	print msg
+	print(msg)
 
 def clearconsole():
-	print "\e[1;1H\e[2J"
+	print("\e[1;1H\e[2J")
 
 def print_error(msg):
 	printcolor("ERROR ", BRIGHT, RED)

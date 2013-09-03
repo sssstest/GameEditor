@@ -9,10 +9,13 @@
 #* See LICENSE for details.
 
 import zlib
-import cStringIO
+import io
+
+class NotAPNG(BaseException):
+	BaseException
 
 class ApngIO(object):
-	PNG_SIGNATURE = "".join([ chr(0x89),'P','N','G',chr(0x0D),chr(0x0A),chr(0x1A),chr(0x0A) ])
+	PNG_SIGNATURE = b"\x89PNG\x0D\x0A\x1A\x0A"
 	IO_FMT = "png"
 
 	#Convenience byte[]/int methods
@@ -22,7 +25,7 @@ class ApngIO(object):
 
 	@staticmethod
 	def i2b(i):
-		return [ chr(ApngIO.bite(i,24)),chr(ApngIO.bite(i,16)),chr(ApngIO.bite(i,8)),chr(ApngIO.bite(i,0)) ]
+		return bytes([ApngIO.bite(i,24),ApngIO.bite(i,16),ApngIO.bite(i,8),ApngIO.bite(i,0)])
 
 	#* Convenience method to fully read a buffer, since in.read(buf) can fall short. */
 	@staticmethod
@@ -98,14 +101,14 @@ class ApngIO(object):
 
 	def apngToBufferedImages(self, ist):
 		genChunk = Generic_Chunk()
-		png = cStringIO.StringIO()#ByteArrayOutputStream()
+		png = io.BytesIO()
 		ret = []
 		imageHeader=[]
 
 		png.write(ApngIO.PNG_SIGNATURE)
 
 		pngBase=ist.read(8)
-		if not pngBase==ApngIO.PNG_SIGNATURE: raise "Not APNG"
+		if not pngBase==ApngIO.PNG_SIGNATURE: raise NotAPNG
 
 		hasData = False
 
@@ -116,7 +119,7 @@ class ApngIO(object):
 				if hasData:
 					png.write(IEND.instance.getBytes())
 					png.seek(0)
-					bais = cStringIO.StringIO(png.read())
+					bais = io.BytesIO(png.read())
 					ret.append(bais)
 
 					png.reset()
@@ -133,7 +136,7 @@ class ApngIO(object):
 			elif genChunk.isType(IEND.type):
 				png.write(genChunk.getBytes())
 				png.seek(0)
-				bais = cStringIO.StringIO(png.read())
+				bais = io.BytesIO(png.read())
 				ret.append(bais)
 				break
 			elif genChunk.isType(IHDR_Dummy.type):
@@ -154,7 +157,8 @@ class ApngChunkType(object):
 
 		def bytesToInt(self, b):
 			if len(b) != 4: raise "ArrayIndexOutOfBoundsException"
-			return ord(b[0]) << 24 | ord(b[1]) << 16 | ord(b[2]) << 8 | ord(b[3])
+			b=bytearray(b)
+			return b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3]
 
 		def equals(self, other):
 			return self.val == other.val
@@ -166,18 +170,18 @@ class PNG_Chunk(object):
 		self.chunkType = type
 
 	def updateCRC(self):
-		tcrc = zlib.crc32("".join(self.chunkType.getBytes())+"".join(self.data)) & 0xFFFFFFFF
+		tcrc = zlib.crc32(self.chunkType.getBytes()+b"".join(self.data)) & 0xFFFFFFFF
 		self.length = len(self.data)
 		self.crc = ApngIO.i2b(tcrc)
 
 	def getBytes(self):
 		#Get the bytes of this chunk for writing
-		baos = cStringIO.StringIO()
+		baos = io.BytesIO()
 
-		baos.write("".join(ApngIO.i2b(self.length)))
-		baos.write("".join(self.chunkType.getBytes()))
-		baos.write("".join(self.data))
-		baos.write("".join(self.crc))
+		baos.write(ApngIO.i2b(self.length))
+		baos.write(self.chunkType.getBytes())
+		baos.write(self.data)
+		baos.write(self.crc)
 
 		baos.seek(0)
 		return baos.read()
@@ -205,10 +209,10 @@ class Generic_Chunk(PNG_Chunk):
 		PNG_Chunk.__init__(self)
 
 	def repopulate(self):
-		print "Repopulate called on generic chunk."
+		print("Repopulate called on generic chunk.")
 
 class IHDR_Dummy(PNG_Chunk):
-	type = ApngChunkType([ 'I','H','D','R' ])
+	type = ApngChunkType(b"IHDR")
 
 	def __init__(self, png):
 		PNG_Chunk.__init__(self)
@@ -220,7 +224,7 @@ class IHDR_Dummy(PNG_Chunk):
 		self.updateCRC()
 
 class acTL(PNG_Chunk):
-	type = ApngChunkType([ 'a','c','T','L' ])
+	type = ApngChunkType(b"acTL")
 
 	def __init__(self, nf, np):
 		PNG_Chunk.__init__(self)
@@ -234,11 +238,11 @@ class acTL(PNG_Chunk):
 		self.updateCRC()
 
 class fcTL(PNG_Chunk):
-	type = ApngChunkType([ 'f','c','T','L' ])
+	type = ApngChunkType(b"fcTL")
 
 	def __init__(self, sn, w, h, xo, yo, dn, dd, dop, bop):
 		PNG_Chunk.__init__(self)
-		self.chunkType = ApngChunkType([ 'f','c','T','L' ])
+		self.chunkType = ApngChunkType(b"fcTL")
 		self.sequenceNumber = sn
 		self.width = w
 		self.height = h
@@ -281,12 +285,12 @@ class fcTL(PNG_Chunk):
 		self.updateCRC()
 
 class IDAT(PNG_Chunk):
-	type = ApngChunkType([ 'I','D','A','T' ])
+	type = ApngChunkType(b"IDAT")
 
 	#* Creates a new IDAT chunk with the given frame data. */
 	def __init__(self, dat):
 		PNG_Chunk.__init__(self)
-		self.chunkType = ApngChunkType([ 'I','D','A','T' ])
+		self.chunkType = ApngChunkType(b"IDAT")
 		self.data = dat
 		self.repopulate()
 
@@ -294,13 +298,13 @@ class IDAT(PNG_Chunk):
 		self.updateCRC()
 
 class fdAT(PNG_Chunk):
-	type = ApngChunkType([ 'f','d','A','T' ])
+	type = ApngChunkType(b"fdAT")
 
 	#* Creates an fdAT from a PNG_Chunk that is already in fdAT format.
 	#* Namely, it extracts the sequence number from the frame data.
 	def __init__(self, pc, sn=None):
 		PNG_Chunk.__init__(self)
-		self.chunkType = ApngChunkType([ 'f','d','A','T' ])
+		self.chunkType = ApngChunkType(b"fdAT")
 		self.length = pc.length
 		if sn:
 			#* Creates an fdAT from a PNG_Chunk that is in another format (converts it) */
@@ -326,13 +330,13 @@ class fdAT(PNG_Chunk):
 		return IDAT(self.frameData)
 
 class IEND(PNG_Chunk):
-	type = ApngChunkType([ 'I','E','N','D' ])
+	type = ApngChunkType(b"IEND")
 
 	#* IEND is a singleton class and should not be instantiated.
 	#* Use IEND.instance instead.
 	def __init__(self):
 		PNG_Chunk.__init__(self)
-		self.chunkType = ApngChunkType([ 'I','E','N','D' ])
+		self.chunkType = ApngChunkType(b"IEND")
 		self.repopulate()
 
 	def repopulate(self):
