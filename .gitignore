@@ -1,0 +1,15 @@
+*.pyc
+*.class
+*.o
+*.d
+*.depend
+*.so
+*.dll
+*.dylib
+*.exe
+*.jar
+*.log
+*~
+.DS_Store
+ValgrindOut.xml
+*.cbTemp
