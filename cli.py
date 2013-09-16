@@ -109,7 +109,7 @@ def cli():
 	if args.run:
 		emode=emode_run
 	LoadPluginLib()
-	GameFile.compileRunES(es,testGameFile,emode)
+	GameFile.compileRunES(es,testGameFile,emode,open(cliDir+"gamesettings.ey","r").read())
 	if emode==emode_compile:
 		print_notice("run game")
 		print_notice(subprocess.check_output([testGameFile]))

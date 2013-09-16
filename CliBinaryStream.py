@@ -106,6 +106,11 @@ class BinaryStream:
 	def unpack(self, fmt, length = 1):
 		return unpack(fmt, self.readBytes(length))[0]
 
+	def Read(self):
+		value=self.base_stream.read()
+		self.base_stream.seek(0)
+		return value
+
 	def Rewind(self):
 		self.base_stream.seek(0)
 

@@ -332,6 +332,15 @@ class GameSprite(GameResource):
 		self.setMember("name","sprite_"+str(id))
 		self.subimages=[]
 
+	def getQIcon(self):
+		if len(self.subimages)>0:
+			q=self.subimages[0].getQImage()
+			image=QtGui.QPixmap()
+			image.convertFromImage(q)
+			image=image.scaled(16,16)
+			return QtGui.QIcon(image)
+		return None
+
 	def addSubimage(self, subimage):
 		self.subimages.append(subimage)
 
@@ -1112,7 +1121,7 @@ class GameScript(GameResource):
 		obj=ESScript()
 		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
-		obj.code=self.getMember("value").encode()
+		obj.code=self.getMember("value")
 		return obj
 
 class GameShader(GameResource):
@@ -1137,20 +1146,23 @@ class GameShader(GameResource):
 		for key in ["name","id","type","precompile"]:
 			if not self.ifDefault(key):
 				stri+="\t"+key+"="+str(self.getMember(key))+"\n"
+		stri+="\t@vertex {\n"
 		for x in self.getMember("vertex").split("\n"):
-			stri+="\t"+x+"\n"
+			stri+="\t\t"+x+"\n"
+		stri+="\t}\t@fragment {\n"
 		for x in self.getMember("fragment").split("\n"):
-			stri+="\t"+x+"\n"
+			stri+="\t\t"+x+"\n"
+		stri+="\t}\n"
 		stri+="}\n"
 		return stri
 
 	def WriteESShader(self):
 		obj=ESShader()
-		obj.name=self.getMember("name")
+		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
-		obj.vertex=self.getMember("vertex")
-		obj.fragment=self.getMember("fragment")
-		obj.type=self.getMember("type")
+		obj.vertex=self.getMember("vertex").encode()
+		obj.fragment=self.getMember("fragment").encode()
+		obj.type=self.getMember("type").encode()
 		obj.precompile=self.getMember("precompile")
 		return obj
 
@@ -4153,7 +4165,6 @@ class GameTreeNode(object):
 			self.contents[i].Finalize(parent)
 
 	def AddResource(self,resource):
-		self.index = 0
 		self.index = resource.GetId()
 		node = GameTreeNode(StatusSecondary, self.group, self.index, self.resource.name)
 		node.resource = self.resource
@@ -4331,15 +4342,6 @@ class GameFile(GameResource):
 		RtUnknown=9
 		RtCount=10
 
-		try:
-			EnigmaSettingsEy=open(cliDir+"gamesettings.ey","rU").read()
-		except:
-			try:
-				EnigmaSettingsEy=open("gamesettings.ey","rU").read()
-			except:
-				print_error("can't find gamesettings.ey")
-		#extensions: Universal_System/Extensions/Alarms,Universal_System/Extensions/Timelines,Universal_System/Extensions/Paths,Universal_System/Extensions/MotionPlanning,Universal_System/Extensions/DateTime,Universal_System/Extensions/ParticleSystems,Universal_System/Extensions/DataStructures
-
 	def __init__(self):
 		GameResource.__init__(self, self, -1)
 		self.version=0
@@ -4368,6 +4370,27 @@ class GameFile(GameResource):
 		#self.resourceTree = Tree()
 		self.gameId = random.randint(0,2147483647) % self.GMK_MAX_ID;
 		self.readingFile=False
+		self.EnigmaTargetAudio="OpenAL"
+		self.EnigmaTargetWindowing="xlib"
+		self.EnigmaTargetCompiler="gcc"
+		self.EnigmaTargetGraphics="OpenGL3"
+		self.EnigmaTargetWidget="None"
+		self.EnigmaTargetCollision="BBox"
+		self.EnigmaTargetNetworking="None"
+
+	def EnigmaSettingsEy(self):
+		ey="%e-yaml\n---\ntreat-literals-as: 0\nsample-lots-of-radios: 0\ninherit-equivalence-from: 0\n"
+		ey+="sample-checkbox: on\nsample-edit: DEADBEEF\nsample-combobox: 0\ninherit-strings-from: 0\n"
+		ey+="inherit-escapes-from: 0\ninherit-increment-from: 0\n \n"
+		ey+="target-audio: "+self.EnigmaTargetAudio+"\n"
+		ey+="target-windowing: "+self.EnigmaTargetWindowing+"\n"
+		ey+="target-compiler: "+self.EnigmaTargetCompiler+"\n"
+		ey+="target-graphics: "+self.EnigmaTargetGraphics+"\n"
+		ey+="target-widget: "+self.EnigmaTargetWidget+"\n"
+		ey+="target-collision: "+self.EnigmaTargetCollision+"\n"
+		ey+="target-networking: "+self.EnigmaTargetNetworking+"\n"
+		ey+="extensions:Universal_System/Extensions/Alarms,Universal_System/Extensions/Timelines,Universal_System/Extensions/Paths,Universal_System/Extensions/MotionPlanning,Universal_System/Extensions/DateTime,Universal_System/Extensions/ParticleSystems,Universal_System/Extensions/DataStructures"
+		return ey
 
 	def addSprite(self, point):
 		if point in self.sprites:
@@ -4415,11 +4438,11 @@ class GameFile(GameResource):
 
 	def compileRunEnigma(self, exePath, emode):
 		es=self.WriteES()
-		GameFile.compileRunES(es, exePath, emode)
+		GameFile.compileRunES(es, exePath, emode, self.EnigmaSettingsEy())
 		
 	@staticmethod
-	def compileRunES(es, exePath, emode):
-		result=definitionsModified(b"", GameFile.EnigmaSettingsEy.encode())
+	def compileRunES(es, exePath, emode, EnigmaSettingsEy):
+		result=definitionsModified(b"", EnigmaSettingsEy.encode())
 		print_notice("definitions "+str(result[0].err_str))
 		if Class:#trick compileEGMf into using fixed make
 			gcliDir=os.path.join(os.getcwd(),cliDir)
@@ -4444,6 +4467,7 @@ class GameFile(GameResource):
 		self.resourceTree.AddGroupName("Backgrounds")
 		self.resourceTree.AddGroupName("Paths")
 		self.resourceTree.AddGroupName("Scripts")
+		self.resourceTree.AddGroupName("Shaders")
 		self.resourceTree.AddGroupName("Fonts")
 		self.resourceTree.AddGroupName("Timelines")
 		self.resourceTree.AddGroupName("Objects")
@@ -5166,6 +5190,9 @@ class GameFile(GameResource):
 				if s.getMember("id")==index: return s
 		elif type==GameFile.RtScript:
 			for s in self.scripts:
+				if s.getMember("id")==index: return s
+		elif type==GameFile.RtShader:
+			for s in self.shaders:
 				if s.getMember("id")==index: return s
 		elif type==GameFile.RtFont:
 			for s in self.fonts:

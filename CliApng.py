@@ -25,7 +25,7 @@ class ApngIO(object):
 
 	@staticmethod
 	def i2b(i):
-		return bytes([ApngIO.bite(i,24),ApngIO.bite(i,16),ApngIO.bite(i,8),ApngIO.bite(i,0)])
+		return bytearray([ApngIO.bite(i,24),ApngIO.bite(i,16),ApngIO.bite(i,8),ApngIO.bite(i,0)])
 
 	#* Convenience method to fully read a buffer, since in.read(buf) can fall short. */
 	@staticmethod
@@ -43,7 +43,7 @@ class ApngIO(object):
 				break
 			total += n
 			if total == length: break
-		return buffer
+		return bytearray(buffer)
 
 	#Functionality
 	def transferIDATs(dis, os, sn, ignoreOthers):
@@ -103,7 +103,7 @@ class ApngIO(object):
 		genChunk = Generic_Chunk()
 		png = io.BytesIO()
 		ret = []
-		imageHeader=[]
+		imageHeader=b""
 
 		png.write(ApngIO.PNG_SIGNATURE)
 
@@ -122,7 +122,8 @@ class ApngIO(object):
 					bais = io.BytesIO(png.read())
 					ret.append(bais)
 
-					png.reset()
+					#png.seek(0)
+					png = io.BytesIO()
 					png.write(pngBase)
 					png.write(imageHeader)
 					hasData = False
@@ -170,7 +171,7 @@ class PNG_Chunk(object):
 		self.chunkType = type
 
 	def updateCRC(self):
-		tcrc = zlib.crc32(self.chunkType.getBytes()+b"".join(self.data)) & 0xFFFFFFFF
+		tcrc = zlib.crc32(bytes(self.chunkType.getBytes()+self.data)) & 0xFFFFFFFF
 		self.length = len(self.data)
 		self.crc = ApngIO.i2b(tcrc)
 
@@ -216,7 +217,7 @@ class IHDR_Dummy(PNG_Chunk):
 
 	def __init__(self, png):
 		PNG_Chunk.__init__(self)
-		self.data = [0]*13
+		self.data = bytes(13)
 		System.arraycopy(png,16,data,0,data.length)
 		self.repopulate()
 
@@ -233,8 +234,8 @@ class acTL(PNG_Chunk):
 		self.repopulate()
 
 	def repopulate(self):
-		self.data = [ self.bite(self.numFrames,24),self.bite(self.numFrames,16),self.bite(self.numFrames,8),
-				self.bite(self.numFrames,0),self.bite(self.numPlays,24),self.bite(self.numPlays,16),self.bite(self.numPlays,8),self.bite(self.numPlays,0) ]
+		self.data = bytearray([ self.bite(self.numFrames,24),self.bite(self.numFrames,16),self.bite(self.numFrames,8),
+				self.bite(self.numFrames,0),self.bite(self.numPlays,24),self.bite(self.numPlays,16),self.bite(self.numPlays,8),self.bite(self.numPlays,0) ])
 		self.updateCRC()
 
 class fcTL(PNG_Chunk):
@@ -276,12 +277,12 @@ class fcTL(PNG_Chunk):
 	OVER=1
 
 	def repopulate(self):
-		self.data = [ self.bite(self.sequenceNumber,24),self.bite(self.sequenceNumber,16),self.bite(self.sequenceNumber,8),
+		self.data = bytearray([ self.bite(self.sequenceNumber,24),self.bite(self.sequenceNumber,16),self.bite(self.sequenceNumber,8),
 				self.bite(self.sequenceNumber,0),self.bite(self.width,24),self.bite(self.width,16),self.bite(self.width,8),self.bite(self.width,0),
 				self.bite(self.height,24),self.bite(self.height,16),self.bite(self.height,8),self.bite(self.height,0),self.bite(self.xOffset,24),
 				self.bite(self.xOffset,16),self.bite(self.xOffset,8),self.bite(self.xOffset,0),self.bite(self.yOffset,24),self.bite(self.yOffset,16),
 				self.bite(self.yOffset,8),self.bite(self.yOffset,0),self.bite(self.delayNum,8),self.bite(self.delayNum,0),self.bite(self.delayDen,8),
-				self.bite(self.delayDen,0),self.disposeOp.getValue(),self.blendOp.getValue() ]
+				self.bite(self.delayDen,0),self.disposeOp.getValue(),self.blendOp.getValue() ])
 		self.updateCRC()
 
 class IDAT(PNG_Chunk):
@@ -312,14 +313,15 @@ class fdAT(PNG_Chunk):
 			self.frameData = pc.data #will just be arraycopy'd anyways
 			self.repopulate()
 			return
-		self.sequenceNumber = ord(pc.data[0]) << 24 | ord(pc.data[1]) << 16 | ord(pc.data[2]) << 8 | ord(pc.data[3])
-		self.frameData = [0]*(len(pc.data) - 4)
-		for i in xrange(len(self.frameData)):
+		self.sequenceNumber = pc.data[0] << 24 | pc.data[1] << 16 | pc.data[2] << 8 | pc.data[3]
+		#self.sequenceNumber = ord(pc.data[0]) << 24 | ord(pc.data[1]) << 16 | ord(pc.data[2]) << 8 | ord(pc.data[3])
+		self.frameData = bytearray(len(pc.data) - 4)
+		for i in range(len(self.frameData)):
 			self.frameData[i]=pc.data[4+i]
 		self.crc = pc.crc
 
 	def repopulate(self):
-		self.data = [0]*(len(self.frameData) + 4)
+		self.data = bytes(len(self.frameData) + 4)
 		for i in xrange(4):
 			self.data[i]=ApngIO.i2b(self.sequenceNumber)[i]
 		for i in xrange(len(self.frameData)):
@@ -340,7 +342,7 @@ class IEND(PNG_Chunk):
 		self.repopulate()
 
 	def repopulate(self):
-		self.data = []
+		self.data = b""
 		self.updateCRC()
 
 IEND.instance = IEND()

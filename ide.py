@@ -108,7 +108,7 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 			propertiesList=self.res.members
 		for m in propertiesList:
 			r=self.res.getMember(m)
-			types = [str,int,float]
+			types = [str,int,float,bool]
 			if sys.version_info[0]<3:
 				types.append(unicode)
 			if type(r) not in types or (type(r)==str and r.count("\n")>0):
@@ -221,25 +221,65 @@ class SpriteWindow(ResourceWindow):
 		scrollArea.setWidget(imageLabel)
 		q=QWidget()
 		self.setWidget(q)
-		layout = QVBoxLayout(q) # no initialization here
-		layout.addWidget(scrollArea) # layout is uninitialized and probably garbage
+		layout = QVBoxLayout(q)
+		layout.addWidget(scrollArea)
+		load=QPushButton("&Load File", self)
+		save=QPushButton("&Save File", self)
+		q2=QWidget()
+		layout2 = QHBoxLayout(q2)
+		layout2.addWidget(load)
+		layout2.addWidget(save)
+		q2.setLayout(layout2)
+		layout.addWidget(q2)
 		layout.setContentsMargins(0, 0, 0, 0)
 		q.setLayout(layout)
-
+		
+		
 class SoundWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
-		self.setWindowIcon(QIcon(resourcePath+"resources/sprite.png"))
+		self.setWindowIcon(QIcon(resourcePath+"resources/sound.png"))
+		play=QPushButton("&Play", self)
+		play.pressed.connect(self.handlePlayPressed)
+		stop=QPushButton("S&top", self)
+		stop.pressed.connect(self.handleStopPressed)
+		load=QPushButton("&Load File", self)
+		save=QPushButton("&Save File", self)
+		q=QWidget()
+		self.setWidget(q)
+		layout = QHBoxLayout(q)
+		layout.addWidget(play)
+		layout.addWidget(stop)
+		layout.addWidget(load)
+		layout.addWidget(save)
+		q.setLayout(layout)
+
+	def handlePlayPressed(self):
+		CliClass.print_warning("starting avplay")
+		self.playerProcess = QProcess()
+		self.playerProcess.start("avplay -vn -nodisp -autoexit -i pipe:")
+		#self.playerProcess.readyReadStandardOutput.connect(self.handleProcessOutput)
+		#self.playerProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
+		self.playerProcess.finished.connect(self.handleProcessFinished)
+		self.playerProcess.writeData(self.res.getMember("data").Read())
+		self.playerProcess.closeWriteChannel()
+
+	def handleStopPressed(self):
+		self.playerProcess.kill()
+
+	def handleProcessFinished(self):
+		CliClass.print_warning("done avplay")
+		self.playerProcess.close()
 
 class BackgroundWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
-		self.setWindowIcon(QIcon(resourcePath+"resources/sprite.png"))
+		self.setWindowIcon(QIcon(resourcePath+"resources/background.png"))
 
 class PathWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
-		self.setWindowIcon(QIcon(resourcePath+"resources/sprite.png"))
+		self.setWindowIcon(QIcon(resourcePath+"resources/path.png"))
 
 class ScriptWindow(EditorWindow):
 	def __init__(self, mainwindow, res):
@@ -261,7 +301,7 @@ class ScriptWindow(EditorWindow):
 class ShaderWindow(EditorWindow):
 	def __init__(self, mainwindow, res):
 		EditorWindow.__init__(self, mainwindow, res)
-		self.setWindowIcon(QIcon(resourcePath+"resources/sprite.png"))
+		self.setWindowIcon(QIcon(resourcePath+"resources/shader.png"))
 		self.shaderIndex="vertex"
 		self.sciEditor.setText(self.res.getMember(str(self.shaderIndex)))
 		
@@ -303,12 +343,12 @@ class ShaderWindow(EditorWindow):
 class FontWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
-		self.setWindowIcon(QIcon(resourcePath+"resources/sprite.png"))
+		self.setWindowIcon(QIcon(resourcePath+"resources/font.png"))
 
 class TimelineWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
-		self.setWindowIcon(QIcon(resourcePath+"resources/sprite.png"))
+		self.setWindowIcon(QIcon(resourcePath+"resources/timeline.png"))
 
 class ObjectWindow(EditorWindow):
 	def __init__(self, mainwindow, res):
@@ -450,6 +490,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.projectPath=None
 		self.debuggerCommands=[]
 		self.projectSavingEnabled=False
+		self.projectEmode=CliClass.emode_run
 		CliClass.print_error=self.outputLine
 		CliClass.print_warning=self.outputLine
 		CliClass.print_notice=self.outputLine
@@ -469,6 +510,9 @@ class MainWindow(QtGui.QMainWindow):
 		editMenu = QMenu("&Edit", self)
 		viewMenu = QMenu("&View", self)
 		#viewMenu.addAction(self.mdiAction)
+		themeAction = QAction("&Theme", self)
+		themeAction.triggered.connect(self.switchTheme)
+		viewMenu.addAction(themeAction)
 		updAction = QAction("&Update", self)
 		updAction.triggered.connect(self.updateHierarchyTree)
 		viewMenu.addAction(updAction)
@@ -526,6 +570,33 @@ class MainWindow(QtGui.QMainWindow):
 		debugAction.triggered.connect(self.handleDebugAction)
 		buildToolbar.addAction(debugAction)
 		buildMenu.addAction(debugAction)
+		self.buildTypeList=QComboBox(buildToolbar)
+		self.buildTypeList.addItem("Run")
+		self.buildTypeList.addItem("Debug")
+		#self.buildTypeList.addItem("Design")
+		self.buildTypeList.currentIndexChanged.connect(self.handleBuildTypeListChanged)
+		buildToolbar.addWidget(self.buildTypeList)
+		#buildToolbar.addWidget(QLabel("Platform:"))
+		self.buildPlatformList=QComboBox(buildToolbar)
+		#if sys.platform.startswith('linux'):
+		if os.name=="nt":
+			self.buildPlatformList.addItem("Windows")
+		else:
+			self.buildPlatformList.addItem("Linux X11")
+			self.buildPlatformList.addItem("Windows mingw32")
+			self.buildPlatformList.addItem("Android")
+		self.buildPlatformList.currentIndexChanged.connect(self.handleBuildPlatformListChanged)
+		buildToolbar.addWidget(self.buildPlatformList)
+		#buildToolbar.addWidget(QLabel("Graphics:"))
+		self.buildGraphicsList=QComboBox(buildToolbar)
+		self.buildGraphicsList.addItem("OpenGL 1.1")
+		self.buildGraphicsList.addItem("OpenGL 3.0")
+		if os.name=="nt":
+			self.buildGraphicsList.addItem("Direct3D 9.0")
+		self.buildGraphicsList.addItem("OpenGLES")
+		self.buildGraphicsList.setCurrentIndex(1)
+		self.buildGraphicsList.currentIndexChanged.connect(self.handleBuildGraphicsListChanged)
+		buildToolbar.addWidget(self.buildGraphicsList)
 		"""designAction = QAction(QIcon(resourcePath+"actions/compile.png"), "Design", self)
 		buildToolbar.addAction(designAction)
 		buildMenu.addAction(designAction)
@@ -576,7 +647,7 @@ class MainWindow(QtGui.QMainWindow):
 		roomAction.triggered.connect(self.actionNewRoom)
 		resourceToolbar.addAction(roomAction)
 		self.addToolBar(resourceToolbar)"""
-		settingsToolbar = QToolBar(self)
+		"""settingsToolbar = QToolBar(self)
 		settingsToolbar.addAction(preferencesAction)
 		gameSettingsAction = QAction(QIcon(resourcePath+"resources/gm.png"), "Global Game Settings", self)
 		gameSettingsAction.triggered.connect(self.actionShowGameSettings)
@@ -588,7 +659,7 @@ class MainWindow(QtGui.QMainWindow):
 		settingsToolbar.addAction(extensionsAction)
 		manualAction = QAction(QIcon(resourcePath+"actions/manual.png"), "Manual", self)
 		settingsToolbar.addAction(manualAction)
-		self.addToolBar(settingsToolbar)
+		self.addToolBar(settingsToolbar)"""
 		self.hierarchyDock = QDockWidget("Hierarchy", self)
 		self.hierarchyTree = QTreeWidget(self)
 		self.hierarchyTree.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -653,6 +724,63 @@ class MainWindow(QtGui.QMainWindow):
 		self.handleNewAction()
 		self.updateHierarchyTree()
 
+	def handleBuildTypeListChanged(self, event):
+		mode=self.buildTypeList.currentText()
+		if mode=="Run":
+			self.projectEmode=CliClass.emode_run
+		elif mode=="Debug":#emode_debug
+			self.projectEmode=CliClass.emode_compile
+		elif mode=="Design":
+			self.projectEmode=CliClass.emode_design
+		else:
+			CliClass.print_error("unsupported emode "+mode)
+
+	def handleBuildPlatformListChanged(self, event):
+		platform=self.buildPlatformList.currentText()
+		if platform=="Linux X11":
+			self.gmk.EnigmaTargetAudio="OpenAL"
+			self.gmk.EnigmaTargetWindowing="xlib"
+			self.gmk.EnigmaTargetCompiler="gcc"
+			#self.gmk.EnigmaTargetCompiler="clang"
+			self.gmk.EnigmaTargetWidget="None"
+			self.gmk.EnigmaTargetCollision="BBox"
+		elif platform=="Windows":
+			self.gmk.EnigmaTargetAudio="OpenAL"
+			#self.gmk.EnigmaTargetAudio="DirectSound"
+			#self.gmk.EnigmaTargetAudio="FMODAudio"
+			self.gmk.EnigmaTargetWindowing="Win32"
+			self.gmk.EnigmaTargetCompiler="gcc"
+			self.gmk.EnigmaTargetWidget="Win32"
+			self.gmk.EnigmaTargetCollision="Precise"
+		elif platform=="Windows mingw32":
+			self.gmk.EnigmaTargetAudio="OpenAL"
+			self.gmk.EnigmaTargetWindowing="Win32"
+			self.gmk.EnigmaTargetCompiler="i686-w64-mingw32-gcc"#x86_64-w64-mingw32-gcc
+			self.gmk.EnigmaTargetWidget="Win32"
+			self.gmk.EnigmaTargetCollision="BBox"
+		elif platform=="Android":
+			self.gmk.EnigmaTargetAudio="AndroidAudio"
+			self.gmk.EnigmaTargetWindowing="Android"
+			self.gmk.EnigmaTargetCompiler="Linux/Android"
+			self.gmk.EnigmaTargetGraphics="OpenGLES"
+			self.gmk.EnigmaTargetWidget="None"
+			self.gmk.EnigmaTargetCollision="BBox"
+		else:
+			CliClass.print_error("unsupported target platform "+platform)
+
+	def handleBuildGraphicsListChanged(self, event):
+		graphics=self.buildGraphicsList.currentText()
+		if graphics=="OpenGL 1.1":
+			self.gmk.EnigmaTargetGraphics="OpenGL1"
+		elif graphics=="OpenGL 3.0":
+			self.gmk.EnigmaTargetGraphics="OpenGL3"
+		elif graphics=="Direct3D 9.0":
+			self.gmk.EnigmaTargetGraphics="Direct3D9"
+		elif graphics=="OpenGLES":
+			self.gmk.EnigmaTargetGraphics="OpenGLES"
+		else:
+			CliClass.print_error("unsupported target graphics "+graphics)
+
 	def handleContextMenu(self, aPosition):
 		item = self.hierarchyTree.itemAt(aPosition)
 		if item:
@@ -710,42 +838,52 @@ class MainWindow(QtGui.QMainWindow):
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtSprite)
 			s=CliClass.GameSprite(self.gmk,id+1)
 			self.gmk.sprites.append(s)
+			self.gmk.resourceTree.AddResourcePath("Sprites/"+s.getMember("name"),s)
 		elif group=="Sounds":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtSound)
 			s=CliClass.GameSound(self.gmk,id+1)
 			self.gmk.sounds.append(s)
+			self.gmk.resourceTree.AddResourcePath("Sounds/"+s.getMember("name"),s)
 		elif group=="Backgrounds":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtBackground)
 			s=CliClass.GameBackground(self.gmk,id+1)
 			self.gmk.backgrounds.append(s)
+			self.gmk.resourceTree.AddResourcePath("Backgrounds/"+s.getMember("name"),s)
 		elif group=="Paths":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtPath)
 			s=CliClass.GamePath(self.gmk,id+1)
 			self.gmk.paths.append(s)
+			self.gmk.resourceTree.AddResourcePath("Paths/"+s.getMember("name"),s)
 		elif group=="Scripts":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtScript)
 			s=CliClass.GameScript(self.gmk,id+1)
 			self.gmk.scripts.append(s)
+			self.gmk.resourceTree.AddResourcePath("Scripts/"+s.getMember("name"),s)
 		elif group=="Shaders":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtShader)
 			s=CliClass.GameShader(self.gmk,id+1)
 			self.gmk.shaders.append(s)
+			self.gmk.resourceTree.AddResourcePath("Shaders/"+s.getMember("name"),s)
 		elif group=="Fonts":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtFont)
 			s=CliClass.GameFont(self.gmk,id+1)
 			self.gmk.fonts.append(s)
+			self.gmk.resourceTree.AddResourcePath("Fonts/"+s.getMember("name"),s)
 		elif group=="Timelines":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtTimeline)
 			s=CliClass.GameTimeline(self.gmk,id+1)
 			self.gmk.timelines.append(s)
+			self.gmk.resourceTree.AddResourcePath("Timelines/"+s.getMember("name"),s)
 		elif group=="Objects":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtObject)
 			s=CliClass.GameObject(self.gmk,id+1)
 			self.gmk.objects.append(s)
+			self.gmk.resourceTree.AddResourcePath("Objects/"+s.getMember("name"),s)
 		elif group=="Rooms":
 			id=self.gmk.GetResourceHighestId(CliClass.GameFile.RtRoom)
 			s=CliClass.GameRoom(self.gmk,id+1)
 			self.gmk.rooms.append(s)
+			self.gmk.resourceTree.AddResourcePath("Rooms/"+s.getMember("name"),s)
 		self.updateHierarchyTree()
 		i=self.findTreeItemRes(s)
 		self.handleItemActivated(i,0)
@@ -759,7 +897,7 @@ class MainWindow(QtGui.QMainWindow):
 					return x
 		return None
 
-	def handleSubWindowActivated(self,window):
+	def handleSubWindowActivated(self, window):
 		if window:
 			window.updatePropertiesTable()
 			i=self.findTreeItemRes(window.res)
@@ -812,47 +950,74 @@ class MainWindow(QtGui.QMainWindow):
 		self.projectModified = m
 		self.projectUpdateWindowTitle()
 
+	def updateHierarchyTreeRecursive(self, treeItemRoot, treeNode, resIcon, root=False):
+		if treeNode.status==CliClass.GameTree.StatusSecondary:
+			treeItem = QTreeWidgetItem(treeItemRoot,[treeNode.name])
+			if root:
+				if treeNode.name=="Game Information":
+					q=QIcon(resourcePath+"resources/info.png")
+				elif treeNode.name=="Global Game Settings":
+					q=QIcon(resourcePath+"resources/gm.png")
+				elif treeNode.name=="Extensions":
+					q=QIcon(resourcePath+"resources/extension.png")
+				else:
+					q=QIcon(resourcePath+"resources/script.png")
+			else:
+				q=resIcon
+			if treeNode.group==CliClass.GameTree.GroupSprites:
+				q=treeNode.resource.getQIcon()
+			if treeNode.group==CliClass.GameTree.GroupObjects:
+				sprite=treeNode.resource.getMember("sprite")
+				if sprite:
+					q=sprite.getQIcon()
+			if not q:
+				q=resIcon
+			treeItem.setIcon(0, q)
+			treeItem.res=treeNode.resource
+			if not treeItem.res:
+				CliClass.print_warning("no resource for "+treeNode.name)
+		else:
+			if root:
+				if treeNode.name=="Triggers":
+					resIcon=QIcon(resourcePath+"resources/script.png")
+				elif treeNode.name=="Constants":
+					resIcon=QIcon(resourcePath+"resources/script.png")
+				elif treeNode.name=="Sounds":
+					resIcon=QIcon(resourcePath+"resources/sound.png")
+				elif treeNode.name=="Sprites":
+					resIcon=QIcon(resourcePath+"resources/sprite.png")
+				elif treeNode.name=="Backgrounds":
+					resIcon=QIcon(resourcePath+"resources/background.png")
+				elif treeNode.name=="Paths":
+					resIcon=QIcon(resourcePath+"resources/path.png")
+				elif treeNode.name=="Scripts":
+					resIcon=QIcon(resourcePath+"resources/script.png")
+				elif treeNode.name=="Shaders":
+					resIcon=QIcon(resourcePath+"resources/shader.png")
+				elif treeNode.name=="Fonts":
+					resIcon=QIcon(resourcePath+"resources/font.png")
+				elif treeNode.name=="Timelines":
+					resIcon=QIcon(resourcePath+"resources/timeline.png")
+				elif treeNode.name=="Objects":
+					resIcon=QIcon(resourcePath+"resources/object.png")
+				elif treeNode.name=="Rooms":
+					resIcon=QIcon(resourcePath+"resources/room.png")
+				else:
+					resIcon=QIcon(resourcePath+"resources/script.png")
+			treeItem = QTreeWidgetItem(treeItemRoot,[treeNode.name])
+			treeItem.res=None
+			treeItem.setIcon(0, QIcon(resourcePath+"resources/group.png"))
+			if root:
+				treeItem.setExpanded(True)
+			for treeNodeChild in treeNode.contents:
+				self.updateHierarchyTreeRecursive(treeItem, treeNodeChild, resIcon)
+
 	def updateHierarchyTree(self):
 		self.hierarchyTree.clear()
-		self.addResourceGroup("Sprites")
-		self.addResourceGroup("Sounds")
-		self.addResourceGroup("Backgrounds")
-		self.addResourceGroup("Paths")
-		self.addResourceGroup("Scripts")
-		self.addResourceGroup("Shaders")
-		self.addResourceGroup("Fonts")
-		self.addResourceGroup("Timelines")
-		self.addResourceGroup("Objects")
-		self.addResourceGroup("Rooms")
-		self.addResource("Game Information", QIcon(resourcePath+"resources/info.png"))
-		self.addResource("Global Game Settings", QIcon(resourcePath+"resources/gm.png"))
-		self.addResource("Extensions", QIcon(resourcePath+"resources/extension.png"))
-		for t in self.gmk.triggers:
-			self.addResourceToGroup("Triggers",t,QIcon(resourcePath+"resources/script.png"))
-		for t in self.gmk.constants:
-			self.addResourceToGroup("Constants",t,QIcon(resourcePath+"resources/script.png"))
-		for t in self.gmk.sounds:
-			self.addResourceToGroup("Sounds",t,QIcon(resourcePath+"resources/sound.png"))
-		for t in self.gmk.sprites:
-			self.addResourceToGroup("Sprites",t,QIcon(resourcePath+"resources/sprite.png"))
-		for t in self.gmk.backgrounds:
-			self.addResourceToGroup("Backgrounds",t,QIcon(resourcePath+"resources/background.png"))
-		for t in self.gmk.paths:
-			self.addResourceToGroup("Paths",t,QIcon(resourcePath+"resources/path.png"))
-		for t in self.gmk.scripts:
-			self.addResourceToGroup("Scripts",t,QIcon(resourcePath+"resources/script.png"))
-		for t in self.gmk.shaders:
-			self.addResourceToGroup("Shaders",t,QIcon(resourcePath+"resources/shader.png"))
-		for t in self.gmk.fonts:
-			self.addResourceToGroup("Fonts",t,QIcon(resourcePath+"resources/font.png"))
-		for t in self.gmk.timelines:
-			self.addResourceToGroup("Timelines",t,QIcon(resourcePath+"resources/timeline.png"))
-		for t in self.gmk.objects:
-			self.addResourceToGroup("Objects",t,QIcon(resourcePath+"resources/object.png"))
-		for t in self.gmk.rooms:
-			self.addResourceToGroup("Rooms",t,QIcon(resourcePath+"resources/room.png"))
+		for treeNode in self.gmk.resourceTree.contents:
+			self.updateHierarchyTreeRecursive(self.hierarchyTree, treeNode, None, True)
 
-	def addResourceToGroup(self,groupName,res,icon):
+	def addResourceToGroup(self, groupName, res, icon):
 		if type(res)==tuple:
 			resName=res[0]
 		else:
@@ -873,19 +1038,28 @@ class MainWindow(QtGui.QMainWindow):
 		treeItem.res=res
 		treeItem.setIcon(0, icon)
 
+	def switchTheme(self):
+		if self.ideTheme:
+			self.ideTheme=0
+			self.app.setStyleSheet(" QTabBar::tab { height: 16; icon-size: 18px; } QStatusBar::item { border: 0px solid black; }");
+		else:
+			self.ideTheme=1
+			self.app.setStyleSheet(open(resourcePath+"theme.qss").read())
+
 	def handleRunAction(self):
 		self.saveOpenResources()
 		#es=self.gmk.WriteES()
 		if self.projectLoadPluginLib==False:
 			CliClass.LoadPluginLib()
 			self.projectLoadPluginLib=True
-		self.gmk.compileRunEnigma("/tmp/testgame",3)
-		self.gameProcessGdb=False
-		self.gameProcess = QProcess()
-		self.gameProcess.start("/tmp/testgame")
-		self.gameProcess.readyReadStandardOutput.connect(self.handleProcessOutput)
-		self.gameProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
-		self.gameProcess.finished.connect(self.handleProcessFinished)
+		self.gmk.compileRunEnigma("/tmp/testgame",self.projectEmode)
+		if self.projectEmode == CliClass.emode_compile:#emode_debug
+			self.gameProcessGdb=False
+			self.gameProcess = QProcess()
+			self.gameProcess.start("/tmp/testgame")
+			self.gameProcess.readyReadStandardOutput.connect(self.handleProcessOutput)
+			self.gameProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
+			self.gameProcess.finished.connect(self.handleProcessFinished)
 
 	def handleDebugAction(self):
 		self.gameProcessGdb=True
@@ -934,7 +1108,7 @@ class MainWindow(QtGui.QMainWindow):
 	def handleProcessOutput(self):
 		self.gameProcess.setReadChannel(QProcess.StandardOutput)
 		while 1:
-			s=self.gameProcess.read(600)
+			s=self.gameProcess.read(600).decode()
 			CliClass.print_notice(str(s))
 			if s=="":
 				return
@@ -971,6 +1145,21 @@ class MainWindow(QtGui.QMainWindow):
 	def handleNewAction(self):
 		self.gmk = CliClass.GameFile()
 		self.gmk.app=self.app
+		self.gmk.resourceTree=CliClass.GameTree(self.gmk)
+		self.gmk.resourceTree.AddGroupName("Sprites")
+		self.gmk.resourceTree.AddGroupName("Sounds")
+		self.gmk.resourceTree.AddGroupName("Backgrounds")
+		self.gmk.resourceTree.AddGroupName("Paths")
+		self.gmk.resourceTree.AddGroupName("Scripts")
+		self.gmk.resourceTree.AddGroupName("Shaders")
+		self.gmk.resourceTree.AddGroupName("Fonts")
+		self.gmk.resourceTree.AddGroupName("Timelines")
+		self.gmk.resourceTree.AddGroupName("Objects")
+		self.gmk.resourceTree.AddGroupName("Rooms")
+		self.gmk.resourceTree.AddGroupName("Game Information")
+		self.gmk.resourceTree.AddGroupName("Global Game Settings")
+		self.gmk.resourceTree.AddGroupName("Extensions")
+		self.gmk.newSettings()
 		self.projectTitle="noname"
 		self.projectUpdateWindowTitle()
 		self.updateHierarchyTree()
