@@ -18,6 +18,23 @@
 #* LateralGM is free software and comes with ABSOLUTELY NO WARRANTY.
 #* See LICENSE for details.
 
+#* getActionsCode converted to python from https://github.com/enigma-dev/enigma-dev/blob/master/pluginsource/org/enigma/EnigmaWriter.java
+
+#* Copyright (C) 2008, 2009 IsmAvatar <IsmAvatar@gmail.com>
+#* 
+#* Enigma Plugin is free software: you can redistribute it and/or modify
+#* it under the terms of the GNU General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or
+#* (at your option) any later version.
+#* 
+#* Enigma Plugin is distributed in the hope that it will be useful,
+#* but WITHOUT ANY WARRANTY; without even the implied warranty of
+#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#* GNU General Public License (COPYING) for more details.
+#* 
+#* You should have received a copy of the GNU General Public License
+#* along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 #@section License
 #
 #Copyright (C) 2013 ssss
@@ -44,6 +61,7 @@ import subprocess
 import xml.etree.ElementTree
 import tempfile#gmz
 import shutil#gmz
+import tempfile
 from PyQt4 import QtGui, QtCore#font
 from CliApng import *
 from CliEefReader import *
@@ -52,25 +70,43 @@ from CliBinaryStream import *
 from CliEnigmaStruct import *
 from CliLexer import *
 
-cliDir = "GameEditor/"
+def we_are_frozen():
+    return hasattr(sys, "frozen")
+
+def module_path():
+	if sys.version_info[0]<3:
+		if we_are_frozen():
+			return os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding( )))
+
+		return os.path.dirname(unicode(__file__, sys.getfilesystemencoding( )))
+	else:
+		if we_are_frozen():
+			return os.path.dirname(sys.executable)
+
+		return os.path.dirname(__file__)
+
+cliDir = module_path()+"/"
 Class=1
+tmpDir=tempfile.gettempdir()+"/"
 
-#converted to python from https://github.com/enigma-dev/enigma-dev/blob/master/pluginsource/org/enigma/EnigmaWriter.java
+def redirectStdout():
+	global realStdout,realStderr
+	realStdout = open(tmpDir+"enigmastdout2.txt","w")
+	os.dup2(sys.stdout.fileno(), realStdout.fileno())
+	realStderr = open(tmpDir+"enigmacrap2.txt","w")
+	os.dup2(sys.stderr.fileno(), realStderr.fileno())
+	oldf = open(tmpDir+"enigmastdout.txt","w")
+	os.dup2(oldf.fileno(), sys.stdout.fileno())
+	oldf2 = open(tmpDir+"enigmacrap.txt","w")
+	os.dup2(oldf2.fileno(), sys.stderr.fileno())
 
-#* Copyright (C) 2008, 2009 IsmAvatar <IsmAvatar@gmail.com>
-#* 
-#* Enigma Plugin is free software: you can redistribute it and/or modify
-#* it under the terms of the GNU General Public License as published by
-#* the Free Software Foundation, either version 3 of the License, or
-#* (at your option) any later version.
-#* 
-#* Enigma Plugin is distributed in the hope that it will be useful,
-#* but WITHOUT ANY WARRANTY; without even the implied warranty of
-#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#* GNU General Public License (COPYING) for more details.
-#* 
-#* You should have received a copy of the GNU General Public License
-#* along with this program. If not, see <http://www.gnu.org/licenses/>.
+def restoreStdout():
+	global realStdout,realStderr
+	os.dup2(realStdout.fileno(), sys.stdout.fileno())
+	os.dup2(realStderr.fileno(), sys.stderr.fileno())
+
+redirectStdout()
+setRealStdout(realStdout)
 
 def getActionsCode(actions):
 	code=""
@@ -218,16 +254,24 @@ def ede_dia_clear():
 	pass
 
 def ede_dia_progress(progress):
-	print_notice("ede_dia_progress "+str(progress))
+	print_notice(str(progress)+"%")
 
 def ede_dia_progress_text(caption):
-	print_notice("ede_dia_progress_text "+str(caption))
+	print_notice("ENIGMA "+str(caption))
 
 def ede_output_redirect_file(filepath):
 	print_notice("ede_output_redirect_file "+str(filepath))
 
 def ede_output_redirect_reset():
 	print_notice("ede_output_redirect_reset")
+
+def ede_ide_execute(command,a,b):
+	print_error("ide_execute")
+	return 0
+	
+def ede_ide_compress_data(d,i):
+	print_error("ide_compress_data")
+	return 0
 
 def emptyTextToString(chil):
 	if not chil:
@@ -298,7 +342,8 @@ class GameResource(object):
 			print_warning("setting member not in defaults "+member)
 		if type(self.defaults[member])!=type(val) and type(self.defaults[member])!=type(None):
 			if type(self.defaults[member])!=str and type(val)!=unicode:
-				print_error("changed type of "+member+" "+str(type(self.defaults[member]))+" "+str(type(val)))
+				if type(self.defaults[member])!=int and type(val)!=long:
+					print_error("changed type of "+member+" "+str(type(self.defaults[member]))+" "+str(type(val)))
 		if member not in self.members or self.members[member]!=val:
 			for callBack in self.listeners:
 				callBack("property",member,self.members[member],val)
@@ -2557,6 +2602,15 @@ class GameAction(GameResource):
 		self.argumentKind=[0,0,0,0,0,0,0,0]
 		self.appliesObject=None
 
+	def setActionCode(self, code):
+		self.setMember("libraryId",1)
+		self.setMember("actionId",603)
+		self.setMember("kind",7)
+		self.setMember("type",2)
+		self.argumentValue[0]=code
+		self.argumentKind[0]=1
+		self.setMember("argumentsUsed",1)
+
 	def WriteGGG(self, nactions):
 		ml=False
 		singleaction=False
@@ -4370,12 +4424,20 @@ class GameFile(GameResource):
 		#self.resourceTree = Tree()
 		self.gameId = random.randint(0,2147483647) % self.GMK_MAX_ID;
 		self.readingFile=False
-		self.EnigmaTargetAudio="OpenAL"
-		self.EnigmaTargetWindowing="xlib"
-		self.EnigmaTargetCompiler="gcc"
-		self.EnigmaTargetGraphics="OpenGL3"
-		self.EnigmaTargetWidget="None"
-		self.EnigmaTargetCollision="BBox"
+		if os.name=="nt":
+			self.EnigmaTargetAudio="OpenAL"
+			self.EnigmaTargetWindowing="Win32"
+			self.EnigmaTargetCompiler="gcc"
+			self.EnigmaTargetGraphics="OpenGL3"
+			self.EnigmaTargetWidget="Win32"
+			self.EnigmaTargetCollision="Precise"
+		else:
+			self.EnigmaTargetAudio="OpenAL"
+			self.EnigmaTargetWindowing="xlib"
+			self.EnigmaTargetCompiler="gcc"
+			self.EnigmaTargetGraphics="OpenGL3"
+			self.EnigmaTargetWidget="None"
+			self.EnigmaTargetCollision="BBox"
 		self.EnigmaTargetNetworking="None"
 
 	def EnigmaSettingsEy(self):
@@ -4439,7 +4501,7 @@ class GameFile(GameResource):
 	def compileRunEnigma(self, exePath, emode):
 		es=self.WriteES()
 		GameFile.compileRunES(es, exePath, emode, self.EnigmaSettingsEy())
-		
+
 	@staticmethod
 	def compileRunES(es, exePath, emode, EnigmaSettingsEy):
 		result=definitionsModified(b"", EnigmaSettingsEy.encode())
@@ -5501,7 +5563,10 @@ class GameFile(GameResource):
 			self.es.rooms=cast(ot,POINTER(ESRoom))
 
 def LoadPluginLib():
-	egmf=cdll.LoadLibrary("./libcompileEGMf.so")
+	if os.name=="nt":
+		egmf=cdll.LoadLibrary("compileEGMf.dll")
+	else:
+		egmf=cdll.LoadLibrary("./libcompileEGMf.so")
 	global ecb,compileEGMf,next_available_resource,first_available_resource,resource_isFunction,resource_argCountMin,resource_argCountMax,resource_overloadCount,resource_parameters,resource_isTypeName,resource_isGlobal,resources_atEnd,libInit,libFree,definitionsModified,syntaxCheck
 	#extern int (*compileEGMf)(EnigmaStruct *es, const char* exe_filename, int mode);
 	compileEGMf=egmf.compileEGMf
@@ -5571,6 +5636,8 @@ def LoadPluginLib():
 	ecb.dia_progress_text = CFUNCTYPE(c_voidp, c_char_p)(ede_dia_progress_text)
 	ecb.output_redirect_file = CFUNCTYPE(c_voidp, c_char_p)(ede_output_redirect_file)
 	ecb.output_redirect_reset = CFUNCTYPE(c_voidp)(ede_output_redirect_reset)
+	ecb.ide_execute = CFUNCTYPE(c_int, c_char_p, POINTER(c_char_p), c_intbool)(ede_ide_execute)
+	ecb.ide_compress_data = CFUNCTYPE(c_int, c_char_p, c_int)(ede_ide_compress_data)
 	libInit(ecb)
 
 

@@ -13,7 +13,7 @@ inherit-increment-from: 0
 target-audio: OpenAL
 target-windowing: xlib
 target-compiler: gcc
-target-graphics: OpenGL3
+target-graphics: OpenGL1
 target-widget: None
 target-collision: BBox
 target-networking: None

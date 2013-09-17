@@ -22,7 +22,30 @@ import argparse
 import sys
 from CliClass import *
 
-testGameFile="/tmp/testgame"
+testGameFile=tmpDir+"testgame"
+
+def newGame(code):
+	resourcePath=os.path.join(module_path(),"ideicons")+"/"
+
+	game=GameFile()
+	room=game.newRoom()
+	room.setMember("caption","room 0")
+	instance=room.newInstance()
+	object=game.newObject()
+	event=GameEvent(game)
+	action=GameAction(game)
+	action.setActionCode(code)#'show_message("show");game_end();'
+	#event.eventNumber=0
+	#event.setMember("eventKind",0)
+	event.actions.append(action)
+	object.addEvent(event)
+	sprite=game.newSprite()
+	sprite.newSubimageFile(resourcePath+"resources/sprite.png")
+	object.setMember("sprite",sprite)
+	instance.setMember("object",object)
+	game.newSettings()
+	game.newGameInformation()
+	return game
 
 def newGameCode(code):
 	es=EnigmaStruct()
@@ -86,10 +109,12 @@ def cli():
 		gameFile=GameFile()
 		print_notice("loading "+p)
 		gameFile.Read(p)
+	if args.code:
+		gameFile=newGame(args.code)
 	if args.writefile:
 		if args.writefile=="-":
 			ext=".ggg"
-			gameFile.Save(ext,"/tmp/crap",wfile=sys.stdout)
+			gameFile.Save(ext,tmpDir+"crap",wfile=sys.stdout)
 		else:
 			ext=os.path.splitext(os.path.split(args.writefile)[1])[1]
 			if ext not in [".gmk",".gm81",".egm",".gmx",".ggg"]:
@@ -97,12 +122,9 @@ def cli():
 		print_notice("saving "+args.writefile)
 		gameFile.Save(ext,args.writefile)
 		sys.exit(0)
-	if args.code:
-		es=newGameCode(args.code)
-	else:
-		print_notice("writing EnigmaStruct")
-		gameFile.app=app
-		es=gameFile.WriteES()
+	print_notice("writing EnigmaStruct")
+	gameFile.app=app
+	es=gameFile.WriteES()
 	if args.test:
 		sys.exit(0)
 	emode=emode_compile#make turns compile into debug
@@ -110,6 +132,7 @@ def cli():
 		emode=emode_run
 	LoadPluginLib()
 	GameFile.compileRunES(es,testGameFile,emode,open(cliDir+"gamesettings.ey","r").read())
+	restoreStdout()
 	if emode==emode_compile:
 		print_notice("run game")
 		print_notice(subprocess.check_output([testGameFile]))

@@ -25,6 +25,7 @@
 
 from __future__ import print_function
 import sys
+import os
 
 RESET          = 0
 BRIGHT         = 1
@@ -43,30 +44,38 @@ MAGENTA        = 5
 CYAN           = 6
 WHITE          = 7
 
+def setRealStdout(stdout):
+	global realStdout
+	realStdout=stdout
+
 def RGBA2DWORD(iR, iG, iB, iA):
 	return (((((iR << 8) + iG) << 8) + iB) << 8) + iA
 
 def textcolor(attr, fg, bg):
-	print("%c[%d;%d;%dm" % (0x1B, attr, fg + 30, bg + 40), end=" ")
+	if os.name!="nt":
+		print("%c[%d;%d;%dm" % (0x1B, attr, fg + 30, bg + 40), end=" ", file=realStdout)
 
 def textcolorbg(attr, bg):
-	print("%c[%d;%dm" % (0x1B, attr, bg + 40), end=" ")
+	if os.name!="nt":
+		print("%c[%d;%dm" % (0x1B, attr, bg + 40), end=" ", file=realStdout)
 
 def textcolorfg(attr, fg):
-	print("%c[%d;%dm" % (0x1B, attr, fg + 30), end=" ")
+	if os.name!="nt":
+		print("%c[%d;%dm" % (0x1B, attr, fg + 30), end=" ", file=realStdout)
 
 def textcolorreset():
-	print("%c[%dm" % (0x1B, colorCodes.RESET), end=" ")
+	if os.name!="nt":
+		print("%c[%dm" % (0x1B, colorCodes.RESET), end=" ", file=realStdout)
 
 def printfln(msg):
-	print(msg)
+	print(msg, file=realStdout)
 
 def println():
-	print("")
+	print("", file=realStdout)
 
 def printcolor(msg, attr, fg):
 	textcolorfg(attr, fg)
-	print(msg, end=" ")
+	print(msg, end=" ", file=realStdout)
 
 def printfcln(msg, attr, fg):
 	printcolor(msg, attr, fg)
@@ -74,10 +83,11 @@ def printfcln(msg, attr, fg):
 
 def printfc(msg, attr, bg, fg):
 	textcolor(attr, fg, bg)
-	print(msg)
+	print(msg, file=realStdout)
 
 def clearconsole():
-	print("\e[1;1H\e[2J")
+	if os.name!="nt":
+		print("\e[1;1H\e[2J", file=realStdout)
 
 def print_error(msg):
 	printcolor("ERROR ", BRIGHT, RED)

@@ -27,8 +27,8 @@ import os
 import CliClass
 from IdeRoomEditor import *
 from IdeSciLexer import *
- 
-resourcePath="GameEditor/ideicons/"
+
+resourcePath=os.path.join(CliClass.module_path(),"ideicons")+"/"
 
 class PropertiesTable(QTableWidget):
 	def __init__(self, parent):
@@ -111,6 +111,7 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 			types = [str,int,float,bool]
 			if sys.version_info[0]<3:
 				types.append(unicode)
+				types.append(long)
 			if type(r) not in types or (type(r)==str and r.count("\n")>0):
 				CliClass.print_warning("not inserting property "+m+" "+str(type(r)))
 				continue
@@ -1052,11 +1053,11 @@ class MainWindow(QtGui.QMainWindow):
 		if self.projectLoadPluginLib==False:
 			CliClass.LoadPluginLib()
 			self.projectLoadPluginLib=True
-		self.gmk.compileRunEnigma("/tmp/testgame",self.projectEmode)
+		self.gmk.compileRunEnigma(CliClass.tmpDir+"testgame",self.projectEmode)
 		if self.projectEmode == CliClass.emode_compile:#emode_debug
 			self.gameProcessGdb=False
 			self.gameProcess = QProcess()
-			self.gameProcess.start("/tmp/testgame")
+			self.gameProcess.start(CliClass.tmpDir+"testgame")
 			self.gameProcess.readyReadStandardOutput.connect(self.handleProcessOutput)
 			self.gameProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
 			self.gameProcess.finished.connect(self.handleProcessFinished)
@@ -1064,9 +1065,9 @@ class MainWindow(QtGui.QMainWindow):
 	def handleDebugAction(self):
 		self.gameProcessGdb=True
 		self.gameProcess = QProcess()
-		self.gameProcess.start("gdb /tmp/testgame")
+		self.gameProcess.start("gdb "+CliClass.tmpDir+"testgame")
 		self.gameProcess.setProcessChannelMode(QProcess.MergedChannels)
-		#self.gameProcess.start("/tmp/testgame.exe")
+		#self.gameProcess.start(CliClass.tmpDir+"testgame.exe")
 		self.debuggerCommands=["b main","run"]
 		self.debuggerCommands.reverse()
 		self.gameProcess.readyRead.connect(self.handleProcessOutput)
