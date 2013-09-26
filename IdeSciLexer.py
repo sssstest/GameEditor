@@ -46,30 +46,7 @@ class LexerGame(QsciLexerCPP):
 			return ""
 
 	def color(self, style):
-		"""colors = {32: 0xff3c3c3c,0: 0xff808080,1: 0xff007f00,2: 0xff007f00,3: 0xff3f703f,4: 0xff007f7f,5: 0xff00007f,6: 0xff7f007f,7: 0xff7f007f,
-		8: 0xff3c3c3c,9: 0xff7f7f00,10: 0xff000000,11: 0xff3c3c3c,12: 0xff000000,13: 0xff007f00,14: 0xff3f7f3f,15: 0xff3f703f,16: 0xff3c3c3c,
-		17: 0xff3060a0,18: 0xff804020,19: 0xff3c3c3c,20: 0xff7f007f,40: 0xffb090b0,64: 0xffc0c0c0,65: 0xff90b090,66: 0xff90b090,67: 0xffd0d0d0,
-		68: 0xff90b090,69: 0xff9090b0,70: 0xffb090b0,71: 0xffb090b0,72: 0xffc0c0c0,73: 0xffb0b090,74: 0xffb0b0b0,75: 0xffb0b0b0,76: 0xff000000,
-		77: 0xff90b090,78: 0xff7faf7f,79: 0xffc0c0c0,80: 0xffc0c0c0,81: 0xffc0c0c0,82: 0xffc0c0c0,83: 0xffb0b0b0}"""
-		colors = {0: 0xff000000,#DOCUMENT_DEFAULT                        = 0
-		1: 0xff008400,#COMMENT                        = 1
-		2: 0xff008400,#COMMENTLINE                    = 2
-		4: 0xff008484,#NUMBER                        = 4
-		5: 0xff0000ff,#7f,#dark blue for funcs#WORD                        = 5
-		6: 0xff840084,#STRING                        = 6
-		7: 0xff840084,#CHARACTER                    = 7
-		9: 0xff7f7f00,#PREPROCESSOR                = 9
-		10: 0xffa30000,#OPERATOR                    = 10
-		11: 0xff000000,#default#IDENTIFIER                    = 11
-		12: 0xff840084,#7f007f,#STRING#STRINGEOL                    = 12
-		16: 0xffff0000,#constants red#WORD2                        = 16
-		}
-		colorsbg = {32: 0xffc3c3c3,0: 0xff7f7f7f,1: 0xffff80ff,2: 0xffff80ff,3: 0xffc08fc0,4: 0xffff8080,5: 0xff80ff80,6: 0xffffff80,7: 0xff80ff80,
-		8: 0xffc3c3c3,9: 0xff8080ff,10: 0xffffffff,11: 0xffc3c3c3,12: 0xffffffff,13: 0xffff80ff,14: 0xffc080c0,15: 0xffc08fc0,16: 0xffc3c3c3,
-		17: 0xffcf9f5f,18: 0xff7fbfdf,19: 0xffc3c3c3,20: 0xff80ff80,40: 0xff4f6f4f,64: 0xff3f3f3f,65: 0xff6f4f6f,66: 0xff6f4f6f,67: 0xff2f2f2f,
-		68: 0xff6f4f6f,69: 0xff6f6f4f,70: 0xff4f6f4f,71: 0xff4f6f4f,72: 0xff3f3f3f,73: 0xff4f4f6f,74: 0xff4f4f4f,75: 0xff4f4f4f,76: 0xffffffff,
-		77: 0xff6f4f6f,78: 0xff805080,79: 0xff3f3f3f,80: 0xff3f3f3f,81: 0xff3f3f3f,82: 0xff3f3f3f,83: 0xff4f4f4f}
 		if self.mainwindow.ideTheme==1:
-			return QColor(colorsbg.get(style,0xffa0ff00))
+			return QColor(self.mainwindow.themeColors.get(style,0xffa0ff00))
 		else:
-			return QColor(colors.get(style,0xffa0ff00))
+			return QColor(self.mainwindow.colors.get(style,0xffa0ff00))

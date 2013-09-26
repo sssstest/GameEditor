@@ -872,6 +872,24 @@ class MainWindow(QtGui.QMainWindow):
 		self.editorSize = 10
 		self.editorFont=QFont("DejaVu Sans Mono", 8)#Courier 10 Pitch
 		self.ideTheme=0
+		self.colors = {0: 0xff000000,#DOCUMENT_DEFAULT                        = 0
+		1: 0xff008400,#COMMENT                        = 1
+		2: 0xff008400,#COMMENTLINE                    = 2
+		4: 0xff008484,#NUMBER                        = 4
+		5: 0xff0000ff,#7f,#dark blue for funcs#WORD                        = 5
+		6: 0xff840084,#STRING                        = 6
+		7: 0xff840084,#CHARACTER                    = 7
+		9: 0xff7f7f00,#PREPROCESSOR                = 9
+		10: 0xffa30000,#OPERATOR                    = 10
+		11: 0xff000000,#default#IDENTIFIER                    = 11
+		12: 0xff840084,#7f007f,#STRING#STRINGEOL                    = 12
+		16: 0xffff0000,#constants red#WORD2                        = 16
+		}
+		self.themeColors = {32: 0xffc3c3c3,0: 0xff7f7f7f,1: 0xffff80ff,2: 0xffff80ff,3: 0xffc08fc0,4: 0xffff8080,5: 0xff80ff80,6: 0xffffff80,7: 0xff80ff80,
+		8: 0xffc3c3c3,9: 0xff8080ff,10: 0xffffffff,11: 0xffc3c3c3,12: 0xffffffff,13: 0xffff80ff,14: 0xffc080c0,15: 0xffc08fc0,16: 0xffc3c3c3,
+		17: 0xffcf9f5f,18: 0xff7fbfdf,19: 0xffc3c3c3,20: 0xff80ff80,40: 0xff4f6f4f,64: 0xff3f3f3f,65: 0xff6f4f6f,66: 0xff6f4f6f,67: 0xff2f2f2f,
+		68: 0xff6f4f6f,69: 0xff6f6f4f,70: 0xff4f6f4f,71: 0xff4f6f4f,72: 0xff3f3f3f,73: 0xff4f4f6f,74: 0xff4f4f4f,75: 0xff4f4f4f,76: 0xffffffff,
+		77: 0xff6f4f6f,78: 0xff805080,79: 0xff3f3f3f,80: 0xff3f3f3f,81: 0xff3f3f3f,82: 0xff3f3f3f,83: 0xff4f4f4f}
 		self.loadPreferences()
 
 		self.projectModified=False
@@ -1136,6 +1154,10 @@ class MainWindow(QtGui.QMainWindow):
 		self.switchTheme()
 		for x,file in config.items("Recent"):
 			self.recentFiles.append(file)
+		for key,color in config.items("Colors"):
+			self.colors[int(key)]=int(color,16)
+		for key,color in config.items("ThemeColors"):
+			self.themeColors[int(key)]=int(color,16)
 
 	def savePreferences(self):
 		config = ConfigParser()
@@ -1148,6 +1170,12 @@ class MainWindow(QtGui.QMainWindow):
 		config.set('Editor', 'size', str(self.editorSize))
 		#config.set('Editor', 'showLineNumbers', True)
 		#config.set('Editor', '', '')
+		config.add_section('Colors')
+		for key in self.colors:
+			config.set('Colors', str(key), __builtins__.hex(self.colors[key]))
+		config.add_section('ThemeColors')
+		for key in self.themeColors:
+			config.set('ThemeColors', str(key), __builtins__.hex(self.themeColors[key]))
 		config.write(open(os.path.expanduser("~/.GameEditor.cfg"),"w"))
 
 	def handleGameStats(self, event):
