@@ -349,7 +349,7 @@ class GameResource(object):
 				if type(self.defaults[member])!=int and type(val)!=long:
 					print_error("changed type of "+member+" "+str(type(self.defaults[member]))+" "+str(type(val)))
 		if member=="name" and self.gameFile.resourceTree:
-			node,tree=self.gameFile.resourceTree.FindNodeName(self.members[member])
+			node,tree=self.gameFile.resourceTree.FindNodeName(self.members.get(member,"noname"))
 			if node:
 				node.name=val
 		#if member not in self.members or self.members[member]!=val:
@@ -4382,7 +4382,6 @@ class GameTree(GameResource):
 
 	def FindRecursiveNodeName(self, name, r):
 		for x in r.contents:
-			print x.name,name
 			if x.name==name:
 				return x,r
 			node,tree=self.FindRecursiveNodeName(name, x)
@@ -4424,16 +4423,6 @@ class GameFile(GameResource):
 		GMK_MIN_TILE_LAST_ID		= 1000000
 
 		#ResourceType
-		"""RtSprite=0
-		RtSound=1
-		RtBackground=2
-		RtPath=3
-		RtScript=4
-		RtShader=11
-		RtFont=5
-		RtTimeline=6
-		RtObject=7
-		RtRoom=8"""
 		RtUnknown=9
 		RtCount=10
 

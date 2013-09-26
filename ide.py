@@ -1486,16 +1486,28 @@ class MainWindow(QtGui.QMainWindow):
 		self.saveOpenResources()
 		#es=self.gmk.WriteES()
 		if self.projectLoadPluginLib==False:
+			def ede_output_redirect_file(filepath):
+				redir=open(filepath.encode()).read()
+				CliClass.print_error(redir)
+			CliClass.ede_output_redirect_file=ede_output_redirect_file
 			CliClass.LoadPluginLib()
 			self.projectLoadPluginLib=True
-		self.gmk.compileRunEnigma(CliClass.tmpDir+"testgame",self.projectEmode)
-		if self.projectEmode == CliClass.emode_compile:#emode_debug
-			self.gameProcessGdb=False
-			self.gameProcess = QProcess()
-			self.gameProcess.start(CliClass.tmpDir+"testgame")
-			self.gameProcess.readyReadStandardOutput.connect(self.handleProcessOutput)
-			self.gameProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
-			self.gameProcess.finished.connect(self.handleProcessFinished)
+
+		class AThread(QtCore.QThread):
+			def run(self):
+				self.mainwindow.gmk.compileRunEnigma(CliClass.tmpDir+"testgame",self.mainwindow.projectEmode)
+				if self.mainwindow.projectEmode == CliClass.emode_compile:#emode_debug
+					self.mainwindow.gameProcessGdb=False
+					self.mainwindow.gameProcess = QProcess()
+					self.mainwindow.gameProcess.start(CliClass.tmpDir+"testgame")
+					self.mainwindow.gameProcess.readyReadStandardOutput.connect(self.mainwindow.handleProcessOutput)
+					self.mainwindow.gameProcess.readyReadStandardError.connect(self.mainwindow.handleProcessErrorOutput)
+					self.mainwindow.gameProcess.finished.connect(self.mainwindow.handleProcessFinished)
+		global thread
+		thread = AThread()
+		thread.mainwindow=self
+		#thread.finished.connect(app.exit)
+		thread.start()
 
 	def handleDebugAction(self):
 		self.gameProcessGdb=True
