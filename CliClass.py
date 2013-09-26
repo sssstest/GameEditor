@@ -348,10 +348,18 @@ class GameResource(object):
 			if type(self.defaults[member])!=str and type(val)!=unicode:
 				if type(self.defaults[member])!=int and type(val)!=long:
 					print_error("changed type of "+member+" "+str(type(self.defaults[member]))+" "+str(type(val)))
-		if member not in self.members or self.members[member]!=val:
-			for callBack in self.listeners:
-				callBack("property",member,self.members[member],val)
+		if member=="name" and self.gameFile.resourceTree:
+			node,tree=self.gameFile.resourceTree.FindNodeName(self.members[member])
+			if node:
+				node.name=val
+		#if member not in self.members or self.members[member]!=val:
+		#	for callBack in self.listeners:
+		#		callBack("property",member,self.members[member],val)
+		oldValue=self.members.get(member,None)
 		self.members[member]=val
+		if member not in self.members or oldValue!=val:
+			for callBack in self.listeners:
+				callBack("property",member,oldValue,val)
 
 	def addListener(self, callBack):
 		self.listeners.append(callBack)
@@ -4368,6 +4376,19 @@ class GameTree(GameResource):
 		node = GameTreeNode(status, group, -1, name)
 		self.contents.append(node)
 		return node
+
+	def FindNodeName(self, name):
+		return self.FindRecursiveNodeName(name, self)
+
+	def FindRecursiveNodeName(self, name, r):
+		for x in r.contents:
+			print x.name,name
+			if x.name==name:
+				return x,r
+			node,tree=self.FindRecursiveNodeName(name, x)
+			if node:
+				return node,tree
+		return None,None
 
 	def AddResourcePath(self, path, resource):
 		p=path.split("/")

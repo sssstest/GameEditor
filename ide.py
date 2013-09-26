@@ -24,7 +24,6 @@ from PyQt4.QtCore import *
 from PyQt4.Qsci import *
 import sys
 import os
-import copy
 import CliClass
 from IdeRoomEditor import *
 from IdeSciLexer import *
@@ -148,6 +147,8 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 			propertiesList=self.res.members
 		resLists=[]
 		for m in propertiesList:
+			if m == "id":
+				continue
 			r=self.res.getMember(m)
 			types = [str,int,float,bool]
 			mltypes = [str]
@@ -169,11 +170,88 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 				item.setFont(fontbold)
 			self.mainwindow.propertiesTable.setItem(ind, 0, item)
 			if resType=="color":
-				item=ColorQTableWidgetItem(str(r))
+				item=ColorQTableWidgetItem(__builtins__.hex(r))
+				item.setBackgroundColor(QColor(int(str(item.text()),16)))
 				item.setFlags(Qt.ItemIsSelectable|Qt.ItemIsEditable|Qt.ItemIsEnabled)
 				item.setFont(font)
 				self.mainwindow.propertiesTable.setItem(ind, 1, item)
 				continue
+			elif resType=="shadertype":
+				item=QComboBox(self)
+				item.addItem("GLSL")
+				item.addItem("GLSLES")
+				item.addItem("HLSL")
+				item.addItem("HLSL9")
+				item.addItem("Cg")
+				item.setCurrentIndex(item.findText(self.res.getMember(m)))
+				def setType(e,i=item,m=m,resType=resType):
+					self.res.setMember(m,str(i.currentText()))
+					self.updatePropertiesTable()
+				item.currentIndexChanged.connect(setType)
+				self.mainwindow.propertiesTable.setCellWidget(ind, 1, item)
+			elif resType=="fontAntiAliasing":
+				item=QComboBox(self)
+				item.addItem("0")
+				item.addItem("1")
+				item.addItem("2")
+				item.addItem("3")
+				item.addItem("4")
+				fontAa=str(self.res.getMember(m))
+				item.setCurrentIndex(item.findText(fontAa))
+				def setType(e,i=item,m=m,resType=resType):
+					self.res.setMember(m,int(str(i.currentText())))
+					self.updatePropertiesTable()
+				item.currentIndexChanged.connect(setType)
+				self.mainwindow.propertiesTable.setCellWidget(ind, 1, item)
+			elif resType=="pathConnectionKind":
+				item=QComboBox(self)
+				item.addItem("0 Straight")
+				item.addItem("1 Smooth")
+				kind=self.res.getMember(m)
+				item.setCurrentIndex(kind)
+				def setType(e,i=item,m=m,resType=resType):
+					self.res.setMember(m,int(str(i.currentText()).split()[0]))
+					self.updatePropertiesTable()
+				item.currentIndexChanged.connect(setType)
+				self.mainwindow.propertiesTable.setCellWidget(ind, 1, item)
+			elif resType=="soundKind":
+				item=QComboBox(self)
+				item.addItem("0 Normal")
+				item.addItem("1 Background")
+				item.addItem("2 3D")
+				item.addItem("3 Multimedia")
+				kind=self.res.getMember(m)
+				item.setCurrentIndex(kind)
+				def setType(e,i=item,m=m,resType=resType):
+					self.res.setMember(m,int(str(i.currentText()).split()[0]))
+					self.updatePropertiesTable()
+				item.currentIndexChanged.connect(setType)
+				self.mainwindow.propertiesTable.setCellWidget(ind, 1, item)
+			elif resType=="spriteMaskshape":
+				item=QComboBox(self)
+				item.addItem("0 Precise")
+				item.addItem("1 Rectangle")
+				item.addItem("2 Disc")
+				item.addItem("3 Diamond")
+				kind=self.res.getMember(m)
+				item.setCurrentIndex(kind)
+				def setType(e,i=item,m=m,resType=resType):
+					self.res.setMember(m,int(str(i.currentText()).split()[0]))
+					self.updatePropertiesTable()
+				item.currentIndexChanged.connect(setType)
+				self.mainwindow.propertiesTable.setCellWidget(ind, 1, item)
+			elif resType=="spriteBboxmode":
+				item=QComboBox(self)
+				item.addItem("0 Automatic")
+				item.addItem("1 Full")
+				item.addItem("2 Manual")
+				kind=self.res.getMember(m)
+				item.setCurrentIndex(kind)
+				def setType(e,i=item,m=m,resType=resType):
+					self.res.setMember(m,int(str(i.currentText()).split()[0]))
+					self.updatePropertiesTable()
+				item.currentIndexChanged.connect(setType)
+				self.mainwindow.propertiesTable.setCellWidget(ind, 1, item)
 			elif resType:
 				item=ResourceQComboBox(self,self.mainwindow,resType,r)
 				resLists.append(item)
@@ -185,6 +263,7 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 					else:
 						self.res.setMember(m,self.mainwindow.gmk.GetResourceName(resType,i.currentText()))
 					self.res.setMember(m+"Index",self.res.getMember(m).getMember("id"))
+					self.updatePropertiesTable()
 				item.currentIndexChanged.connect(setResourceFromName)
 				self.mainwindow.propertiesTable.setCellWidget(ind, 1, item)
 				continue
@@ -207,10 +286,13 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 
 	def handleitemClicked(self, item):
 		if type(item)==ColorQTableWidgetItem:
-			col = QtGui.QColorDialog.getColor()
+			col = QtGui.QColorDialog.getColor(QColor(int(str(item.text()),16)))
+			color=col.rgba()
 			if col.isValid():
-				print col.getRgb()
-				item.setText(str(col.rgba()))
+				#col.getRgb()
+				item.setText(str(color))
+				#item.setBackgroundColor(QColor(color))
+				self.updatePropertiesTable()
 
 class EditorWindow(ResourceWindow):
 	def initEditor(self):
@@ -299,6 +381,7 @@ class GameInformationWindow(EditorWindow):
 		"showborder","sizeable","alwaysontop","freeze",
 		"showInSeperateWindow","caption",
 		"backgroundcolor"]
+		self.propertiesType={"backgroundcolor":"color"}
 		self.sciEditor.setText(self.res.getMember("information"))
 
 class GameSettingsWindow(EditorWindow):
@@ -320,6 +403,7 @@ class GameSettingsWindow(EditorWindow):
 		"colordepth","resolution","frequency",
 		"noscreensaver","closesecondary",
 		"errorFlags"]
+		self.propertiesType={"windowcolor":"color"}
 		self.sciEditor.setText(self.res.getMember("version_information"))
 		
 		q=QWidget(self)
@@ -349,6 +433,7 @@ class SpriteWindow(ResourceWindow):
 		"maskshape","bboxmode","bbox_left","bbox_right","bbox_bottom","bbox_top",
 		"alphatolerance","precisecollisionchecking","seperatemasks",
 		"HTile","VTile","For3D","width","height"]
+		self.propertiesType={"maskshape":"spriteMaskshape","bboxmode":"spriteBboxmode"}
 		imageLabel = QLabel()
 		p=QPixmap()
 		if len(res.subimages)>0:
@@ -387,6 +472,7 @@ class SoundWindow(ResourceWindow):
 		self.setWindowIcon(QIcon(resourcePath+"resources/sound.png"))
 		self.propertiesList=["name","id","kind","effects","preload",
 		"volume","pan","mp3BitRate","oggQuality","extension","origname"]
+		self.propertiesType={"kind":"soundKind"}
 		play=QPushButton("&Play", self)
 		play.pressed.connect(self.handlePlayPressed)
 		stop=QPushButton("S&top", self)
@@ -433,7 +519,7 @@ class PathWindow(ResourceWindow):
 		self.setWindowIcon(QIcon(resourcePath+"resources/path.png"))
 		self.propertiesList=["name","id","snapX","snapY",#"roomIndex",
 		"room","connectionKind","closed","precision"]
-		self.propertiesType={"room":CliClass.GameRoom}
+		self.propertiesType={"room":CliClass.GameRoom,"connectionKind":"pathConnectionKind"}
 
 class ScriptWindow(EditorWindow):
 	def __init__(self, mainwindow, res):
@@ -458,6 +544,7 @@ class ShaderWindow(EditorWindow):
 		EditorWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/shader.png"))
 		self.propertiesList=["name","id","type","precompile"]
+		self.propertiesType={"type":"shadertype"}
 		self.shaderIndex="vertex"
 		self.sciEditor.setText(self.res.getMember(str(self.shaderIndex)))
 		
@@ -502,6 +589,7 @@ class FontWindow(ResourceWindow):
 		self.setWindowIcon(QIcon(resourcePath+"resources/font.png"))
 		self.propertiesList=["name","id","fontName","size","antiAliasing","bold","italic",
 		"characterRangeBegin","characterRangeEnd","characterSet"]
+		self.propertiesType={"antiAliasing":"fontAntiAliasing"}
 
 class TimelineWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
@@ -684,10 +772,12 @@ class RoomWindow(ResourceWindow):
 		layout2 = QHBoxLayout(q2)
 		layout2.addWidget(QLabel("Add Object:"))
 		self.addObjectList=ResourceQComboBox(q,mainwindow,CliClass.GameObject,None)
+		self.addObjectList.setCurrentIndex(1)
 		self.addObjectList.currentIndexChanged.connect(self.handleCurrentIndexChanged)
 		layout2.addWidget(self.addObjectList)
 		q2.setLayout(layout2)
 		layout.addWidget(q2)
+		layout.addWidget(QLabel("Control click to add object instances"))
 
 		layout.setContentsMargins(0, 0, 0, 0)
 		q.setLayout(layout)
