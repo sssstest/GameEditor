@@ -24,6 +24,10 @@ from PyQt4.QtCore import *
 from PyQt4.Qsci import *
 import sys
 import os
+if sys.version_info[0]<3:
+	from ConfigParser import *
+else:
+	from configparser import *
 import CliClass
 from IdeRoomEditor import *
 from IdeSciLexer import *
@@ -300,7 +304,7 @@ class EditorWindow(ResourceWindow):
 		self.sciEditor.setFrameStyle(QsciScintilla.NoFrame)
 		#self.sciEditor.setWrapMode(QsciScintilla.WrapCharacter)
 		self.sciEditor.setCaretLineVisible(True)
-		font = QFont("DejaVu Sans Mono", 8)#Courier 10 Pitch
+		font = self.mainwindow.editorFont
 		font.setFixedPitch(True)
 		self.sciEditor.setFont(font)
 		lexer = LexerGame(self.mainwindow)
@@ -862,7 +866,14 @@ class MainWindow(QtGui.QMainWindow):
 		QtGui.QMainWindow.__init__(self)
 		self.app=app
 		self.findDialog=None
+		self.recentFiles=[]
+
+		self.editorFontName = "DejaVu Sans Mono"
+		self.editorSize = 10
+		self.editorFont=QFont("DejaVu Sans Mono", 8)#Courier 10 Pitch
 		self.ideTheme=0
+		self.loadPreferences()
+
 		self.projectModified=False
 		self.projectTitle="noname"
 		self.projectLoadPluginLib=False
@@ -938,6 +949,10 @@ class MainWindow(QtGui.QMainWindow):
 		fileMenu.addAction(saveAsAction)
 		fileMenu.addSeparator()
 		# add recent projects list
+		for fileName in self.recentFiles:
+			recentFile=QAction(fileName, self)
+			recentFile.triggered.connect(lambda x,fileName=fileName:self.openProject(fileName))
+			fileMenu.addAction(recentFile)
 		fileMenu.addSeparator()
 		preferencesAction = QAction(QIcon(resourcePath+"actions/preferences.png"), "Preferences", self)
 		preferencesAction.triggered.connect(self.actionPreferences)
@@ -1108,6 +1123,32 @@ class MainWindow(QtGui.QMainWindow):
 		self.aboutDialog = None
 		self.handleNewAction()
 		self.updateHierarchyTree()
+
+	def loadPreferences(self):
+		config = ConfigParser()
+		#config.readfp(open('GameEditor.cfg'))
+		config.read([os.path.join(CliClass.module_path(),"GameEditor.cfg"), os.path.expanduser("~/.GameEditor.cfg")])
+		self.editorFontName = config.get('Editor', 'fontName')
+		self.editorSize = int(config.get('Editor', 'size'))
+		#self.editorFont=QFont("DejaVu Sans Mono", 8)#Courier 10 Pitch
+		self.editorFont=QFont(self.editorFontName, self.editorSize)
+		self.ideTheme=not int(config.get('Editor', 'theme'))
+		self.switchTheme()
+		for x,file in config.items("Recent"):
+			self.recentFiles.append(file)
+
+	def savePreferences(self):
+		config = ConfigParser()
+		config.add_section('Recent')
+		for x in self.recentFiles:
+			config.set("Recent", x, x)
+		config.add_section('Editor')
+		config.set('Editor', 'theme', str(self.ideTheme))
+		config.set('Editor', 'fontName', self.editorFontName)
+		config.set('Editor', 'size', str(self.editorSize))
+		#config.set('Editor', 'showLineNumbers', True)
+		#config.set('Editor', '', '')
+		config.write(open(os.path.expanduser("~/.GameEditor.cfg"),"w"))
 
 	def handleGameStats(self, event):
 		self.outputClear()
@@ -1614,6 +1655,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.updateHierarchyTree()
 
 	def openProject(self,fileName):
+		self.recentFiles.append(fileName)
 		fileName=str(fileName)
 		self.gmk = CliClass.GameFile()
 		self.gmk.app=self.app
@@ -1652,6 +1694,7 @@ class MainWindow(QtGui.QMainWindow):
 			self.projectSetModified(False)
 
 	def handleCloseApplication(self):
+		self.savePreferences()
 		self.saveOpenResources()
 		if self.projectModified:
 			CliClass.print_notice("close modified")
