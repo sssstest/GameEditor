@@ -196,7 +196,7 @@ class RoomView(QWidget):
 		self.resizeSelection=False
 		self.rotateSelection=False
 		if self.app.keyboardModifiers() == Qt.ControlModifier:
-			item=self.res.gameFile.GetResourceName(CliClass.GameFile.RtObject, self.roomWindow.activeItem)
+			item=self.res.gameFile.GetResourceName(CliClass.GameObject, self.roomWindow.activeItem)
 			if item:
 				inst=self.res.newInstance()
 				inst.setMember("x",self.origin.x())

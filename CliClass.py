@@ -1031,7 +1031,7 @@ class GamePath(GameResource):
 		if not self.gameFile.readingFile:
 			if member=="roomIndex":
 				if value != GameObject.SpriteIndexNone:
-					self.setMember("room", self.gameFile.GetResource(GameFile.RtRoom, value))
+					self.setMember("room", self.gameFile.GetResource(GameRoom, value))
 
 	def addPoint(self, point):
 		self.points.append(point)
@@ -1117,7 +1117,7 @@ class GamePath(GameResource):
 
 	def Finalize(self):
 		if self.getMember("roomIndex") != GamePath.RoomIndexNone:
-			self.setMember("room", self.gameFile.GetResource(GameFile.RtRoom, self.getMember("roomIndex")))
+			self.setMember("room", self.gameFile.GetResource(GameRoom, self.getMember("roomIndex")))
 
 class GameScript(GameResource):
 	defaults={"id":-1,"name":"noname","value":""}
@@ -1430,13 +1430,13 @@ class GameObject(GameResource):
 		if not self.gameFile.readingFile:
 			if member=="spriteIndex":
 				if value != GameObject.SpriteIndexNone:
-					self.setMember("sprite", self.gameFile.GetResource(GameFile.RtSprite, value))
+					self.setMember("sprite", self.gameFile.GetResource(GameSprite, value))
 			elif member=="parentIndex":
 				if value not in [GameObject.ParentIndexNone, -1]:
-					self.setMember("parent", self.gameFile.GetResource(GameFile.RtObject, value))
+					self.setMember("parent", self.gameFile.GetResource(GameObject, value))
 			elif member=="maskIndex":
 				if value != GameObject.SpriteIndexNone:
-					self.setMember("mask", self.gameFile.GetResource(GameFile.RtSprite, value))
+					self.setMember("mask", self.gameFile.GetResource(GameSprite, value))
 
 	def addEvent(self, event):
 		self.events.append(event)
@@ -1865,11 +1865,11 @@ class GameObject(GameResource):
 		
 	def Finalize(self):
 		if self.getMember("spriteIndex") != GameObject.SpriteIndexNone:
-			self.setMember("sprite", self.gameFile.GetResource(GameFile.RtSprite, self.getMember("spriteIndex")))
+			self.setMember("sprite", self.gameFile.GetResource(GameSprite, self.getMember("spriteIndex")))
 		if self.getMember("parentIndex") not in [GameObject.ParentIndexNone, -1]:
-			self.setMember("parent", self.gameFile.GetResource(GameFile.RtObject, self.getMember("parentIndex")))
+			self.setMember("parent", self.gameFile.GetResource(GameObject, self.getMember("parentIndex")))
 		if self.getMember("maskIndex") != GameObject.MaskIndexNone:
-			self.setMember("mask", self.gameFile.GetResource(GameFile.RtSprite, self.getMember("maskIndex")))
+			self.setMember("mask", self.gameFile.GetResource(GameSprite, self.getMember("maskIndex")))
 
 		for i in range(len(self.events)):
 			self.events[i].Finalize()
@@ -2122,14 +2122,14 @@ class GameEvent(GameResource):
 		if not self.gameFile.readingFile:
 			if self.eventNumber == 4 and member=="eventKind":
 				if value != GameObject.SpriteIndexNone:
-					self.eventCollisionObject = self.gameFile.GetResource(GameFile.RtObject, value)
+					self.eventCollisionObject = self.gameFile.GetResource(GameObject, value)
 
 	@staticmethod
 	def eventKindNumber(eventNumber,name,gameFile):
 		if eventNumber in [9,10]:
 			eventNumber=5
 		if eventNumber == 4:
-			return gameFile.GetResourceName(GameFile.RtObject, name).getMember("id")
+			return gameFile.GetResourceName(GameObject, name).getMember("id")
 		if eventNumber == 2:
 			return int(name)
 		kindNames=GameEvent.kindNames[eventNumber]
@@ -2163,17 +2163,21 @@ class GameEvent(GameResource):
 			return self.kindNames[GameEvent.EkOther].get(k,str(k)).lower()
 		return str(k)
 
-	def WriteGGG(self):
+	def eventGGGName(self):
 		if self.eventNumber in [GameEvent.EkCreate,GameEvent.EkDestroy] and self.getMember("eventKind")==0:
-			stri="@ev_"+self.eventNumberName(self.eventNumber)+" {\n"
+			stri="@ev_"+self.eventNumberName(self.eventNumber)
 		elif self.eventNumber == GameEvent.EkCollision:
 			if self.eventCollisionObject:
-				stri="@ev_"+self.eventNumberName(self.eventNumber)+"("+self.eventCollisionObject.getMember("name")+") {\n"
+				stri="@ev_"+self.eventNumberName(self.eventNumber)+"("+self.eventCollisionObject.getMember("name")+")"
 			else:
 				print_warning("collision event didn't find eventCollisionObject "+str(self.getMember("eventKind")))
-				stri="@ev_"+self.eventNumberName(self.eventNumber)+"("+self.eventKindName(self.eventNumber,self.getMember("eventKind"))+") {\n"
+				stri="@ev_"+self.eventNumberName(self.eventNumber)+"("+self.eventKindName(self.eventNumber,self.getMember("eventKind"))+")"
 		else:
-			stri="@ev_"+self.eventNumberName(self.eventNumber)+"("+self.eventKindName(self.eventNumber,self.getMember("eventKind"))+") {\n"
+			stri="@ev_"+self.eventNumberName(self.eventNumber)+"("+self.eventKindName(self.eventNumber,self.getMember("eventKind"))+")"
+		return stri
+
+	def WriteGGG(self):
+		stri=self.eventGGGName()+" {\n"
 		for o in self.actions:
 			stri=stri+tabStringLines(o.WriteGGG(len(self.actions)))
 		stri+="}\n"
@@ -2181,7 +2185,7 @@ class GameEvent(GameResource):
 
 	def Finalize(self):
 		if self.eventNumber==GameEvent.EkCollision:
-			self.eventCollisionObject=self.gameFile.GetResource(GameFile.RtObject, self.getMember("eventKind"))
+			self.eventCollisionObject=self.gameFile.GetResource(GameObject, self.getMember("eventKind"))
 
 class GameAction(GameResource):
 	if Class:
@@ -2765,16 +2769,16 @@ class GameAction(GameResource):
 			GameFile.RtUnknown,
 			GameFile.RtUnknown,
 			GameFile.RtUnknown,
-			GameFile.RtSprite,
-			GameFile.RtSound,
-			GameFile.RtBackground,
-			GameFile.RtPath,
-			GameFile.RtScript,
-			GameFile.RtObject,
-			GameFile.RtRoom,
-			GameFile.RtFont,
+			GameSprite,
+			GameSound,
+			GameBackground,
+			GamePath,
+			GameScript,
+			GameObject,
+			GameRoom,
+			GameFont,
 			GameFile.RtUnknown,
-			GameFile.RtTimeline]
+			GameTimeline]
 		if index < GameAction.ARGUMENT_COUNT:
 			#self.argumentValue[index] and 
 			#if akKinds[self.argumentKind[index]] != GameFile.RtUnknown:
@@ -2790,16 +2794,16 @@ class GameAction(GameResource):
 			GameFile.RtUnknown,
 			GameFile.RtUnknown,
 			GameFile.RtUnknown,
-			GameFile.RtSprite,
-			GameFile.RtSound,
-			GameFile.RtBackground,
-			GameFile.RtPath,
-			GameFile.RtScript,
-			GameFile.RtObject,
-			GameFile.RtRoom,
-			GameFile.RtFont,
+			GameSprite,
+			GameSound,
+			GameBackground,
+			GamePath,
+			GameScript,
+			GameObject,
+			GameRoom,
+			GameFont,
 			GameFile.RtUnknown,
-			GameFile.RtTimeline]
+			GameTimeline]
 		if index < GameAction.ARGUMENT_COUNT:
 			#if akKinds[self.argumentKind[index]] != GameFile.RtUnknown:
 			if self.argumentValue[index]:
@@ -2810,7 +2814,7 @@ class GameAction(GameResource):
 
 	def Finalize(self):
 		if self.getMember("appliesToObject") >= GameAction.ApObject:
-			self.appliesObject = self.gameFile.GetResource(GameFile.RtObject, self.getMember("appliesToObject"))
+			self.appliesObject = self.gameFile.GetResource(GameObject, self.getMember("appliesToObject"))
 		else:
 			self.appliesObject = None
 
@@ -2896,7 +2900,7 @@ class GameRoomView(GameResource):
 		if not self.gameFile.readingFile:
 			if member=="objectFollowingIndex":
 				if value != -1:
-					self.setMember("objectFollowing", self.gameFile.GetResource(GameFile.RtObject, value))
+					self.setMember("objectFollowing", self.gameFile.GetResource(GameObject, value))
 
 	def ReadGmk(self, stream):
 		self.setMember("visible",stream.ReadBoolean())
@@ -2935,7 +2939,7 @@ class GameRoomView(GameResource):
 
 	def Finalize(self):
 		if self.getMember("objectFollowingIndex") != -1:
-			self.setMember("objectFollowing", self.gameFile.GetResource(GameFile.RtObject, self.getMember("objectFollowingIndex")))
+			self.setMember("objectFollowing", self.gameFile.GetResource(GameObject, self.getMember("objectFollowingIndex")))
 
 	def WriteGGG(self):
 		stri="@view {\n"
@@ -2975,7 +2979,7 @@ class GameRoomInstance(GameResource):
 		if not self.gameFile.readingFile:
 			if member=="objectIndex":
 				if value != -1:
-					self.setMember("object", self.gameFile.GetResource(GameFile.RtObject, value))
+					self.setMember("object", self.gameFile.GetResource(GameObject, value))
 
 	def ReadGmk(self, stream):
 		self.setMember("x",stream.ReadDword())
@@ -2998,7 +3002,7 @@ class GameRoomInstance(GameResource):
 
 	def Finalize(self):
 		if self.getMember("objectIndex") != -1:
-			self.setMember("object", self.gameFile.GetResource(GameFile.RtObject, self.getMember("objectIndex")))
+			self.setMember("object", self.gameFile.GetResource(GameObject, self.getMember("objectIndex")))
 
 	def WriteGGG(self):
 		stri="@instance {\n"
@@ -3029,7 +3033,7 @@ class GameRoomTile(GameResource):
 		if not self.gameFile.readingFile:
 			if member=="backgroundIndex":
 				if value != -1:
-					self.setMember("background", self.gameFile.GetResource(GameFile.RtObject, value))
+					self.setMember("background", self.gameFile.GetResource(GameObject, value))
 
 	def ReadGmk(self, stream):
 		self.setMember("x",stream.ReadDword())
@@ -4207,20 +4211,20 @@ class GameTreeNode(object):
 	def Finalize(self,parent):
 		groupKind = [
 			GameFile.RtUnknown,
-			GameFile.RtObject,
-			GameFile.RtSprite,
-			GameFile.RtSound,
-			GameFile.RtRoom,
+			GameObject,
+			GameSprite,
+			GameSound,
+			GameRoom,
 			GameFile.RtUnknown,
-			GameFile.RtBackground,
-			GameFile.RtScript,
-			GameFile.RtPath,
-			GameFile.RtFont,
+			GameBackground,
+			GameScript,
+			GamePath,
+			GameFont,
 			GameFile.RtUnknown,
 			GameFile.RtUnknown,
-			GameFile.RtTimeline,
+			GameTimeline,
 			GameFile.RtUnknown,
-			GameFile.RtShader]
+			GameShader]
 		self.resource = parent.gameFile.GetResource(groupKind[self.group], self.index)
 		for i in range(len(self.contents)):
 			self.contents[i].Finalize(parent)
@@ -4399,7 +4403,7 @@ class GameFile(GameResource):
 		GMK_MIN_TILE_LAST_ID		= 1000000
 
 		#ResourceType
-		RtSprite=0
+		"""RtSprite=0
 		RtSound=1
 		RtBackground=2
 		RtPath=3
@@ -4408,7 +4412,7 @@ class GameFile(GameResource):
 		RtFont=5
 		RtTimeline=6
 		RtObject=7
-		RtRoom=8
+		RtRoom=8"""
 		RtUnknown=9
 		RtCount=10
 
@@ -4517,17 +4521,17 @@ class GameFile(GameResource):
 			callBack("subresource","rooms",None,None)
 
 	def newSprite(self):
-		instance = GameSprite(self, self.GetResourceHighestId(GameFile.RtSprite)+1)
+		instance = GameSprite(self, self.GetResourceHighestId(GameSprite)+1)
 		self.addSprite(instance)
 		return instance
 
 	def newObject(self):
-		instance = GameObject(self, self.GetResourceHighestId(GameFile.RtObject)+1)
+		instance = GameObject(self, self.GetResourceHighestId(GameObject)+1)
 		self.addObject(instance)
 		return instance
 
 	def newRoom(self):
-		instance = GameRoom(self, self.GetResourceHighestId(GameFile.RtRoom)+1)
+		instance = GameRoom(self, self.GetResourceHighestId(GameRoom)+1)
 		self.addRoom(instance)
 		return instance
 
@@ -5230,47 +5234,52 @@ class GameFile(GameResource):
 
 	def GetResourceHighestId(self, type):
 		highest=-1
-		if type==GameFile.RtSprite:
+		if type==GameSprite:
 			for s in self.sprites:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFile.RtSound:
+		elif type==GameSound:
 			for s in self.sounds:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFile.RtBackground:
+		elif type==GameBackground:
 			for s in self.backgrounds:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFile.RtPath:
+		elif type==GamePath:
 			for s in self.paths:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFile.RtScript:
+		elif type==GameScript:
 			for s in self.scripts:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFile.RtFont:
+		elif type==GameShader:
+			for s in self.shaders:
+				id = s.getMember("id")
+				if id>highest:
+					highest=id
+		elif type==GameFont:
 			for s in self.fonts:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFile.RtTimeline:
+		elif type==GameTimeline:
 			for s in self.timelines:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFile.RtObject:
+		elif type==GameObject:
 			for s in self.objects:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFile.RtRoom:
+		elif type==GameRoom:
 			for s in self.rooms:
 				id = s.getMember("id")
 				if id>highest:
@@ -5278,69 +5287,69 @@ class GameFile(GameResource):
 		return highest
 
 	def GetResource(self, type, index):
-		if type==GameFile.RtSprite:
+		if type==GameSprite:
 			for s in self.sprites:
 				if s.getMember("id")==index:
 					return s
-		elif type==GameFile.RtSound:
+		elif type==GameSound:
 			for s in self.sounds:
 				if s.getMember("id")==index: return s
-		elif type==GameFile.RtBackground:
+		elif type==GameBackground:
 			for s in self.backgrounds:
 				if s.getMember("id")==index: return s
-		elif type==GameFile.RtPath:
+		elif type==GamePath:
 			for s in self.paths:
 				if s.getMember("id")==index: return s
-		elif type==GameFile.RtScript:
+		elif type==GameScript:
 			for s in self.scripts:
 				if s.getMember("id")==index: return s
-		elif type==GameFile.RtShader:
+		elif type==GameShader:
 			for s in self.shaders:
 				if s.getMember("id")==index: return s
-		elif type==GameFile.RtFont:
+		elif type==GameFont:
 			for s in self.fonts:
 				if s.getMember("id")==index: return s
-		elif type==GameFile.RtTimeline:
+		elif type==GameTimeline:
 			for s in self.timelines:
 				if s.getMember("id")==index: return s
-		elif type==GameFile.RtObject:
+		elif type==GameObject:
 			for s in self.objects:
 				if s.getMember("id")==index: return s
-		elif type==GameFile.RtRoom:
+		elif type==GameRoom:
 			for s in self.rooms:
 				if s.getMember("id")==index: return s
 		return None
 
 	def GetResourceName(self, type, name):
-		if type==GameFile.RtSprite:
+		if type==GameSprite:
 			for s in self.sprites:
 				if s.getMember("name")==name:
 					return s
-		elif type==GameFile.RtSound:
+		elif type==GameSound:
 			for s in self.sounds:
 				if s.getMember("name")==name: return s
-		elif type==GameFile.RtBackground:
+		elif type==GameBackground:
 			for s in self.backgrounds:
 				if s.getMember("name")==name: return s
-		elif type==GameFile.RtPath:
+		elif type==GamePath:
 			for s in self.paths:
 				if s.getMember("name")==name: return s
-		elif type==GameFile.RtScript:
+		elif type==GameScript:
 			for s in self.scripts:
 				if s.getMember("name")==name: return s
-		elif type==GameFile.RtShader:
+		elif type==GameShader:
 			for s in self.shaders:
 				if s.getMember("name")==name: return s
-		elif type==GameFile.RtFont:
+		elif type==GameFont:
 			for s in self.fonts:
 				if s.getMember("name")==name: return s
-		elif type==GameFile.RtTimeline:
+		elif type==GameTimeline:
 			for s in self.timelines:
 				if s.getMember("name")==name: return s
-		elif type==GameFile.RtObject:
+		elif type==GameObject:
 			for s in self.objects:
 				if s.getMember("name")==name: return s
-		elif type==GameFile.RtRoom:
+		elif type==GameRoom:
 			for s in self.rooms:
 				if s.getMember("name")==name: return s
 		return None
