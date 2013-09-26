@@ -331,11 +331,13 @@ class GameResource(object):
 		else:
 			return -1
 
-	def getMember(self, member):
+	def getMember(self, member, default=None):
 		if member in self.members:
 			return self.members[member]
 		elif member in self.defaults:
 			return self.defaults[member]
+		elif default:
+			return default
 		else:
 			print_error("unsupported member "+member)
 
@@ -1168,7 +1170,7 @@ class GameScript(GameResource):
 		obj=ESScript()
 		obj.name=self.getMember("name").encode()
 		obj.id=self.getMember("id")
-		obj.code=self.getMember("value")
+		obj.code=self.getMember("value").encode()
 		return obj
 
 class GameShader(GameResource):
@@ -1243,7 +1245,7 @@ class GameFont(GameResource):
 		OEM_CHARSET			= 0xFF
 
 	defaults={"id":-1,"name":"noname","fontName":"","size":12,"bold":False,"italic":False,
-	"characterRangeBegin":32,"characterRangeEnd":127,"characterSet":DEFAULT_CHARSET,"antiAliasing":Aa3,"value":0}
+	"characterRangeBegin":32,"characterRangeEnd":127,"characterSet":DEFAULT_CHARSET,"antiAliasing":Aa3}
 
 	def __init__(self, gameFile, id):
 		GameResource.__init__(self, gameFile, id)
@@ -1317,10 +1319,10 @@ class GameFont(GameResource):
 		self.setMember("size",fontStream.ReadDword())
 		self.setMember("bold",fontStream.ReadBoolean())
 		self.setMember("italic",fontStream.ReadBoolean())
-		self.setMember("value",fontStream.ReadDword())
-		self.setMember("characterSet",(self.getMember("value") >> 16) & 0xFF)
-		self.setMember("antiAliasing",(self.getMember("value") >> 24) & 0xFF)
-		self.setMember("characterRangeBegin",self.getMember("value") & 0xFFFF)
+		value=fontStream.ReadDword()
+		self.setMember("characterSet",(value >> 16) & 0xFF)
+		self.setMember("antiAliasing",(value >> 24) & 0xFF)
+		self.setMember("characterRangeBegin",value & 0xFFFF)
 		self.setMember("characterRangeEnd",fontStream.ReadDword())
 
 	def WriteGGG(self):
@@ -4116,7 +4118,7 @@ class GameInformation(GameResource):
 		self.setMember("information",gameInfoStream.ReadString())
 		#Background Color of Game Information
 		if len(self.getMember("information"))>400:
-			print_warning("information too big")
+			print_warning("game information too big "+str(len(self.getMember("information"))))
 			self.setMember("information","")
 
 	def WriteGmk(self, stream):
@@ -4311,6 +4313,15 @@ class GameTree(GameResource):
 	def Finalize(self):
 		for i in range(len(self.contents)):
 			self.contents[i].Finalize(self)
+		names=[]
+		for node in self.contents:
+			names.append(node.name)
+		if "Shaders" not in names:
+			for count in range(len(self.contents)):
+				if self.contents[count].name=="Scripts":
+					group,status = self.PrimaryGroupName("Shaders")
+					node = GameTreeNode(status, group, -1, "Shaders")
+					self.contents.insert(count+1,node)
 
 	def PrimaryGroupName(self, name):
 		status=GameTree.StatusPrimary

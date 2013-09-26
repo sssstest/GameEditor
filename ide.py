@@ -68,11 +68,11 @@ class PropertiesTable(QTableWidget):
 
 
 class ResourceWindow(QtGui.QMdiSubWindow):
-	def __init__(self, mainwindow, res):
+	def __init__(self, mainwindow, res, defaultTitle=None):
 		QtGui.QMdiSubWindow.__init__(self)
 		self.mainwindow=mainwindow
 		self.res=res
-		self.setWindowTitle(res.getMember("name"))
+		self.setWindowTitle(res.getMember("name",defaultTitle))
 		n=QLabel("Properties panel")
 		self.setWidget(n)
 		self.propertiesList=[]
@@ -109,11 +109,13 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 		for m in propertiesList:
 			r=self.res.getMember(m)
 			types = [str,int,float,bool]
+			mltypes = [str]
 			if sys.version_info[0]<3:
+				mltypes.append(unicode)
 				types.append(unicode)
 				types.append(long)
-			if type(r) not in types or (type(r)==str and r.count("\n")>0):
-				CliClass.print_warning("not inserting property "+m+" "+str(type(r)))
+			if type(r) not in types or (type(r) in mltypes and r.count("\n")>0):
+				#CliClass.print_warning("not inserting property "+m+" "+str(type(r)))
 				continue
 			ind=self.mainwindow.propertiesTable.rowCount()-1
 			self.mainwindow.propertiesTable.insertRow(ind)
@@ -186,8 +188,8 @@ class EditorWindow(ResourceWindow):
 		q.setLayout(layout)
 		# sciEditor.setFixedHeight(300);
 
-	def __init__(self, mainwindow, res):
-		ResourceWindow.__init__(self, mainwindow, res)
+	def __init__(self, mainwindow, res, defaultTitle=None):
+		ResourceWindow.__init__(self, mainwindow, res, defaultTitle)
 		self.initEditor()
 
 	def closeEvent(self, closeEvent):
@@ -200,10 +202,50 @@ class EditorWindow(ResourceWindow):
 		else:
 			self.sciEditor.markerAdd(nline, self.BREAK_MARKER_NUM)
 
+class GameInformationWindow(EditorWindow):
+	def __init__(self, mainwindow, res):
+		EditorWindow.__init__(self, mainwindow, res, "Game Information")
+		self.setWindowIcon(QIcon(resourcePath+"resources/info.png"))
+		self.propertiesList=["left","top","width","height",
+		"showborder","sizeable","alwaysontop","freeze",
+		"showInSeperateWindow","caption",
+		"backgroundcolor"]
+		self.sciEditor.setText(self.res.getMember("information"))
+
+class GameSettingsWindow(EditorWindow):
+	def __init__(self, mainwindow, res):
+		EditorWindow.__init__(self, mainwindow, res, "Game Settings")
+		self.setWindowIcon(QIcon(resourcePath+"resources/gm.png"))
+		self.propertiesList=["fullscreen","scale","interpolate","windowcolor","sizeable",
+		"stayontop","noborder","nobuttons","showcursor","freeze",
+		"vsync","changeresolution",
+		"quitkey","helpkey","fullscreenkey","savekey","screenshotkey","priority",
+		"loadImage","loadtransparent","loadalpha",
+		"showprogress","frontImage","backImage","scaleprogress","iconImage",#gameId
+		"displayerrors","writeerrors","aborterrors","treatUninitializedVariablesAsZero","argumenterrors",
+		"version_product","author","version","version_copyright",#"version_information",
+		
+		"version_major","version_minor","version_release","version_build",
+		"version_company","version_description",
+		
+		"colordepth","resolution","frequency",
+		"noscreensaver","closesecondary",
+		"errorFlags"]
+		self.sciEditor.setText(self.res.getMember("version_information"))
+
+#class ExtensionsWindow(ResourceWindow):
+#	def __init__(self, mainwindow, res):
+#		ResourceWindow.__init__(self, mainwindow, res)
+#		self.setWindowIcon(QIcon(resourcePath+"resources/extension.png"))
+
 class SpriteWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/sprite.png"))
+		self.propertiesList=["name","id","smoothedges","preload","transparent","xorigin","yorigin",
+		"maskshape","bboxmode","bbox_left","bbox_right","bbox_bottom","bbox_top",
+		"alphatolerance","precisecollisionchecking","seperatemasks",
+		"HTile","VTile","For3D","width","height"]
 		imageLabel = QLabel()
 		p=QPixmap()
 		if len(res.subimages)>0:
@@ -240,6 +282,8 @@ class SoundWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/sound.png"))
+		self.propertiesList=["name","id","kind","effects","preload",
+		"volume","pan","mp3BitRate","oggQuality","extension","origname"]
 		play=QPushButton("&Play", self)
 		play.pressed.connect(self.handlePlayPressed)
 		stop=QPushButton("S&top", self)
@@ -276,16 +320,21 @@ class BackgroundWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/background.png"))
+		self.propertiesList=["name","id","width","height","transparent","smoothEdges","preload","useAsTileset",
+		"tileWidth","tileHeight","tileHorizontalOffset","tileVerticalOffset","tileHorizontalSeperation","tileVerticalSeperation",
+		"For3D"]
 
 class PathWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/path.png"))
+		self.propertiesList=["name","id","snapX","snapY","roomIndex","room","connectionKind","closed","precision"]
 
 class ScriptWindow(EditorWindow):
 	def __init__(self, mainwindow, res):
 		EditorWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/script.png"))
+		self.propertiesList=["name","id"]
 		self.sciEditor.setText(res.getMember("value"))
 
 	def saveResource(self):
@@ -303,6 +352,7 @@ class ShaderWindow(EditorWindow):
 	def __init__(self, mainwindow, res):
 		EditorWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/shader.png"))
+		self.propertiesList=["name","id","type","precompile"]
 		self.shaderIndex="vertex"
 		self.sciEditor.setText(self.res.getMember(str(self.shaderIndex)))
 		
@@ -345,6 +395,8 @@ class FontWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/font.png"))
+		self.propertiesList=["name","id","fontName","size","antiAliasing","bold","italic",
+		"characterRangeBegin","characterRangeEnd","characterSet"]
 
 class TimelineWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
@@ -355,6 +407,11 @@ class ObjectWindow(EditorWindow):
 	def __init__(self, mainwindow, res):
 		EditorWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/object.png"))
+		self.propertiesList=["name","id","spriteIndex","sprite","depth",
+		"parentIndex","parent","maskIndex","mask","visible","solid","persistent",
+		"PhysicsObject","PhysicsObjectSensor","PhysicsObjectShape","PhysicsObjectDensity",
+		"PhysicsObjectRestitution","PhysicsObjectGroup","PhysicsObjectLinearDamping","PhysicsObjectAngularDamping",
+		"PhysicsObjectFriction","PhysicsObjectAwake","PhysicsObjectKinematic","PhysicsShapePoints"]
 		ggg=res.WriteGGG(False)
 		self.sciEditor.setText(ggg)
 
@@ -517,6 +574,9 @@ class MainWindow(QtGui.QMainWindow):
 		updAction = QAction("&Update", self)
 		updAction.triggered.connect(self.updateHierarchyTree)
 		viewMenu.addAction(updAction)
+		statsAction = QAction("Game Stats", self)
+		statsAction.triggered.connect(self.handleGameStats)
+		viewMenu.addAction(statsAction)
 		resourceMenu = QMenu("&Resources", self)
 		windowMenu = QMenu("&Window", self)
 		helpMenu = QMenu("&Help", self)
@@ -725,6 +785,10 @@ class MainWindow(QtGui.QMainWindow):
 		self.handleNewAction()
 		self.updateHierarchyTree()
 
+	def handleGameStats(self, event):
+		self.outputClear()
+		self.gmk.printBasicStats()
+
 	def handleBuildTypeListChanged(self, event):
 		mode=self.buildTypeList.currentText()
 		if mode=="Run":
@@ -905,10 +969,11 @@ class MainWindow(QtGui.QMainWindow):
 			if i:
 				self.hierarchyTree.setCurrentItem(i)
 				return
-			CliClass.print_warning("not found activate")
+			#CliClass.print_warning("not found activate")
 
 	def handleItemActivated(self, item, column):
 		if not item.res:
+			#CliClass.print_notice("no res "+str(item.res))
 			return
 		for w in self.mainMdiArea.subWindowList():
 			if w.res==item.res:
@@ -934,6 +999,10 @@ class MainWindow(QtGui.QMainWindow):
 			s = ObjectWindow(self,item.res)
 		elif item.res.__class__==CliClass.GameRoom:
 			s = RoomWindow(self,item.res)
+		elif item.res.__class__==CliClass.GameInformation:
+			s = GameInformationWindow(self,item.res)
+		elif item.res.__class__==CliClass.GameSettings:
+			s = GameSettingsWindow(self,item.res)
 		else:
 			CliClass.print_notice("unsupported class "+str(item.res))
 			return
@@ -976,7 +1045,14 @@ class MainWindow(QtGui.QMainWindow):
 			treeItem.setIcon(0, q)
 			treeItem.res=treeNode.resource
 			if not treeItem.res:
-				CliClass.print_warning("no resource for "+treeNode.name)
+				if treeNode.name=="Game Information":
+					treeItem.res=self.gmk.gameInformation
+				elif treeNode.name=="Global Game Settings":
+					treeItem.res=self.gmk.settings
+				#elif treeNode.name=="Extensions":
+				#	treeItem.res=
+				else:
+					CliClass.print_warning("no resource for "+treeNode.name)
 		else:
 			if root:
 				if treeNode.name=="Triggers":
@@ -1161,6 +1237,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.gmk.resourceTree.AddGroupName("Global Game Settings")
 		self.gmk.resourceTree.AddGroupName("Extensions")
 		self.gmk.newSettings()
+		self.gmk.newGameInformation()
 		self.projectTitle="noname"
 		self.projectUpdateWindowTitle()
 		self.updateHierarchyTree()
