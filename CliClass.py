@@ -105,7 +105,9 @@ def restoreStdout():
 	os.dup2(realStdout.fileno(), sys.stdout.fileno())
 	os.dup2(realStderr.fileno(), sys.stderr.fileno())
 
-redirectStdout()
+#redirectStdout()
+realStdout=sys.stdout
+realStderr=sys.stderr
 setRealStdout(realStdout)
 
 def getActionsCode(actions):
@@ -2611,6 +2613,9 @@ class GameAction(GameResource):
 		self.argumentKind[0]=1
 		self.setMember("argumentsUsed",1)
 
+	def ifActionCode(self):
+		return self.getMember("libraryId") == 1 and self.getMember("actionId") == 603
+
 	def WriteGGG(self, nactions):
 		ml=False
 		singleaction=False
@@ -4453,6 +4458,31 @@ class GameFile(GameResource):
 		ey+="target-networking: "+self.EnigmaTargetNetworking+"\n"
 		ey+="extensions:Universal_System/Extensions/Alarms,Universal_System/Extensions/Timelines,Universal_System/Extensions/Paths,Universal_System/Extensions/MotionPlanning,Universal_System/Extensions/DateTime,Universal_System/Extensions/ParticleSystems,Universal_System/Extensions/DataStructures"
 		return ey
+
+	def printBasicStats(self):
+		numberScripts=len(self.scripts)
+		print_notice("number of scripts:\t\t"+str(numberScripts))
+		numberScriptLines=0
+		for x in self.scripts:
+			if x.getMember("value") != "":
+				numberScriptLines+=x.getMember("value").count("\n")+1
+		print_notice("script lines:\t\t\t"+str(numberScriptLines))
+		numberNonCodeActions=0
+		numberCodeActions=0
+		numberCodeActionLines=0
+		for object in self.objects:
+			for event in object.events:
+				for action in event.actions:
+					if action.ifActionCode():
+						numberCodeActions+=1
+						if action.argumentValue[0]!="":
+							numberCodeActionLines+=action.argumentValue[0].count("\n")+1
+					else:
+						numberNonCodeActions+=1
+		print_notice("number of non code actions:\t"+str(numberNonCodeActions))
+		print_notice("number of code (603) actions:\t"+str(numberCodeActions))
+		print_notice("code action (603) lines:\t"+str(numberCodeActionLines))
+		print_notice("script and code action lines:\t"+str(numberScriptLines+numberCodeActionLines))
 
 	def addSprite(self, point):
 		if point in self.sprites:

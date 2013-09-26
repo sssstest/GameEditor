@@ -93,6 +93,7 @@ def cli():
 	parser.add_argument('-c', dest='code', help="empty game with object create event code")
 	parser.add_argument('-r', dest='run', action='store_true', help="run game emode")
 	parser.add_argument('-t', dest='test', action='store_true', help="test")
+	parser.add_argument('-s', dest='stats', action='store_true', help="stats")
 	if len(sys.argv)==1:
 		args = parser.parse_args(["--help"])
 	else:
@@ -111,6 +112,9 @@ def cli():
 		gameFile.Read(p)
 	if args.code:
 		gameFile=newGame(args.code)
+	if args.stats:
+		gameFile.printBasicStats()
+		sys.exit(0)
 	if args.writefile:
 		if args.writefile=="-":
 			ext=".ggg"
@@ -130,6 +134,9 @@ def cli():
 	emode=emode_compile#make turns compile into debug
 	if args.run:
 		emode=emode_run
+	redirectStdout()
+	#realStdout=sys.stdout
+	setRealStdout(realStdout)
 	LoadPluginLib()
 	GameFile.compileRunES(es,testGameFile,emode,open(cliDir+"gamesettings.ey","r").read())
 	restoreStdout()
