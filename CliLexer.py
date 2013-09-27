@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#* converted to python from https://github.com/enigma-dev/NaturalGM/blob/master/Source/Classes/Lexers/QsciLexerGML.cpp
+#* some lexer code converted to python from https://github.com/enigma-dev/NaturalGM/blob/master/Source/Classes/Lexers/QsciLexerGML.cpp
 
 #* @file QsciLexerGML.cpp
 #* @breif Declares the GML lexer for QScintilla.

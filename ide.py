@@ -24,6 +24,7 @@ from PyQt4.QtCore import *
 from PyQt4.Qsci import *
 import sys
 import os
+import traceback
 if sys.version_info[0]<3:
 	from ConfigParser import *
 else:
@@ -33,6 +34,77 @@ from IdeRoomEditor import *
 from IdeSciLexer import *
 
 resourcePath=os.path.join(CliClass.module_path(),"ideicons")+"/"
+
+class FindDialog(QDialog):
+	def __init__(self, parent=None):
+		super(FindDialog, self).__init__(parent)
+		label = QLabel("Find what:")
+		lineEdit = QLineEdit()
+		label.setBuddy(lineEdit)
+		label2 = QLabel("Replace with:")
+		lineEdit2 = QLineEdit()
+		label2.setBuddy(lineEdit2)
+		wholeWordCheckBox = QCheckBox("Whole word")
+		caseCheckBox = QCheckBox("Case sensitive")
+		escapeCheckBox = QCheckBox("Escape sequences")
+		reCheckBox = QCheckBox("Regular expression")
+		fromStartCheckBox = QCheckBox("Search from &start")
+		wrapAroundCheckBox = QCheckBox("Wrap around")
+		wrapAroundCheckBox.setChecked(True)
+		searchBackwardsCheckBox = QCheckBox("Search backwards")
+
+		selectionRadio= QRadioButton("Selection")
+		resourceRadio = QRadioButton("Open Resource")
+		resourceRadio.setChecked(True)
+		allOpenResourcesRadio = QRadioButton("All Open Resources")
+		allScriptsRadio = QRadioButton("All Scripts")
+		allObjectsRadio = QRadioButton("All Objects")
+		allScriptsAndObjectsRadio = QRadioButton("All Scripts and Objects")
+		allResourcesGGG = QRadioButton("All Resources")
+
+		findButton = QPushButton("&Find")
+		findButton.setDefault(True)
+		replaceButton = QPushButton("&Replace")
+		replaceAllButton = QPushButton("Replace all")
+		closeButton = QPushButton("Close")
+		buttonBox = QDialogButtonBox(Qt.Horizontal)
+		buttonBox.addButton(findButton, QDialogButtonBox.ActionRole)
+		buttonBox.addButton(replaceButton, QDialogButtonBox.ActionRole)
+		buttonBox.addButton(replaceAllButton, QDialogButtonBox.ActionRole)
+		buttonBox.addButton(closeButton, QDialogButtonBox.ActionRole)
+		#moreButton.toggled.connect=setVisible
+		topLeftLayout = QGridLayout()
+		topLeftLayout.addWidget(label, 0, 0)
+		topLeftLayout.addWidget(lineEdit, 0, 1)
+		topLeftLayout.addWidget(label2, 1, 0) 
+		topLeftLayout.addWidget(lineEdit2, 1,1)
+		leftLayout = QVBoxLayout()
+		leftLayout.addLayout(topLeftLayout)
+		leftLayout4 = QVBoxLayout()
+		leftLayout4.addWidget(wholeWordCheckBox)
+		leftLayout4.addWidget(caseCheckBox)
+		leftLayout4.addWidget(escapeCheckBox)
+		leftLayout4.addWidget(reCheckBox)
+		leftLayout4.addWidget(fromStartCheckBox)
+		leftLayout4.addWidget(wrapAroundCheckBox)
+		leftLayout2 = QVBoxLayout()
+		leftLayout2.addWidget(selectionRadio)
+		leftLayout2.addWidget(resourceRadio)
+		leftLayout2.addWidget(allOpenResourcesRadio)
+		leftLayout2.addWidget(allScriptsRadio)
+		leftLayout2.addWidget(allObjectsRadio)
+		leftLayout2.addWidget(allScriptsAndObjectsRadio)
+		leftLayout2.addWidget(allResourcesGGG)
+		topLeftLayout3 = QHBoxLayout()
+		topLeftLayout3.addLayout(leftLayout4)
+		topLeftLayout3.addLayout(leftLayout2)
+		mainLayout = QVBoxLayout()
+		mainLayout.setSizeConstraint(QLayout.SetFixedSize)
+		mainLayout.addLayout(leftLayout)
+		mainLayout.addLayout(topLeftLayout3)
+		mainLayout.addWidget(buttonBox)
+		self.setLayout(mainLayout)
+		self.setWindowTitle("Find")
 
 class ColorQTableWidgetItem(QTableWidgetItem):
 	def __init__(self, item):
@@ -917,6 +989,7 @@ class MainWindow(QtGui.QMainWindow):
 		debugMenu = QMenu("&Debug", self)
 		editMenu = QMenu("&Edit", self)
 		findAction = QAction("&Find", self)
+		findAction.setShortcuts(QKeySequence.Find)
 		findAction.triggered.connect(self.handleFind)
 		editMenu.addAction(findAction)
 		viewMenu = QMenu("&View", self)
@@ -1367,7 +1440,7 @@ class MainWindow(QtGui.QMainWindow):
 	def handleFind(self, event):
 		if not self.findDialog:
 			self.findDialog = FindDialog(self)
-			self.findDialog.findNext.connect(self.findNext)
+			#self.findDialog.findNext.connect(self.findNext)
 		self.findDialog.show()
 		self.findDialog.raise_()
 		self.findDialog.activateWindow()
@@ -1556,24 +1629,61 @@ class MainWindow(QtGui.QMainWindow):
 		#es=self.gmk.WriteES()
 		if self.projectLoadPluginLib==False:
 			def ede_output_redirect_file(filepath):
-				redir=open(filepath.encode()).read()
+				redir=open(filepath.decode()).read()
 				CliClass.print_error(redir)
 			CliClass.ede_output_redirect_file=ede_output_redirect_file
 			CliClass.LoadPluginLib()
 			self.projectLoadPluginLib=True
 
 		class AThread(QtCore.QThread):
+			outputSignal = pyqtSignal(str, name = 'stepIncreased')
 			def run(self):
+				CliClass.print_error=self.outputLine
+				CliClass.print_warning=self.outputLine
+				CliClass.print_notice=self.outputLine
+				
 				self.mainwindow.gmk.compileRunEnigma(CliClass.tmpDir+"testgame",self.mainwindow.projectEmode)
 				if self.mainwindow.projectEmode == CliClass.emode_compile:#emode_debug
 					self.mainwindow.gameProcessGdb=False
-					self.mainwindow.gameProcess = QProcess()
-					self.mainwindow.gameProcess.start(CliClass.tmpDir+"testgame")
-					self.mainwindow.gameProcess.readyReadStandardOutput.connect(self.mainwindow.handleProcessOutput)
-					self.mainwindow.gameProcess.readyReadStandardError.connect(self.mainwindow.handleProcessErrorOutput)
-					self.mainwindow.gameProcess.finished.connect(self.mainwindow.handleProcessFinished)
+					self.gameProcess = QProcess()
+					self.gameProcess.start(CliClass.tmpDir+"testgame")
+					self.gameProcess.readyReadStandardOutput.connect(self.handleProcessOutput)
+					self.gameProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
+					#self.mainwindow.gameProcess.finished.connect(self.mainwindow.handleProcessFinished)
+			
+			def outputLine(self, text):
+				self.outputSignal.emit(text)
+
+			def handleProcessErrorOutput(self):
+				self.gameProcess.setReadChannel(QProcess.StandardError)
+				while 1:
+					s=self.gameProcess.read(600)
+					CliClass.print_notice(str(s))
+					if s=="":
+						return
+					for l in s.split("\n"):
+						if l != "":
+							self.outputLine(l)
+
+			def handleProcessOutput(self):
+				self.gameProcess.setReadChannel(QProcess.StandardOutput)
+				while 1:
+					s=self.gameProcess.read(600).decode()
+					CliClass.print_notice(str(s))
+					if s=="":
+						return
+					for l in s.split("\n"):
+						if l != "":
+							self.outputLine(l)
+						if self.gameProcessGdb and l=="(gdb) ":
+							if len(self.debuggerCommands)>0:
+								c=self.debuggerCommands.pop()
+								self.gameProcess.write(c+"\n")
+								self.outputLine(c)
+
 		global thread
 		thread = AThread()
+		thread.outputSignal.connect(self.outputLine)
 		thread.mainwindow=self
 		#thread.finished.connect(app.exit)
 		thread.start()
@@ -1752,6 +1862,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.logText.insertPlainText(text)
 
 	def outputLine(self, text):
+		#traceback.print_stack(file=sys.stdout)
 		self.logText.append(text)
 
 	#def outputMessage(self, origin, location, description):

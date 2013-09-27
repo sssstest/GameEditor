@@ -5068,6 +5068,9 @@ class GameFile(GameResource):
 		self.resourceTree.ReadGmk(stream)
 		self.Finalize()
 
+	def ReadReadGGGFile(self, filename):
+		"ggg"
+
 	def Read(self, filename):
 		self.readingFile=True
 		self.readPath=filename
@@ -5082,6 +5085,8 @@ class GameFile(GameResource):
 			self.ReadGmx(filename)
 		elif ext==".gmz":
 			self.ReadGmz(filename)
+		elif ext==".ggg":
+			self.ReadGGGFile(filename)
 		else:
 			print_error("unsupported load format")
 		self.readingFile=False
