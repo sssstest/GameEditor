@@ -123,8 +123,8 @@ def cli():
 			ext=os.path.splitext(os.path.split(args.writefile)[1])[1]
 			if ext not in [".gmk",".gm81",".egm",".gmx",".ggg"]:
 				print_error("unsupported output type "+ext)
-		print_notice("saving "+args.writefile)
-		gameFile.Save(ext,args.writefile)
+			print_notice("saving "+args.writefile)
+			gameFile.Save(ext,args.writefile)
 		sys.exit(0)
 	print_notice("writing EnigmaStruct")
 	gameFile.app=app

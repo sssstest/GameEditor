@@ -309,6 +309,9 @@ class EEFReader(object):
 		return str.replace("\\\\","\\")
 
 	def readItem(self, parent, line):
+		if line==u"\r\n":
+			print("broken eef blank line item")
+			return
 		read_attrs = self.readAttrs(line,parent.blockName)
 		e = self.EEFNode()
 		if read_attrs.ids != None:
@@ -378,6 +381,9 @@ class YamlParser(object):
 			if r.rawValue=="null":
 				return -1
 			else:
+				if r.rawValue not in nameId:
+					print_error("name not found "+r.rawValue)
+					return -1
 				return nameId[r.rawValue]
 
 		def getMchange(self, key):

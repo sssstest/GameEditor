@@ -24,7 +24,6 @@ from PyQt4.QtCore import *
 from PyQt4.Qsci import *
 import sys
 import os
-import traceback
 if sys.version_info[0]<3:
 	from ConfigParser import *
 else:
@@ -746,7 +745,6 @@ class ObjectWindow(EditorWindow):
 		for event in names:
 			if event.startswith("@ev_press"):
 				self.m_lwAddItem(m_lw,event,True)
-				events.append(event)
 		self.m_lwAddItem(m_lw,"@ev_press()")
 		for event in names:
 			if event.startswith("@ev_release"):
@@ -1862,7 +1860,6 @@ class MainWindow(QtGui.QMainWindow):
 		self.logText.insertPlainText(text)
 
 	def outputLine(self, text):
-		#traceback.print_stack(file=sys.stdout)
 		self.logText.append(text)
 
 	#def outputMessage(self, origin, location, description):

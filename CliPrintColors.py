@@ -26,6 +26,7 @@
 from __future__ import print_function
 import sys
 import os
+import traceback
 
 RESET          = 0
 BRIGHT         = 1
@@ -92,8 +93,7 @@ def clearconsole():
 def print_error(msg):
 	printcolor("ERROR ", BRIGHT, RED)
 	printfcln(msg, RESET, WHITE)
-	raise NotImplementedError
-	#sys.exit(1)
+	traceback.print_stack(file=sys.stdout)
 
 def print_warning(msg):
 	printcolor("WARNING ", BRIGHT, YELLOW)

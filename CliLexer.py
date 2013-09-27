@@ -106,3 +106,27 @@ def GMLSplitArguments(source):
 		if i>=len(sources):
 			return "",arguments
 	return "",[]
+
+class GGGLexer():
+	def __init__(self, stream):
+		self.stream=stream
+		self.data=stream.read()
+		self.endpos=len(self.data)
+
+	def nextLine(self):
+		return self.stream.readline()
+
+	def close(self):
+		self.stream.close()
+
+	def hasNext(self):
+		pos=self.stream.tell()
+		if pos>=self.endpos:
+			return False
+		return True
+
+	def hasNextLine(self):
+		return self.hasNext()
+
+	#def getWord
+

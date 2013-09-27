@@ -661,7 +661,7 @@ class GameSpriteSubimage(object):
 			print_error("image size is 0")	
 
 	def convertGmkIntoEsData(self):
-		print_warning("slow image conversion")
+		#print_warning("slow image conversion")
 		self.gmkData.base_stream.seek(0)
 		size=self.gmkData.Size()
 		data=self.gmkData.base_stream.read()
@@ -697,7 +697,6 @@ class GameSpriteSubimage(object):
 	def FromQImage(q):#QImage is ARGB
 		if q.width() == 0 or q.height() == 0:
 			return 0,0,None
-		print_notice("image "+str(q.width())+" "+str(q.height()))
 		datap=q.bits()
 		datap.setsize(q.byteCount())
 		data = BinaryStream(io.BytesIO(datap))
@@ -708,7 +707,16 @@ class GameSpriteSubimage(object):
 		stri="@subimage {\n"
 		stri+="\twidth="+str(self.width)+"\n"
 		stri+="\theight="+str(self.height)+"\n"
-		#stri+="\tdata="+str(self.data)+"\n"
+		qImage=self.getQImage()
+		ba = QtCore.QByteArray()
+		buffer = QtCore.QBuffer(ba)
+		buffer.open(QtCore.QIODevice.WriteOnly)
+		qImage.save(buffer, "PNG")
+		buffer.seek(0)
+
+		import base64
+		stri+="\t@data {\n"+str(base64.encodestring(buffer.readData(buffer.size())).decode())+"}\n"
+		#stri+="\t@data {\n"+str(self.getGmkData().EncodeBase64().decode())+"}\n"
 		stri+="}\n"
 		return stri
 
@@ -720,7 +728,7 @@ class GameSpriteSubimage(object):
 		data=self.getEsData()
 		obj.data=data
 		obj.dataSize=len(data)
-		print_notice("data size "+str(len(data)))
+		#print_notice("data size "+str(len(data)))
 		return obj
 
 class GameSound(GameResource):
@@ -846,8 +854,9 @@ class GameSound(GameResource):
 		stri="@sound "+self.getMember("name")+" {\n"
 		for key in self.members:
 			if not self.ifDefault(key):
-				stri+="\t"+key+"="+str(self.getMember(key))+"\n"
-		#stri+="\tdata="+str(self.data)+"\n"
+				if key != "data":
+					stri+="\t"+key+"="+str(self.getMember(key))+"\n"
+		stri+="\t@data {\n"+str(self.getMember("data").CompressBase64().decode())+"}\n"
 		stri+="}\n"
 		return stri
 
@@ -990,7 +999,10 @@ class GameBackground(GameResource):
 		stri="@background "+self.getMember("name")+"{\n"
 		for key in self.members:
 			if not self.ifDefault(key):
-				stri+="\t"+key+"="+str(self.getMember(key))+"\n"
+				if key != "data":
+					stri+="\t"+key+"="+str(self.getMember(key))+"\n"
+		stri+="\t@data {\n"+str(self.getMember("data").EncodeBase64().decode())+"}\n"
+		
 		#stri+="\tdata="+str(self.getMember("data"))+"\n"
 		stri+="}\n"
 		return stri
@@ -2841,7 +2853,7 @@ class GameRoomBackground(GameResource):
 		if not self.gameFile.readingFile:
 			if member=="imageIndex":
 				if value != -1:
-					self.setMember("image", self.gameFile.GetResource(GameFile.RtBackground, value))
+					self.setMember("image", self.gameFile.GetResource(GameBackground, value))
 
 	def ReadGmk(self, stream):
 		self.setMember("visible",stream.ReadBoolean())
@@ -2872,7 +2884,7 @@ class GameRoomBackground(GameResource):
 
 	def Finalize(self):
 		if self.getMember("imageIndex") != -1:
-			self.setMember("image", self.gameFile.GetResource(GameFile.RtBackground, self.getMember("imageIndex")))
+			self.setMember("image", self.gameFile.GetResource(GameBackground, self.getMember("imageIndex")))
 
 	def WriteGGG(self):
 		stri="@roombackground {\n"
@@ -3057,7 +3069,7 @@ class GameRoomTile(GameResource):
 
 	def Finalize(self):
 		if self.getMember("backgroundIndex") != -1:
-			self.setMember("background", self.gameFile.GetResource(GameFile.RtBackground, self.getMember("backgroundIndex")))
+			self.setMember("background", self.gameFile.GetResource(GameBackground, self.getMember("backgroundIndex")))
 
 	def WriteGGG(self):
 		stri="@tile {\n"
@@ -3190,9 +3202,11 @@ class GameRoom(GameResource):
 		self.setMember("yoffset",r.getMint('SCROLL_BAR_Y'))
 		data=r.getMstr('Data')
 		data=z.open(os.path.split(entry)[0]+"/"+data,'r')
-		stream = BinaryStream(data)
-		stream.ReadString()
+		data=data.read()
+		stream = BinaryStream(io.BytesIO(data))
+		print("code",stream.ReadString())#clifix
 		nobackgrounds=stream.ReadDword()
+		#print_notice(entry+" nobackgrounds "+str(nobackgrounds))
 		for count in range(nobackgrounds):
 			background = self.newBackground()
 			background.setMember("visible",stream.ReadBoolean())
@@ -3208,6 +3222,7 @@ class GameRoom(GameResource):
 			background.setMember("speedVertical",stream.ReadDword())
 			background.setMember("stretch",stream.ReadBoolean())
 		noviews=stream.ReadDword()
+		#print_notice(entry+" noviews "+str(noviews))
 		for count in range(noviews):
 			view = self.newView()
 			view.setMember("visible",stream.ReadBoolean())
@@ -3221,10 +3236,15 @@ class GameRoom(GameResource):
 			view.setMember("portH",stream.ReadDword())
 			view.setMember("horizontalBorder",stream.ReadDword())
 			view.setMember("verticalBorder",stream.ReadDword())
-			view.setMember("objectFollowingIndex",stream.readInt32())
+			#view.setMember("objectFollowingIndex",stream.readInt32())
 			view.setMember("horizontalSpeed",stream.ReadDword())
 			view.setMember("verticalSpeed",stream.ReadDword())
+			objectFollowing=stream.ReadString()
+			print("objectFollowing",objectFollowing)
 		noinstances=stream.ReadDword()
+		#print_notice(entry+" noinstances "+str(noinstances))
+		if noinstances==-1:
+			print_error("unsupported format rmg")
 		for count in range(noinstances):
 			instance = self.newInstance()
 			instance.setMember("x",stream.ReadDword())
@@ -3238,21 +3258,23 @@ class GameRoom(GameResource):
 			instance.setMember("creationCode",stream.ReadString())
 			instance.setMember("locked",stream.ReadBoolean())
 		notiles=stream.ReadDword()
+		#print_notice(entry+" notiles "+str(notiles))
 		for count in range(notiles):
 			tile=self.newTile()
-			background.setMember("x",stream.ReadDword())
-			background.setMember("y",stream.ReadDword())
-			background.setMember("backgroundName",stream.ReadString())
-			background.setMember("tileX",stream.ReadDword())
-			background.setMember("tileY",stream.ReadDword())
-			background.setMember("width",stream.ReadDword())
-			background.setMember("height",stream.ReadDword())
-			background.setMember("layer",stream.ReadDword())
-			background.setMember("id",stream.readInt32())
-			background.setMember("locked",stream.ReadBoolean())
-			print_error("egm tiles unsupported")
-			tile = GmkTile()
-			tile.ReadGmk(roomStream)
+			tile.setMember("x",stream.ReadDword())
+			tile.setMember("y",stream.ReadDword())
+			backgroundName=stream.ReadString()
+			if backgroundName=="":
+				tile.setMember("backgroundIndex",-1)
+			else:
+				tile.setMember("backgroundIndex",gmkfile.egmNameId[backgroundName])
+			tile.setMember("tileX",stream.ReadDword())
+			tile.setMember("tileY",stream.ReadDword())
+			tile.setMember("width",stream.ReadDword())
+			tile.setMember("height",stream.ReadDword())
+			tile.setMember("layer",stream.ReadDword())
+			tile.setMember("id",stream.readInt32())
+			tile.setMember("locked",stream.ReadBoolean())
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
 		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir,name)+".room.gmx")
@@ -4154,7 +4176,9 @@ class GameInformation(GameResource):
 		stri="@gameinformation {\n"
 		for key in self.members:
 			if not self.ifDefault(key):
-				stri+="\t"+key+"="+str(self.getMember(key))+"\n"
+				if key != "information":
+					stri+="\t"+key+"="+str(self.getMember(key))+"\n"
+		stri+="\t@information {\n"+str(self.getMember("information"))+"}\n"
 		stri+="}\n"
 		return stri
 
@@ -4171,7 +4195,20 @@ class GameIncludeFile(GameResource):
 	def __init__(self, gameFile, id):
 		GameResource.__init__(self, gameFile, id)
 
-	def WriteGmk(stream):
+	def WriteGGG(self):
+		stri="@includefile {\n"
+		for key in self.members:
+			if not self.ifDefault(key):
+				if key != "data":
+					try:
+						stri+="\t"+key+"="+str(self.getMember(key))+"\n"
+					except:
+						print_error("exception "+key)
+		stri+="\t@data {\n"+str(self.getMember("data").EncodeBase64().decode())+"}\n"
+		stri+="}\n"
+		return stri
+
+	def WriteGmk(self, stream):
 		includeFileStream = BinaryStream()
 		includeFileStream.WriteTimestamp()
 		includeFileStream.WriteDword(800)
@@ -4454,6 +4491,7 @@ class GameFile(GameResource):
 		#self.resourceTree = Tree()
 		self.gameId = random.randint(0,2147483647) % self.GMK_MAX_ID;
 		self.readingFile=False
+		self.EnigmaSettingsEef=None
 		if os.name=="nt":
 			self.EnigmaTargetAudio="OpenAL"
 			self.EnigmaTargetWindowing="Win32"
@@ -4471,7 +4509,11 @@ class GameFile(GameResource):
 		self.EnigmaTargetNetworking="None"
 
 	def EnigmaSettingsEy(self):
-		ey="%e-yaml\n---\ntreat-literals-as: 0\nsample-lots-of-radios: 0\ninherit-equivalence-from: 0\n"
+		ey="%e-yaml\n---\n"
+		if self.EnigmaSettingsEef:
+			ey+="Data: "+self.EnigmaSettingsEef+"\n"
+			print_notice("Enigma Settings.eef "+self.EnigmaSettingsEef)
+		ey+="treat-literals-as: 0\nsample-lots-of-radios: 0\ninherit-equivalence-from: 0\n"
 		ey+="sample-checkbox: on\nsample-edit: DEADBEEF\nsample-combobox: 0\ninherit-strings-from: 0\n"
 		ey+="inherit-escapes-from: 0\ninherit-increment-from: 0\n \n"
 		ey+="target-audio: "+self.EnigmaTargetAudio+"\n"
@@ -4576,6 +4618,15 @@ class GameFile(GameResource):
 
 	def ReadEgm(self, f):
 		z=zipfile.ZipFile(f,'r')
+		f=z.open("Enigma Settings.eef",'rU')
+		global tempeef
+		tempeef=tempfile.NamedTemporaryFile()
+		tempeef=open(tempeef.name+".eef","wb")
+		tempeef.write(f.read())
+		f.close()
+		tempeef.seek(0)
+		self.EnigmaSettingsEef=tempeef.name
+
 		self.egmNames=z.namelist()
 		self.guid=[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0]
 		self.resourceTree = GameTree(self)
@@ -4596,7 +4647,7 @@ class GameFile(GameResource):
 		self.egmNameId={}
 		res={}
 		self.egmEntries=[]
-		self.egmReadNodeChildren(z,res,"notype","")
+		self.egmReadNodeChildren(z, res, "notype", "")
 		for e in self.egmEntries:
 			self.egmProcesEntry(*e)
 		self.Finalize()
@@ -4609,8 +4660,11 @@ class GameFile(GameResource):
 		toc=[]
 		for t in f.readlines():
 			entry = t.decode().strip()
-			if len(entry) > 4 and entry[3] == ' ':
+			if len(entry) > 4 and entry[3] == ' ' and entry[:3].isupper():
+				#oldKind=kind
 				kind,entry = entry[0:3],entry[4:]
+				#if oldKind!=kind:
+				#	print_warning("kind changed "+kind+" "+oldKind)
 			toc.append((kind,entry))
 		self.egmProcessEntries(z,parent,toc,dir);
 
@@ -4618,7 +4672,6 @@ class GameFile(GameResource):
 		for kind,entry in entries:
 			if dir!="":
 				entry = dir + '/' + entry
-			print(entry)
 			if entry+"/toc.txt" in self.egmNames:
 				parent[entry]={}
 				self.egmReadNodeChildren(z,parent[entry],kind,entry);
@@ -4701,7 +4754,7 @@ class GameFile(GameResource):
 		elif kind=="EXT":
 			pass
 		else:
-			print_error("unsupported toc.txt kind "+kind)
+			print_error("unsupported toc.txt kind "+kind+" "+entry)
 
 	def ReadGmz(self, filename):
 		tempDir=tempfile.mkdtemp()
@@ -5068,8 +5121,13 @@ class GameFile(GameResource):
 		self.resourceTree.ReadGmk(stream)
 		self.Finalize()
 
+	def ReadGGGStream(self, stream):
+		GGGLexer(stream)
+
 	def ReadReadGGGFile(self, filename):
-		"ggg"
+		data = open(filename, "rb")
+		stream = BinaryStream(data)
+		self.ReadGGGStream(stream)
 
 	def Read(self, filename):
 		self.readingFile=True
@@ -5226,7 +5284,7 @@ class GameFile(GameResource):
 			ggg=self.WriteGGG()
 			if not wfile:
 				wfile=open(filename,"wb")
-			wfile.write(ggg)
+			wfile.write(ggg.encode())
 		else:
 			print_error("unsupported save format")
 

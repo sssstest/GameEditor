@@ -120,6 +120,26 @@ class BinaryStream:
 		length = self.base_stream.tell()
 		self.base_stream.seek(pos)
 		return length
+	
+	def EncodeBase64(self):
+		import base64
+		self.Rewind()
+		return base64.encodestring(self.Read())
+
+	def CompressBase64(self):
+		import base64
+		self.Rewind()
+		return base64.encodestring(zlib.compress(self.Read()))
+
+	def DecodeBase64(self):
+		import base64
+		self.Rewind()
+		return base64.decodestring(self.Read())
+
+	def DecompressBase64(self):
+		import base64
+		self.Rewind()
+		return zlib.decompress(base64.decodestring(self.Read()))
 
 	def Deflate(self):
 		self.base_stream.seek(0)
@@ -172,7 +192,7 @@ class BinaryStream:
 
 	def ReadString(self):
 		length = self.readUInt32()
-		return self.unpack(str(length) + 's', length).decode("windows-1252")
+		return self.unpack(str(length) + 's', length).decode("iso8859-1")#windows-1252")
 
 	def ReadTimestamp(self):
 		GmTimestampEpoch = 0xFFFFFFFF7C5316BF
