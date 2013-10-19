@@ -1804,7 +1804,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.gmk.resourceTree.AddGroupName("Extensions")
 		self.gmk.newSettings()
 		self.gmk.newGameInformation()
-		self.projectTitle="noname"
+		self.projectTitle="<new game>"
 		self.projectUpdateWindowTitle()
 		self.updateHierarchyTree()
 
