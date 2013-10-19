@@ -91,6 +91,7 @@ def newGameCode(code):
 	return es
 
 def loadPreferences():
+	print_notice("loading preferences: "+os.path.expanduser("~/.GameEditor.cfg"))
 	config = ConfigParser()
 	#config.readfp(open('GameEditor.cfg'))
 	config.read([os.path.join(module_path(),"GameEditor.cfg"), os.path.expanduser("~/.GameEditor.cfg")])

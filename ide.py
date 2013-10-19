@@ -1221,7 +1221,9 @@ class MainWindow(QtGui.QMainWindow):
 		if CliClass.IfEnigmaDir():
 			CliClass.print_notice("enigma installation found")
 		else:
-			CliClass.print_notice("enigma installation not found")
+			CliClass.print_error("enigma installation not found")
+			runAction.setDisabled(True)
+			debugAction.setDisabled(True)
 
 	def loadPreferences(self):
 		config = ConfigParser()
@@ -1260,10 +1262,16 @@ class MainWindow(QtGui.QMainWindow):
 		#config.set('Editor', '', '')
 		config.add_section('Colors')
 		for key in self.colors:
-			config.set('Colors', str(key), __builtins__.hex(self.colors[key]))
+			hexcolor=__builtins__.hex(int(self.colors[key]))
+			if hexcolor[-1]=="L":
+				hexcolor=hexcolor[:-1]
+			config.set('Colors', str(key), hexcolor)
 		config.add_section('ThemeColors')
 		for key in self.themeColors:
-			config.set('ThemeColors', str(key), __builtins__.hex(self.themeColors[key]))
+			hexcolor=__builtins__.hex(int(self.themeColors[key]))
+			if hexcolor[-1]=="L":
+				hexcolor=hexcolor[:-1]
+			config.set('ThemeColors', str(key), hexcolor)
 		config.write(open(os.path.expanduser("~/.GameEditor.cfg"),"w"))
 
 	def handleGameStats(self, event):
