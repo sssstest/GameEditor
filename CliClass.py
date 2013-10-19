@@ -5685,6 +5685,15 @@ class GameFile(GameResource):
 				ot[count]=eobj
 			self.es.rooms=cast(ot,POINTER(ESRoom))
 
+def IfEnigmaDir():
+	if os.name=="nt":
+		if os.path.exists("compileEGMf.dll"):
+			return True
+	else:
+		if os.path.exists("libcompileEGMf.so"):
+			return True
+	return False
+
 def LoadPluginLib():
 	if os.name=="nt":
 		egmf=cdll.LoadLibrary("compileEGMf.dll")

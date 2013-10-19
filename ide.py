@@ -231,6 +231,8 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 				mltypes.append(unicode)
 				types.append(unicode)
 				types.append(long)
+				if type(r)==long:
+					r=int(r)
 			resType=self.propertiesType.get(m,None)
 			if not resType and (type(r) not in types) or (type(r) in mltypes and r.count("\n")>0):
 				#CliClass.print_warning("not inserting property "+m+" "+str(type(r)))
@@ -246,7 +248,10 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 			self.mainwindow.propertiesTable.setItem(ind, 0, item)
 			if resType=="color":
 				item=ColorQTableWidgetItem(__builtins__.hex(r))
-				item.setBackgroundColor(QColor(int(str(item.text()),16)))
+				colortext=item.text()
+				if colortext[-1]=="L":
+					colortext=colortext[:-1]
+				item.setBackgroundColor(QColor(int(str(colortext),16)))
 				item.setFlags(Qt.ItemIsSelectable|Qt.ItemIsEditable|Qt.ItemIsEnabled)
 				item.setFont(font)
 				self.mainwindow.propertiesTable.setItem(ind, 1, item)
@@ -942,6 +947,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.editorSize = 10
 		self.editorFont=QFont("DejaVu Sans Mono", 8)#Courier 10 Pitch
 		self.ideTheme=0
+		self.enigmaPath="enigma-dev"
 		self.colors = {0: 0xff000000,#DOCUMENT_DEFAULT                        = 0
 		1: 0xff008400,#COMMENT                        = 1
 		2: 0xff008400,#COMMENTLINE                    = 2
@@ -1212,6 +1218,10 @@ class MainWindow(QtGui.QMainWindow):
 		self.aboutDialog = None
 		self.handleNewAction()
 		self.updateHierarchyTree()
+		if CliClass.IfEnigmaDir():
+			CliClass.print_notice("enigma installation found")
+		else:
+			CliClass.print_notice("enigma installation not found")
 
 	def loadPreferences(self):
 		config = ConfigParser()
@@ -1222,6 +1232,12 @@ class MainWindow(QtGui.QMainWindow):
 		#self.editorFont=QFont("DejaVu Sans Mono", 8)#Courier 10 Pitch
 		self.editorFont=QFont(self.editorFontName, self.editorSize)
 		self.ideTheme=not int(config.get('Editor', 'theme'))
+		self.enigmaPath = config.get('Editor', 'enigmadev')
+		#CliClass.print_notice("changing directory to enigma-dev: "+self.enigmaPath)
+		try:
+			os.chdir(self.enigmaPath)
+		except:
+			CliClass.print_notice("error changing directory to enigma-dev: "+self.enigmaPath)
 		self.switchTheme()
 		for x,file in config.items("Recent"):
 			self.recentFiles.append(file)
@@ -1236,6 +1252,7 @@ class MainWindow(QtGui.QMainWindow):
 		for x in self.recentFiles:
 			config.set("Recent", x, x)
 		config.add_section('Editor')
+		config.set('Editor', 'enigmadev', str(self.enigmaPath))
 		config.set('Editor', 'theme', str(self.ideTheme))
 		config.set('Editor', 'fontName', self.editorFontName)
 		config.set('Editor', 'size', str(self.editorSize))

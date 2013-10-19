@@ -21,6 +21,10 @@
 import argparse
 import sys
 from CliClass import *
+if sys.version_info[0]<3:
+	from ConfigParser import *
+else:
+	from configparser import *
 
 testGameFile=tmpDir+"testgame"
 
@@ -86,7 +90,24 @@ def newGameCode(code):
 	es.roomCount = 1
 	return es
 
+def loadPreferences():
+	config = ConfigParser()
+	#config.readfp(open('GameEditor.cfg'))
+	config.read([os.path.join(module_path(),"GameEditor.cfg"), os.path.expanduser("~/.GameEditor.cfg")])
+	global enigmaPath
+	enigmaPath = config.get('Editor', 'enigmadev')
+	#print_notice("changing directory to enigma-dev: "+self.enigmaPath)
+	try:
+		os.chdir(enigmaPath)
+	except:
+		print_notice("error changing directory to enigma-dev: "+self.enigmaPath)
+	if IfEnigmaDir():
+		print_notice("enigma installation found")
+	else:
+		print_error("enigma installation not found")
+
 def cli():
+	loadPreferences()
 	parser = argparse.ArgumentParser(description="input file with no options builds in debug mode and runs game")
 	parser.add_argument('filein', metavar='FILE.GMK', type=str, nargs="?",help='read file (gmk gm81 egm gmx gmz formats)')
 	parser.add_argument('-o', dest='writefile', help="convert to output file and exit (gmk ggg formats)")
