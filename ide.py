@@ -33,6 +33,7 @@ from IdeRoomEditor import *
 from IdeSciLexer import *
 
 resourcePath=os.path.join(CliClass.module_path(),"ideicons")+"/"
+stylePath=os.path.join(CliClass.module_path(),"styles")+"/"
 
 class FindDialog(QDialog):
 	def __init__(self, parent=None):
@@ -1642,10 +1643,10 @@ class MainWindow(QtGui.QMainWindow):
 	def switchTheme(self):
 		if self.ideTheme:
 			self.ideTheme=0
-			self.app.setStyleSheet(" QTabBar::tab { height: 16; icon-size: 18px; } QStatusBar::item { border: 0px solid black; }");
+			self.app.setStyleSheet(open(stylePath+"default.css").read())
 		else:
 			self.ideTheme=1
-			self.app.setStyleSheet(open(resourcePath+"theme.qss").read())
+			self.app.setStyleSheet(open(stylePath+"dark.css").read())
 
 	def handleRunAction(self):
 		self.saveOpenResources()
@@ -1811,7 +1812,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.gmk.resourceTree.AddGroupName("Extensions")
 		self.gmk.newSettings()
 		self.gmk.newGameInformation()
-		self.projectTitle="noname"
+		self.projectTitle="<new game>"
 		self.projectUpdateWindowTitle()
 		self.updateHierarchyTree()
 
