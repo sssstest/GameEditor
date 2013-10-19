@@ -35,6 +35,60 @@ from IdeSciLexer import *
 resourcePath=os.path.join(CliClass.module_path(),"ideicons")+"/"
 stylePath=os.path.join(CliClass.module_path(),"styles")+"/"
 
+class PreferencesDialog(QDialog):
+	def __init__(self, parent=None):
+		self.mainwindow=parent
+		self.enigmaPath=parent.enigmaPath
+		super(PreferencesDialog, self).__init__(parent)
+		label = QLabel("enigma-dev path:")
+		lineEdit = QLineEdit()
+		lineEdit.setText(self.enigmaPath)
+		lineEdit.setMaximumWidth(400)
+		lineEdit.setFixedWidth(420)
+		label.setBuddy(lineEdit)
+
+		setButton = QPushButton("&Set")
+		setButton.clicked.connect(self.handleSetAction)
+		doneButton = QPushButton("&Done")
+		doneButton.clicked.connect(self.handleDoneAction)
+		doneButton.setDefault(True)
+		closeButton = QPushButton("Close")
+		closeButton.clicked.connect(self.handleCloseAction)
+		buttonBox = QDialogButtonBox(Qt.Horizontal)
+		#buttonBox.addButton(setButton, QDialogButtonBox.ActionRole)
+		buttonBox.addButton(doneButton, QDialogButtonBox.ActionRole)
+		buttonBox.addButton(closeButton, QDialogButtonBox.ActionRole)
+		topLeftLayout = QGridLayout()
+		topLeftLayout.addWidget(label, 0, 0)
+		topLeftLayout.addWidget(lineEdit, 0, 1)
+		topLeftLayout.addWidget(setButton, 0, 2)
+		leftLayout = QVBoxLayout()
+		leftLayout.addLayout(topLeftLayout)
+		mainLayout = QVBoxLayout()
+		mainLayout.setSizeConstraint(QLayout.SetFixedSize)
+		mainLayout.addLayout(leftLayout)
+		mainLayout.addWidget(buttonBox)
+		self.setLayout(mainLayout)
+		self.setWindowTitle("Preferences")
+
+	def handleDoneAction(self):
+		self.mainwindow.enigmaPath=self.enigmaPath
+		self.mainwindow.savePreferences()
+		self.accept()
+
+	def handleCloseAction(self):
+		self.mainwindow.enigmaPath=self.enigmaPath
+		self.mainwindow.savePreferences()
+		self.accept()
+
+	def handleSetAction(self):
+		self.enigmaPath = QFileDialog.getExistingDirectory(self,"Open", "", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+		if self.enigmaPath!="":
+			self.mainwindow.enigmaPath=self.enigmaPath
+			CliClass.print_notice("new enigma path: "+self.enigmaPath)
+			self.mainwindow.savePreferences()
+			self.accept()
+
 class FindDialog(QDialog):
 	def __init__(self, parent=None):
 		super(FindDialog, self).__init__(parent)
@@ -942,6 +996,7 @@ class MainWindow(QtGui.QMainWindow):
 		QtGui.QMainWindow.__init__(self)
 		self.app=app
 		self.findDialog=None
+		self.prefsDialog=None
 		self.recentFiles=[]
 
 		self.editorFontName = "DejaVu Sans Mono"
@@ -1224,9 +1279,11 @@ class MainWindow(QtGui.QMainWindow):
 		self.handleNewAction()
 		self.updateHierarchyTree()
 		if CliClass.IfEnigmaDir():
-			CliClass.print_notice("enigma installation found")
+			CliClass.print_notice("enigma installation found: "+self.enigmaPath)
 		else:
 			CliClass.print_error("enigma installation not found")
+			if self.enigmaPath==".":
+				self.actionPreferences()
 			runAction.setDisabled(True)
 			debugAction.setDisabled(True)
 
@@ -1260,6 +1317,10 @@ class MainWindow(QtGui.QMainWindow):
 			config.set("Recent", str(x), str(x))
 		config.add_section('Editor')
 		config.set('Editor', 'enigmadev', str(self.enigmaPath))
+		try:
+			os.chdir(self.enigmaPath)
+		except:
+			CliClass.print_notice("error changing directory to enigma-dev: "+self.enigmaPath)
 		config.set('Editor', 'theme', str(self.ideTheme))
 		config.set('Editor', 'fontName', self.editorFontName)
 		config.set('Editor', 'size', str(self.editorSize))
@@ -1791,7 +1852,11 @@ class MainWindow(QtGui.QMainWindow):
 						self.outputLine(c)
 
 	def actionPreferences(self):
-		pass
+		#if not self.prefsDialog:
+		self.prefsDialog=PreferencesDialog(self)
+		self.prefsDialog.show()
+		self.prefsDialog.raise_()
+		self.prefsDialog.activateWindow()
 
 	def actionNewSprite(self):
 		pass
