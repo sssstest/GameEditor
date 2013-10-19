@@ -1101,6 +1101,10 @@ class MainWindow(QtGui.QMainWindow):
 		rebuildAction = QAction(QIcon(resourcePath+"actions/debug.png"), "Rebuild All", self)
 		buildToolbar.addAction(rebuildAction)
 		buildMenu.addAction(rebuildAction)"""
+		enigmaPluginAction = QAction(QIcon(resourcePath+"actions/compile.png"), "Rebuild ENIGMA Compiler", self)
+		enigmaPluginAction.triggered.connect(self.handleRebuildEnigmaPlugin)
+		buildToolbar.addAction(enigmaPluginAction)
+		buildMenu.addAction(enigmaPluginAction)
 		self.addToolBar(buildToolbar)
 		debugToolbar = QToolBar(self)
 		contAction = QAction("Cont", self)
@@ -1252,7 +1256,7 @@ class MainWindow(QtGui.QMainWindow):
 		config = ConfigParser()
 		config.add_section('Recent')
 		for x in self.recentFiles:
-			config.set("Recent", x, x)
+			config.set("Recent", str(x), str(x))
 		config.add_section('Editor')
 		config.set('Editor', 'enigmadev', str(self.enigmaPath))
 		config.set('Editor', 'theme', str(self.ideTheme))
@@ -1647,6 +1651,17 @@ class MainWindow(QtGui.QMainWindow):
 			self.ideTheme=1
 			self.app.setStyleSheet(open(resourcePath+"theme.qss").read())
 
+	def handleRebuildEnigmaPlugin(self):
+		CliClass.print_notice("Rebuilding ENIGMA running make")
+		self.gameProcessGdb=False
+		self.gameProcess = QProcess()
+		self.gameProcess.start("make")
+		self.gameProcess.setProcessChannelMode(QProcess.MergedChannels)
+		self.gameProcess.readyRead.connect(self.handleProcessOutput)
+		self.gameProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
+		self.gameProcess.error.connect(self.handleProcessError)
+		self.gameProcess.finished.connect(self.handleProcessFinished)
+
 	def handleRunAction(self):
 		self.saveOpenResources()
 		#es=self.gmk.WriteES()
@@ -1654,7 +1669,10 @@ class MainWindow(QtGui.QMainWindow):
 			def ede_output_redirect_file(filepath):
 				redir=open(filepath.decode()).read()
 				CliClass.print_error(redir)
+			def ede_dia_progress(progress):
+				self.engimaProgressTitle=str(progress)+"%"
 			CliClass.ede_output_redirect_file=ede_output_redirect_file
+			CliClass.ede_dia_progress=ede_dia_progress
 			CliClass.LoadPluginLib()
 			self.projectLoadPluginLib=True
 
