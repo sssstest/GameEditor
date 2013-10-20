@@ -26,21 +26,26 @@ QToolBar
 QMenuBar
 {
 	color: #ffffe0;
-	background-color: #222222;
-	border-top: 1px solid #333333;
-	border-bottom: 1px solid #333333;
 	font-size: 15px;
 	padding-left: 5px;
 	padding-top: 1px;
+     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
+                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
 }
 QMenuBar::item
 {
-	background-color: #222222;
 	color: #ffffff;
 	padding-left: 6px;
 	padding-right: 7px;
 	margin-top: 1px;
+     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
+                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
 }
+QMenuBar::item:hover {
+     background: #666666;
+ }
 /*QMenuBar::item:selected
 {
 	border: 1px solid #404040;
@@ -67,7 +72,7 @@ QMenu::item:selected
 QDockWidget
 {
 	color: #e0e0e0;
-	titlebar-close-icon: url();
+	/*titlebar-close-icon: url();*/
 	icon-size: 13px;
 	width: 13px;
 }
@@ -81,6 +86,9 @@ QDockWidget::title
 	background-color: #333333;
 	border-top: 1px solid #333333;
 	border-bottom: 1px solid #333333;
+     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
+                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
 }
 /*QDockWidget::close-button
 {
@@ -127,14 +135,12 @@ QTabBar::tab
 }
 QTabBar::tab:selected
 {
-	border-top-width: 5px;
-	border-bottom-width: 1px;
-	border-left-width: 4px;
-	border-right-width: 4px;
+
 	/*height: 18px;*/
 	padding-left: 9px;
 	padding-right: 7px;
-	color: #ffffff;
+	background-color: gray;
+	color: white;
 }
 QPushButton {
 	color: #ff00ff;
@@ -277,7 +283,7 @@ QScrollBar:horizontal {
      it reads QTabBar _not_ QTabWidget */
  QTabBar::tab {
      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
+                                 stop: 0 #333333, stop: 0.4 #FFFFFF,
                                  stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
      border: 2px solid #C4C4C3;
      border-bottom-color: #C2C7CB; /* same as the pane color */
@@ -285,17 +291,22 @@ QScrollBar:horizontal {
      border-top-right-radius: 4px;
      min-width: 8ex;
      padding: 2px;
+
+     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
+                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
  }
 
  QTabBar::tab:selected, QTabBar::tab:hover {
      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #fafafa, stop: 0.4 #f4f4f4,
-                                 stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
+                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
+                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
  }
 
  QTabBar::tab:selected {
      border-color: #9B9B9B;
      border-bottom-color: #C2C7CB; /* same as pane color */
+     color: white;
  }
 
  QTabBar::tab:!selected {
@@ -334,3 +345,11 @@ QScrollBar::add-page, QScrollBar::sub-page
 {
 	background: none;
 }*/
+
+QStatusBar::item { 
+  border: 0px solid black; 
+}
+
+QsciScintilla {
+	background: gray;
+}
