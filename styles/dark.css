@@ -23,11 +23,6 @@ QToolBar
 	background-color: #222222;
 	border: 1px solid #222222;
 }
-QToolBar::item
-{
-	background-color: red;
-	border: 1px solid #222222;
-}
 QMenuBar
 {
 	color: #ffffe0;
@@ -142,13 +137,9 @@ QTabBar::tab:selected
 	/*height: 18px;*/
 	padding-left: 9px;
 	padding-right: 7px;
-	background-color: red;
 	color: white;
 }
-QPushButton {
-	color: #ff00ff;
-     background-color: #ff2222;
- }
+
 QHeaderView::section {
 	color: #eeeeee;
      background-color: #222222;
