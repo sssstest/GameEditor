@@ -390,7 +390,7 @@ class GameSprite(GameResource):
 		self.subimages=[]
 
 	def getQIcon(self):
-		if len(self.subimages)>0:
+		if 0:# len(self.subimages)>0:
 			q=self.subimages[0].getQImage()
 			image=QtGui.QPixmap()
 			image.convertFromImage(q)
@@ -661,7 +661,7 @@ class GameSpriteSubimage(object):
 			print_error("image size is 0")	
 
 	def convertGmkIntoEsData(self):
-		#print_warning("slow image conversion")
+		print_warning("slow image conversion")
 		self.gmkData.base_stream.seek(0)
 		size=self.gmkData.Size()
 		data=self.gmkData.base_stream.read()
