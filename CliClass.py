@@ -388,14 +388,17 @@ class GameSprite(GameResource):
 		GameResource.__init__(self, gameFile, id)
 		self.setMember("name","sprite_"+str(id))
 		self.subimages=[]
+		self.qIcon=None
 
 	def getQIcon(self):
-		if 0:# len(self.subimages)>0:
-			q=self.subimages[0].getQImage()
-			image=QtGui.QPixmap()
-			image.convertFromImage(q)
-			image=image.scaled(16,16)
-			return QtGui.QIcon(image)
+		if self.qIcon:
+			return self.qIcon
+		#if len(self.subimages)>0:
+		#	q=self.subimages[0].getQImage()
+		#	image=QtGui.QPixmap()
+		#	image.convertFromImage(q)
+		#	image=image.scaled(16,16)
+		#	return QtGui.QIcon(image)
 		return None
 
 	def addSubimage(self, subimage):
@@ -5696,6 +5699,8 @@ def IfEnigmaDir():
 
 def LoadPluginLib():
 	if os.name=="nt":
+		ss=cdll.LoadLibrary(os.path.split(os.getcwd())[0]+"\\mingw32\\bin\\libgcc_s_sjlj-1.dll")
+		ss2=cdll.LoadLibrary(os.path.split(os.getcwd())[0]+"\\mingw32\\bin\\libstdc++-6.dll")
 		egmf=cdll.LoadLibrary("compileEGMf.dll")
 	else:
 		egmf=cdll.LoadLibrary("./libcompileEGMf.so")

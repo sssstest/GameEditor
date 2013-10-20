@@ -44,6 +44,13 @@ from IdeRoomEditor import *
 from IdeGameInformationEditor import *
 from IdeGameSettingsEditor import *
 
+class SpriteQIconUpdateThread(QtCore.QThread):
+			#outputSignal = pyqtSignal(str, name = 'stepIncreased')
+			def run(self):
+				self.mainwindow
+			#def outputLine(self, text):
+			#	self.outputSignal.emit(text)
+
 class PreferencesDialog(QDialog):
 	def __init__(self, parent=None):
 		self.mainwindow=parent
@@ -495,7 +502,7 @@ class MainWindow(QtGui.QMainWindow):
 		if CliClass.IfEnigmaDir():
 			CliClass.print_notice("enigma installation found: "+self.enigmaPath)
 		else:
-			CliClass.print_error("enigma installation not found")
+			CliClass.print_error("enigma compiler library not found: "+self.enigmaPath)
 			if self.enigmaPath==".":
 				self.actionPreferences()
 			runAction.setDisabled(True)
@@ -1122,6 +1129,15 @@ class MainWindow(QtGui.QMainWindow):
 		self.projectTitle=os.path.split(fileName)[1]
 		self.projectUpdateWindowTitle()
 		self.updateHierarchyTree()
+		self.startBackgroundThread()
+
+	def startBackgroundThread(self):
+		global backgroundThread
+		backgroundThread = AThread()
+		#backgroundThread.outputSignal.connect(self.outputLine)
+		backgroundThread.mainwindow=self
+		#thread.finished.connect(app.exit)
+		backgroundThread.start()
 
 	def handleOpenAction(self):
 		self.projectPath = QFileDialog.getOpenFileName(self,"Open", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
