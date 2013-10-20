@@ -28,9 +28,9 @@ QMenuBar
 	color: #ffffe0;
 	font-size: 15px;
 	padding-left: 5px;
-     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
-                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #8A8A8A, stop: 0.4 #5C5C5C,
+                                 stop: 0.5 #333333, stop: 1.0 #222222);
 }
 QMenuBar::item
 {
@@ -38,8 +38,8 @@ QMenuBar::item
 	padding-left: 6px;
 	padding-right: 7px;
      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
-                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
+                                 stop: 0 #8A8A8A, stop: 0.4 #5C5C5C,
+                                 stop: 0.5 #333333, stop: 1.0 #222222);
 }
 QMenuBar::item:hover {
      background: #666666;
@@ -137,7 +137,7 @@ QTabBar::tab:selected
 	/*height: 18px;*/
 	padding-left: 9px;
 	padding-right: 7px;
-	background-color: gray;
+	background-color: red;
 	color: white;
 }
 QPushButton {
@@ -270,7 +270,7 @@ QScrollBar:horizontal {
   
   
   QTabWidget::pane { /* The tab widget frame */
-     border-top: 2px solid #C2C7CB;
+     border-top: 2px solid #666666;
  }
 
  QTabWidget::tab-bar {
@@ -280,11 +280,11 @@ QScrollBar:horizontal {
  /* Style the tab using the tab sub-control. Note that
      it reads QTabBar _not_ QTabWidget */
  QTabBar::tab {
-     border: 1px solid #C4C4C3;
-     border-bottom-color: #C2C7CB; /* same as the pane color */
+     border: 1px solid #666666;
+     border-bottom-color: #666666; /* same as the pane color */
      border-top-left-radius: 4px;
      border-top-right-radius: 4px;
-     min-width: 8ex;
+
      padding: 2px;
 
      	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -299,8 +299,8 @@ QScrollBar:horizontal {
  }
 
  QTabBar::tab:selected {
-     border-color: #9B9B9B;
-     border-bottom-color: #C2C7CB; /* same as pane color */
+     border-color: #666666;
+     border-bottom-color: #666666; /* same as pane color */
      color: white;
  }
 
