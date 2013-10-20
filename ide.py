@@ -818,7 +818,7 @@ class MainWindow(QtGui.QMainWindow):
 			w.saveResource()
 
 	def projectUpdateWindowTitle(self):
-		self.setWindowTitle(self.projectTitle+" "+["","*"][self.projectModified]+" - GameEditor")
+		self.setWindowTitle("GameEditor - " + self.projectTitle+" "+["","*"][self.projectModified])
 
 	def projectSetModified(self,m):
 		self.projectModified = m
