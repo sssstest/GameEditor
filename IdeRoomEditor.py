@@ -23,6 +23,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4.Qsci import *
 import CliClass
+from IdeResource import *
 
 class RoomViewInstance(QWidget):
 	def __init__(self, image, res, parent, qTreeWidgetItem):
@@ -278,3 +279,114 @@ class RoomView(QWidget):
 					if type(c)==RoomViewInstance:
 						c.selected=True
 						c.update()
+
+class RoomWindow(ResourceWindow):
+	def __init__(self, mainwindow, res):
+		ResourceWindow.__init__(self, mainwindow, res)
+		self.setWindowIcon(QIcon(resourcePath+"resources/room.png"))
+		self.propertiesList=["name","id","caption","width","height","speed","persistent","clearViewBackground","color","code",
+		"rememberRoomEditorInfo","roomEditorWidth","roomEditorHeight","showGrid",
+		"showObjects","showTiles","showBackgrounds","showForegrounds","showViews",
+		"deleteUnderlyingObj","deleteUnderlyingTiles","page","hsnap","vsnap","isometric",
+		"bgFlags","showcolor","enableViews","xoffset","yoffset",
+		"PhysicsWorld","PhysicsWorldTop","PhysicsWorldLeft","PhysicsWorldRight","PhysicsWorldBottom","PhysicsWorldGravityX",
+		"PhysicsWorldGravityY","PhysicsWorldGravityY","PhysicsWorldPixToMeters"]
+		self.propertiesType={"color":"color"}
+		self.app=mainwindow.app
+		splitter = QSplitter(self)
+		q=QWidget(splitter)
+		splitter.addWidget(q)
+		layout = QVBoxLayout(q)
+		self.tree=QTreeWidget(q)
+		self.tree.header().setVisible(False)
+		self.tree.itemSelectionChanged.connect(self.handleItemSelectionChanged)
+		layout.addWidget(self.tree)
+
+		q2=QWidget(q)
+		layout2 = QHBoxLayout(q2)
+		layout2.addWidget(QLabel("Add Object:"))
+		self.addObjectList=ResourceQComboBox(q,mainwindow,CliClass.GameObject,None)
+		self.addObjectList.setCurrentIndex(1)
+		self.addObjectList.currentIndexChanged.connect(self.handleCurrentIndexChanged)
+		layout2.addWidget(self.addObjectList)
+		q2.setLayout(layout2)
+		layout.addWidget(q2)
+		layout.addWidget(QLabel("Control click to add object instances"))
+
+		layout.setContentsMargins(0, 0, 0, 0)
+		q.setLayout(layout)
+		self.scrollAreas = QScrollArea(splitter)
+		self.updateTree()
+		splitter.addWidget(self.scrollAreas)
+		splitter.setSizes([self.width()*.25,self.width()*.75])
+		self.setWidget(splitter)
+		self.activeItem=None
+		self.res.addListener(self.resListener)
+		self.activeItem=self.addObjectList.currentText()
+
+	def resListener(self,type,member,value,val):
+		self.updateTree()
+
+	def keyReleaseEvent(self, event):
+		QWidget.keyReleaseEvent(self, event)
+		if event.matches(QKeySequence.Delete):
+			item=self.tree.currentItem()
+			if item:
+				if type(item.res) == CliClass.GameRoomInstance:
+					self.res.instances.remove(item.res)
+			self.updateTree()
+
+	def handleCurrentIndexChanged(self):
+		self.activeItem=self.addObjectList.currentText()
+
+	def handleItemSelectionChanged(self):
+		item=self.tree.selectedItems()
+		#if len(item)>0:
+		#	self.activeItem=item[0].text(0)
+
+	def updateTree(self):
+		self.tree.clear()
+		self.instancesItem = QTreeWidgetItem(self.tree,["Instances"])
+		self.instancesItem.setIcon(0, QIcon(resourcePath+"resources/group.png"))
+		self.instancesItem.setExpanded(True)
+		self.instancesItem.res=None
+		self.viewsItem = QTreeWidgetItem(self.tree,["Views"])
+		self.viewsItem.setIcon(0, QIcon(resourcePath+"resources/group.png"))
+		self.viewsItem.setExpanded(False)
+		self.viewsItem.res=None
+		self.backgroundsItem = QTreeWidgetItem(self.tree,["Backgrounds"])
+		self.backgroundsItem.setIcon(0, QIcon(resourcePath+"resources/group.png"))
+		self.backgroundsItem.setExpanded(False)
+		self.backgroundsItem.res=None
+		self.tilesItem = QTreeWidgetItem(self.tree,["Tiles"])
+		self.tilesItem.setIcon(0, QIcon(resourcePath+"resources/group.png"))
+		self.tilesItem.setExpanded(True)
+		self.tilesItem.res=None
+		for i in self.res.instances:
+			s=i.getMember("object")
+			if s:
+				name=s.getMember("name")
+				resIcon=QIcon(resourcePath+"resources/object.png")
+				sprite=s.getMember("sprite")
+				if sprite:
+					resIcon=sprite.getQIcon()
+			else:
+				name=""
+			item = QTreeWidgetItem(self.instancesItem,[name,str(i.getMember("x"))+","+str(i.getMember("y"))])
+			item.setIcon(0, resIcon)
+			item.res=i
+		for i in self.res.views:
+			item = QTreeWidgetItem(self.viewsItem,[str(i.getMember("objectFollowingIndex"))])
+			item.res=i
+		for i in self.res.backgrounds:
+			item = QTreeWidgetItem(self.backgroundsItem,[str(i.getMember("imageIndex"))])
+			item.res=i
+		for i in self.res.tiles:
+			item = QTreeWidgetItem(self.tilesItem,[str(i.getMember("id")),str(i.getMember("backgroundIndex"))])
+			item.res=i
+
+		roomView=RoomView(self.scrollAreas, self.res, self)
+		roomView.gridX=self.res.getMember("hsnap")
+		roomView.gridY=self.res.getMember("vsnap")
+		roomView.updateBrush()
+		self.scrollAreas.setWidget(roomView)
