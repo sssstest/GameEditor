@@ -28,7 +28,6 @@ QMenuBar
 	color: #ffffe0;
 	font-size: 15px;
 	padding-left: 5px;
-	padding-top: 1px;
      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                  stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
                                  stop: 0.5 #2E2E2E, stop: 1.0 #222222);
@@ -38,7 +37,6 @@ QMenuBar::item
 	color: #ffffff;
 	padding-left: 6px;
 	padding-right: 7px;
-	margin-top: 1px;
      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                  stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
                                  stop: 0.5 #2E2E2E, stop: 1.0 #222222);
@@ -73,6 +71,7 @@ QDockWidget
 {
 	color: #e0e0e0;
 	/*titlebar-close-icon: url();*/
+	titlebar-close-color: white;
 	icon-size: 13px;
 	width: 13px;
 }
@@ -80,15 +79,14 @@ QDockWidget::title
 {
 	text-align: left;
 	padding-left: 4px;
-	border: 1px solid #222222;
+	border: 2px solid #222222;
 	icon-size: 13px;
 	width: 13px;
-	background-color: #333333;
-	border-top: 1px solid #333333;
-	border-bottom: 1px solid #333333;
-     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
-                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
+	border-top: 2px solid #333333;
+	border-bottom: 2px solid #333333;
+     	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #4E4E4E, stop: 0.4 #333333,
+                                 stop: 0.5 #333333, stop: 1.0 #4E4E4E);
 }
 /*QDockWidget::close-button
 {
@@ -235,7 +233,7 @@ QScrollBar:horizontal {
  }
   QScrollBar:vertical {
       border: 2px solid #333333;
-      background: #32CC99;
+      background: #696969;
       width: 15px;
       margin: 22px 0 22px 0;
   }
@@ -245,7 +243,7 @@ QScrollBar:horizontal {
   }
   QScrollBar::add-line:vertical {
       border: 2px solid #333333;
-      background: #32CC99;
+      background: #696969;
       height: 20px;
       subcontrol-position: bottom;
       subcontrol-origin: margin;
@@ -253,7 +251,7 @@ QScrollBar:horizontal {
 
   QScrollBar::sub-line:vertical {
       border: 2px solid #333333;
-      background: #32CC99;
+      background: #696969;
       height: 20px;
       subcontrol-position: top;
       subcontrol-origin: margin;
@@ -282,25 +280,22 @@ QScrollBar:horizontal {
  /* Style the tab using the tab sub-control. Note that
      it reads QTabBar _not_ QTabWidget */
  QTabBar::tab {
-     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #333333, stop: 0.4 #FFFFFF,
-                                 stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
-     border: 2px solid #C4C4C3;
+     border: 1px solid #C4C4C3;
      border-bottom-color: #C2C7CB; /* same as the pane color */
      border-top-left-radius: 4px;
      border-top-right-radius: 4px;
      min-width: 8ex;
      padding: 2px;
 
-     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
-                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
+     	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #4E4E4E, stop: 0.4 #333333,
+                                 stop: 0.5 #333333, stop: 1.0 #4E4E4E);
  }
 
  QTabBar::tab:selected, QTabBar::tab:hover {
-     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #D4D4D4, stop: 0.4 #2E2E2E,
-                                 stop: 0.5 #2E2E2E, stop: 1.0 #222222);
+     	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                 stop: 0 #4E4E4E, stop: 0.4 #333333,
+                                 stop: 0.5 #333333, stop: 1.0 #4E4E4E);
  }
 
  QTabBar::tab:selected {
@@ -350,6 +345,16 @@ QStatusBar::item {
   border: 0px solid black; 
 }
 
-QsciScintilla {
-	background: gray;
+QToolBar {
+	icon-size: 10px;
+	border-radius: 0px;
+}
+QAction {
+	icon-size: 10px;
+}
+QToolBar::item {
+	icon-size: 10px;
+}
+QToolBar {
+	icon-size: 10px;
 }
