@@ -4109,7 +4109,7 @@ class GameSettings(GameResource):
 				e.printStackTrace();
 				}
 			}"""
-		og.gameIcon = 0#fn;
+		og.gameIcon = "../../CompilerSource/stupidity-buffer/enigma.ico"
 
 class GameInformation(GameResource):
 	defaults={"id":-1,"backgroundcolor":(255<<16) | (255<<8) | 255,#BuildColor(255, 255, 225)),
@@ -4604,6 +4604,7 @@ class GameFile(GameResource):
 
 	@staticmethod
 	def compileRunES(es, exePath, emode, EnigmaSettingsEy):
+		#print_warning("modified "+EnigmaSettingsEy.encode())
 		result=definitionsModified(b"", EnigmaSettingsEy.encode())
 		print_notice("definitions "+str(result[0].err_str))
 		if Class:#trick compileEGMf into using fixed make
