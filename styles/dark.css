@@ -12,12 +12,6 @@ QMdiArea
 	color: #ffe0e0;
 	background-color: #222222;
 }
-QTreeView
-{
-	background-color: #222222;
-	border: 1px solid #333333;
-	outline: 1px solid white;
-}
 QToolBar
 {
 	background-color: #222222;
@@ -362,6 +356,20 @@ QToolBar QToolButton::hover {
 	icon-size: 10px;
 	border: 2px solid #111111;
 	background: #444444;
+}
+
+QTreeView
+{
+	background-color: #222222;
+	border: 1px solid #333333;
+	outline: 1px solid white;
+}
+
+QTreeView::item:selected
+{
+	background: qlineargradient(spread:pad, x1:0, y1:0.96, x2:0, y2:0, 
+	stop: 0 #707980, stop: 1 #525E66);
+	color: white;
 }
 
 QTreeView::item:selected:active
