@@ -372,3 +372,15 @@ QToolBar QToolButton::hover {
 	border: 2px solid #111111;
 	background: #444444;
 }
+
+QTreeView::item:selected:active
+{
+	background: qlineargradient(spread:pad, x1:0, y1:0.96, x2:0, y2:0, 
+	stop: 0 #707980, stop: 1 #525E66);
+}
+
+QTreeView::item:hover
+{
+	background: qlineargradient(spread:pad, x1:0, y1:0.96, x2:0, y2:0, 
+	stop: 0 #B1BCC4, stop: 1 #7E919E);
+}
