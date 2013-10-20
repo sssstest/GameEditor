@@ -284,8 +284,8 @@ QScrollBar:horizontal {
      padding: 2px;
 
      	background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                 stop: 0 #4E4E4E, stop: 0.4 #333333,
-                                 stop: 0.5 #333333, stop: 1.0 #4E4E4E);
+                                 stop: 0 #3E3E3E, stop: 0.4 #222222,
+                                 stop: 0.5 #222222, stop: 1.0 #3E3E3E);
  }
 
  QTabBar::tab:selected, QTabBar::tab:hover {
