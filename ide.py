@@ -966,11 +966,11 @@ class MainWindow(QtGui.QMainWindow):
 				CliClass.print_warning=self.outputLine
 				CliClass.print_notice=self.outputLine
 				
-				self.mainwindow.gmk.compileRunEnigma(CliClass.tmpDir+"testgame",self.mainwindow.projectEmode)
+				self.mainwindow.gmk.compileRunEnigma(CliClass.tmpDir+"testgame.exe",self.mainwindow.projectEmode)
 				if self.mainwindow.projectEmode == CliClass.emode_compile:#emode_debug
 					self.mainwindow.gameProcessGdb=False
 					self.gameProcess = QProcess()
-					self.gameProcess.start(CliClass.tmpDir+"testgame")
+					self.gameProcess.start(CliClass.tmpDir+"testgame.exe")
 					self.gameProcess.readyReadStandardOutput.connect(self.handleProcessOutput)
 					self.gameProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
 					#self.mainwindow.gameProcess.finished.connect(self.mainwindow.handleProcessFinished)
@@ -1015,7 +1015,7 @@ class MainWindow(QtGui.QMainWindow):
 	def handleDebugAction(self):
 		self.gameProcessGdb=True
 		self.gameProcess = QProcess()
-		self.gameProcess.start("gdb "+CliClass.tmpDir+"testgame")
+		self.gameProcess.start("gdb "+CliClass.tmpDir+"testgame.exe")
 		self.gameProcess.setProcessChannelMode(QProcess.MergedChannels)
 		#self.gameProcess.start(CliClass.tmpDir+"testgame.exe")
 		self.debuggerCommands=["b main","run"]
