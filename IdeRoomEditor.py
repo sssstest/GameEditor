@@ -345,6 +345,7 @@ class RoomWindow(ResourceWindow):
 		#	self.activeItem=item[0].text(0)
 
 	def updateTree(self):
+		resIcon=QIcon(resourcePath+"resources/object.png")
 		self.tree.clear()
 		self.instancesItem = QTreeWidgetItem(self.tree,["Instances"])
 		self.instancesItem.setIcon(0, QIcon(resourcePath+"resources/group.png"))
@@ -372,6 +373,7 @@ class RoomWindow(ResourceWindow):
 					resIcon=sprite.getQIcon()
 			else:
 				name=""
+				print("no object"+repr(i))
 			item = QTreeWidgetItem(self.instancesItem,[name,str(i.getMember("x"))+","+str(i.getMember("y"))])
 			item.setIcon(0, resIcon)
 			item.res=i

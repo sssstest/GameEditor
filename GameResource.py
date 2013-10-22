@@ -24,6 +24,9 @@ from PyQt4 import QtGui, QtCore#font
 
 Class=1
 
+def ARGBtoRGBA(color):
+	return ((color&0xff0000)<<8) | ((color&0xff00)<<8) | ((color&0xff)<<8) | ((color&0xff000000)>>24)
+
 class GameResource(object):
 	def __init__(self, gameFile, id=-1):
 		self.gameFile=gameFile

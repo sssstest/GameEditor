@@ -18,23 +18,6 @@
 #* LateralGM is free software and comes with ABSOLUTELY NO WARRANTY.
 #* See LICENSE for details.
 
-#* getActionsCode converted to python from https://github.com/enigma-dev/enigma-dev/blob/master/pluginsource/org/enigma/EnigmaWriter.java
-
-#* Copyright (C) 2008, 2009 IsmAvatar <IsmAvatar@gmail.com>
-#* 
-#* Enigma Plugin is free software: you can redistribute it and/or modify
-#* it under the terms of the GNU General Public License as published by
-#* the Free Software Foundation, either version 3 of the License, or
-#* (at your option) any later version.
-#* 
-#* Enigma Plugin is distributed in the hope that it will be useful,
-#* but WITHOUT ANY WARRANTY; without even the implied warranty of
-#* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#* GNU General Public License (COPYING) for more details.
-#* 
-#* You should have received a copy of the GNU General Public License
-#* along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 #@section License
 #
 #Copyright (C) 2013 ssss
@@ -68,7 +51,7 @@ from CliEefReader import *
 from CliPrintColors import *
 from CliBinaryStream import *
 from CliEnigmaStruct import *
-from CliLexer import *
+
 from GameResource import *
 from GameSprite import *
 from GameSound import *
@@ -81,6 +64,10 @@ from GameTimeline import *
 from GameObject import *
 from GameRoom import *
 from GameTrigger import *
+from GameSettings import *
+from GameInformation import *
+from GameIncludeFile import *
+from GameTree import *
 
 def we_are_frozen():
     return hasattr(sys, "frozen")
@@ -168,807 +155,6 @@ def ifCleanArgumentValue(chil):
 def gmxFloat(string):
 	return float(string.replace(",","."))
 
-class GameSettings(GameResource):
-	if Class:
-		ScalingKeepAspectRatio = -1
-		ScalingFullScale=0
-		
-		#ColorDepth
-		CdNoChange=0
-		Cd16Bit=1
-		Cd32Bit=2
-		
-		ResolutionNoChange=0
-		Resolution320x240=1
-		Resolution640x480=2
-		Resolution800x600=3
-		Resolution1024x768=4
-		Resolution1280x1024=5
-		Resolution1600x1200=6
-		
-		FrequencyNoChange=0
-		Frequency60=1
-		Frequency70=2
-		Frequency85=3
-		Frequency100=4
-		Frequency120=5
-		
-		PriorityNormal=0
-		PriorityHigh=1
-		PriorityHighest=2
-		
-		#LoadingProgressBarType
-		LpbtNone=0
-		LpbtDefault=1
-		LpbtCustom=2
-	
-	defaults={"id":-1,"fullscreen":False,"interpolate":False,"noborder":False,"showcursor":True,
-	"scale":ScalingKeepAspectRatio,"sizeable":False,"stayontop":False,"windowcolor":0,
-	"changeresolution":False,"colordepth":CdNoChange,"resolution":ResolutionNoChange,"frequency":FrequencyNoChange,
-	"nobuttons":False,"vsync":False,"noscreensaver":True,"fullscreenkey":True,"helpkey":True,"quitkey":True,"savekey":True,#clifix gmx default
-	"screenshotkey":True,"closesecondary":True,"priority":PriorityNormal,
-	"freeze":False,"showprogress":LpbtDefault,
-	"frontImage":None,"backImage":None,"loadImage":None,"loadtransparent":False,"loadalpha":255,"scaleprogress":True,"iconImage":None,
-	"displayerrors":True,"writeerrors":False,"aborterrors":False,"treatUninitializedVariablesAsZero":False,"argumenterrors":True,
-	"author":"","version":"100","version_information":"","version_major":1,"version_minor":0,"version_release":0,"version_build":0,
-	"version_company":"","version_product":"","version_copyright":"","version_description":"",
-	"errorFlags":0}
-
-	def __init__(self, gameFile):
-		GameResource.__init__(self, gameFile, -1)
-
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
-		y=YamlParser()
-		r=y.parseStream(stream)
-		self.setMember("fullscreen",r.getMbool('START_FULLSCREEN'))
-		self.setMember("interpolate",r.getMbool('INTERPOLATE'))
-		self.setMember("noborder",r.getMbool('DONT_DRAW_BORDER'))
-		self.setMember("showcursor",r.getMbool('DISPLAY_CURSOR'))
-		self.setMember("scale",r.getMint('SCALING'))
-		self.setMember("sizeable",r.getMbool('ALLOW_WINDOW_RESIZE'))
-		self.setMember("stayontop",r.getMbool('ALWAYS_ON_TOP'))
-		self.setMember("windowcolor",r.getMhex('COLOR_OUTSIDE_ROOM'))
-		self.setMember("changeresolution",r.getMbool('SET_RESOLUTION'))
-		self.setMember("colordepth",r.getMchange('COLOR_DEPTH'))
-		self.setMember("resolution",r.getMchange('RESOLUTION'))
-		self.setMember("frequency",r.getMchange('FREQUENCY'))
-		self.setMember("nobuttons",r.getMbool('DONT_SHOW_BUTTONS'))
-		self.setMember("vsync",r.getMbool('USE_SYNCHRONIZATION'))
-		self.setMember("noscreensaver",r.getMbool('DISABLE_SCREENSAVERS'))
-		self.setMember("fullscreenkey",r.getMbool('LET_F4_SWITCH_FULLSCREEN'))
-		self.setMember("helpkey",r.getMbool('LET_F1_SHOW_GAME_INFO'))
-		self.setMember("quitkey",r.getMbool('LET_ESC_END_GAME'))
-		self.setMember("savekey",r.getMbool('LET_F5_SAVE_F6_LOAD'))
-		self.setMember("screenshotkey",r.getMbool('LET_F9_SCREENSHOT'))
-		self.setMember("closesecondary",r.getMbool('TREAT_CLOSE_AS_ESCAPE'))
-		self.setMember("priority",r.getMpriority('GAME_PRIORITY'))
-		self.setMember("freeze",r.getMbool('FREEZE_ON_LOSE_FOCUS'))
-		self.setMember("showprogress",r.getMmode('LOAD_BAR_MODE'))
-		#SHOW_CUSTOM_LOAD_IMAGE
-		self.setMember("loadtransparent",r.getMbool('IMAGE_PARTIALLY_TRANSPARENTY'))
-		self.setMember("loadalpha",r.getMint('LOAD_IMAGE_ALPHA'))
-		self.setMember("scaleprogress",r.getMbool('SCALE_PROGRESS_BAR'))
-		icon=r.getMstr('Icon')
-		iconStream=z.open(icon,"r")
-		icon=iconStream.read()
-		self.iconImage = BinaryStream(io.BytesIO(icon))
-		self.setMember("displayerrors",r.getMbool('DISPLAY_ERRORS'))
-		self.setMember("writeerrors",r.getMbool('WRITE_TO_LOG'))
-		self.setMember("aborterrors",r.getMbool('ABORT_ON_ERROR'))
-		#self.setMember("errorFlags"
-		self.setMember("treatUninitializedVariablesAsZero",r.getMbool('TREAT_UNINIT_AS_0'))
-		self.setMember("argumenterrors",r.getMbool('ERROR_ON_ARGS'))
-		#LAST_CHANGED
-		self.setMember("author",r.getMstr('AUTHOR'))
-		self.setMember("version",r.getMstr('VERSION'))
-		self.setMember("version_information",r.getMstr('INFORMATION'))
-		#INCLUDE_FOLDER
-		#OVERWRITE_EXISTING
-		#REMOVE_AT_GAME_END
-		self.setMember("version_major",r.getMint('VERSION_MAJOR'))
-		self.setMember("version_minor",r.getMint('VERSION_MINOR'))
-		self.setMember("version_release",r.getMint('VERSION_RELEASE'))
-		self.setMember("version_build",r.getMint('VERSION_BUILD'))
-		self.setMember("version_company",r.getMstr('COMPANY'))
-		self.setMember("version_product",r.getMstr('PRODUCT'))
-		self.setMember("version_copyright",r.getMstr('COPYRIGHT'))
-		self.setMember("version_description",r.getMstr('DESCRIPTION'))
-
-	def ReadGmk(self, stream):
-		settingsStream = stream.Deserialize()
-		self.setMember("fullscreen",settingsStream.ReadBoolean())
-		self.setMember("interpolate",settingsStream.ReadBoolean())
-		self.setMember("noborder",settingsStream.ReadBoolean())
-		self.setMember("showcursor",settingsStream.ReadBoolean())
-		self.setMember("scale",settingsStream.readInt32())
-		self.setMember("sizeable",settingsStream.ReadBoolean())
-		self.setMember("stayontop",settingsStream.ReadBoolean())
-		self.setMember("windowcolor",settingsStream.ReadDword())
-		self.setMember("changeresolution",settingsStream.ReadBoolean())
-		self.setMember("colordepth",settingsStream.ReadDword())
-		self.setMember("resolution",settingsStream.ReadDword())
-		self.setMember("frequency",settingsStream.ReadDword())
-		self.setMember("nobuttons",settingsStream.ReadBoolean())
-		self.setMember("vsync",settingsStream.ReadBoolean())
-		self.setMember("noscreensaver",settingsStream.ReadBoolean())
-		self.setMember("fullscreenkey",settingsStream.ReadBoolean())
-		self.setMember("helpkey",settingsStream.ReadBoolean())
-		self.setMember("quitkey",settingsStream.ReadBoolean())
-		self.setMember("savekey",settingsStream.ReadBoolean())
-		self.setMember("screenshotkey",settingsStream.ReadBoolean())
-		self.setMember("closesecondary",settingsStream.ReadBoolean())
-		self.setMember("priority",settingsStream.ReadDword())
-		self.setMember("freeze",settingsStream.ReadBoolean())
-		self.setMember("showprogress",settingsStream.ReadDword())
-		if self.getMember("showprogress") == GameSettings.LpbtCustom:
-			self.backImage = 1#settingsStream.ReadBitmap();
-			#frontImage = settingsStream.ReadBitmap();
-			exists=settingsStream.ReadDword()
-			if exists:
-				print_warning("settings Back Image")
-				data = settingsStream.Deserialize()
-			exists=settingsStream.ReadDword()
-			if exists:
-				print_warning("settings Front Image")
-				data = settingsStream.Deserialize()
-		if settingsStream.ReadBoolean():
-			exists = settingsStream.ReadDword()
-			settingsStream.Deserialize()
-			#loadImage = settingsStream.ReadBitmap();
-		self.setMember("loadtransparent",settingsStream.ReadBoolean())
-		self.setMember("loadalpha",settingsStream.ReadDword())
-		self.setMember("scaleprogress",settingsStream.ReadBoolean())
-		self.iconImage=settingsStream.Deserialize(0)
-		self.setMember("displayerrors",settingsStream.ReadBoolean())
-		self.setMember("writeerrors",settingsStream.ReadBoolean())
-		self.setMember("aborterrors",settingsStream.ReadBoolean())
-		self.setMember("errorFlags",settingsStream.ReadDword())
-		self.setMember("treatUninitializedVariablesAsZero",(self.getMember("errorFlags") & 0x01) == 0x01)
-		self.setMember("argumenterrors",(self.getMember("errorFlags") & 0x02) == 0x02)
-		self.setMember("author",settingsStream.ReadString())
-		self.setMember("version",settingsStream.ReadString())
-		#Last Changed date and time
-		settingsStream.ReadTimestamp()
-		self.setMember("version_information",settingsStream.ReadString())
-		self.setMember("version_major",settingsStream.ReadDword())
-		self.setMember("version_minor",settingsStream.ReadDword())
-		self.setMember("version_release",settingsStream.ReadDword())
-		self.setMember("version_build",settingsStream.ReadDword())
-		self.setMember("version_company",settingsStream.ReadString())
-		self.setMember("version_product",settingsStream.ReadString())
-		self.setMember("version_copyright",settingsStream.ReadString())
-		self.setMember("version_description",settingsStream.ReadString())
-		#Last time Global Game Settings were changed
-		settingsStream.ReadTimestamp()
-
-	def ReadGmx(self, root):
-		seen={}
-		if root.tag=="options":
-			option=""
-		elif root.tag=="Config":
-			option="option_"
-		else:
-			print_error("unsupported options root "+root.tag)
-		for child in root:
-			if seen.get(child.tag,0)>0:
-				print_error("duplicated tag "+child.tag)
-			seen[child.tag]=seen.get(child.tag,0)+1
-			if child.tag==option+"aborterrors":
-				self.setMember("aborterrors",child.text=="true")
-			elif child.tag==option+"argumenterrors":
-				self.setMember("argumenterrors",child.text=="true")
-			elif child.tag==option+"author":
-				self.setMember("author",emptyTextToString(child.text))
-			elif child.tag==option+"backimage":
-				pass#self.backImage=
-			elif child.tag==option+"changed":pass
-			elif child.tag==option+"changeresolution":
-				self.setMember("changeresolution",child.text=="true")
-			elif child.tag==option+"closeesc":
-				self.setMember("closesecondary",child.text=="true")
-			elif child.tag==option+"colordepth":
-				self.setMember("colordepth",int(child.text))
-			elif child.tag==option+"display_name":
-				pass#self.gameInformation.setMember("caption",emptyTextToString(child.text))
-			elif child.tag==option+"displayerrors":
-				self.setMember("displayerrors",child.text=="true")
-			elif child.tag==option+"facebook_appid":pass
-			elif child.tag==option+"facebook_enable":pass
-			elif child.tag==option+"freeze":
-				#self.gameInformation.setMember("freeze",child.text=="true")
-				self.setMember("freeze",child.text=="true")
-			elif child.tag==option+"frequency":
-				self.setMember("frequency",int(child.text))
-			elif child.tag==option+"frontimage":
-				pass#self.frontImage=
-			elif child.tag==option+"fullscreen":
-				self.setMember("fullscreen",child.text=="true")
-			elif child.tag==option+"gameguid":pass
-			elif child.tag==option+"gameid":pass
-			elif child.tag==option+"GameID":pass
-			elif child.tag==option+"GUID":pass
-			elif child.tag==option+"haptic_effects":pass
-			elif child.tag==option+"hasloadimage":pass
-			elif child.tag==option+"helpkey":
-				self.setMember("helpkey",child.text=="true")
-			elif child.tag==option+"icon":
-				pass#self.iconImage=
-			elif child.tag==option+"in_app_purchase_enable":pass
-			elif child.tag==option+"in_app_purchase_sandbox_mode":pass
-			elif child.tag==option+"in_app_purchase_server_url":pass
-			elif child.tag==option+"information":
-				pass#self.gameInformation.setMember("information",emptyTextToString(child.text))
-			elif child.tag==option+"interpolate":
-				self.setMember("interpolate",child.text=="true")
-			elif child.tag==option+"lastchanged":pass
-			elif child.tag==option+"loadalpha":
-				self.setMember("loadalpha",int(child.text))
-			elif child.tag==option+"loadimage":
-				pass#self.loadImage=
-			elif child.tag==option+"loadtransparent":
-				self.setMember("loadtransparent",child.text=="true")
-			elif child.tag==option+"noborder":
-				#self.gameInformation.setMember("showborder"
-				self.setMember("noborder",child.text=="true")
-			elif child.tag==option+"nobuttons":
-				self.setMember("nobuttons",child.text=="true")
-			elif child.tag==option+"noscreensaver":
-				self.setMember("noscreensaver",child.text=="true")
-			elif child.tag==option+"priority":
-				self.setMember("priority",int(child.text))
-			elif child.tag==option+"quitkey":
-				self.setMember("quitkey",child.text=="true")
-			elif child.tag==option+"resolution":
-				self.setMember("resolution",int(child.text))
-			elif child.tag==option+"savekey":pass
-			elif child.tag==option+"scale":
-				self.setMember("scale",int(child.text))
-			elif child.tag==option+"scaleprogress":
-				self.setMember("scaleprogress",child.text=="true")
-			elif child.tag==option+"sci_Password":pass
-			elif child.tag==option+"sci_RememberPassword":pass
-			elif child.tag==option+"sci_UseSCI":pass
-			elif child.tag==option+"sci_UserName":pass
-			elif child.tag==option+"sci_serverlocation":pass
-			elif child.tag==option+"screenkey":pass
-			elif child.tag==option+"screenshotkey":
-				self.setMember("screenshotkey",child.text=="true")
-			elif child.tag==option+"showcursor":
-				self.setMember("showcursor",child.text=="true")
-			elif child.tag==option+"showprogress":
-				self.setMember("showprogress",int(child.text))
-			elif child.tag==option+"sizeable":
-				#self.gameInformation.setMember("sizeable",child.text=="true")
-				self.setMember("sizeable",child.text=="true")
-			elif child.tag==option+"stayontop":
-				#self.gameInformation.setMember("alwaysontop",child.text=="true")
-				self.setMember("stayontop",child.text=="true")
-			elif child.tag==option+"sync_vertex":#clifix
-				pass#self.vsync
-			elif child.tag==option+"sync":#options
-				pass#self.vsync
-			elif child.tag==option+"textureGroup_count":pass
-			elif child.tag==option+"use_new_audio":pass
-			elif child.tag==option+"variableerrors":pass
-			elif child.tag==option+"version":
-				self.setMember("version",emptyTextToString(child.text))
-			elif child.tag==option+"version_build":
-				self.setMember("version_build",int(child.text))
-			elif child.tag==option+"version_company":
-				self.setMember("version_company",emptyTextToString(child.text))
-			elif child.tag==option+"version_copyright":
-				self.setMember("version_copyright",emptyTextToString(child.text))
-			elif child.tag==option+"version_description":
-				self.setMember("version_description",emptyTextToString(child.text))
-			elif child.tag==option+"version_major":
-				self.setMember("version_major",int(child.text))
-			elif child.tag==option+"version_minor":
-				self.setMember("version_minor",int(child.text))
-			elif child.tag==option+"version_product":
-				self.setMember("version_product",emptyTextToString(child.text))
-			elif child.tag==option+"version_release":
-				self.setMember("version_release",int(child.text))
-			elif child.tag==option+"windowcolor":#clBlack
-				pass#self.windowcolor=
-			elif child.tag==option+"writeerrors":
-				self.setMember("writeerrors",child.text=="true")
-			else:
-				if child.tag.startswith(option+"android_"):pass
-					#self.setMember("child.tag",child.text)
-				elif child.tag.startswith(option+"html5_"):pass
-				elif child.tag.startswith(option+"ios_"):pass
-				elif child.tag.startswith(option+"linux_"):pass
-				elif child.tag.startswith(option+"mac_"):pass
-				elif child.tag.startswith(option+"tizen_"):pass
-				elif child.tag.startswith(option+"win8_"):pass
-				elif child.tag.startswith(option+"windows_"):pass
-				elif child.tag.startswith(option+"winphone_"):pass
-				elif child.tag.startswith(option+"textureGroup"):pass
-				else:
-					print_error("unsupported tag "+child.tag)
-
-	def WriteGmk(self, stream):
-		settingsStream = BinaryStream()
-		settingsStream.WriteBoolean(self.getMember("fullscreen"))
-		settingsStream.WriteBoolean(self.getMember("interpolate"))
-		settingsStream.WriteBoolean(self.getMember("noborder"))
-		settingsStream.WriteBoolean(self.getMember("showcursor"))
-		settingsStream.WriteDword(self.getMember("scale"))
-		settingsStream.WriteBoolean(self.getMember("sizeable"))
-		settingsStream.WriteBoolean(self.getMember("stayontop"))
-		settingsStream.writeUInt32(self.getMember("windowcolor"))
-		settingsStream.WriteBoolean(self.getMember("changeresolution"))
-		settingsStream.WriteDword(self.getMember("colordepth"))
-		settingsStream.WriteDword(self.getMember("resolution"))
-		settingsStream.WriteDword(self.getMember("frequency"))
-		settingsStream.WriteBoolean(self.getMember("nobuttons"))
-		settingsStream.WriteBoolean(self.getMember("vsync"))
-		settingsStream.WriteBoolean(self.getMember("noscreensaver"))
-		settingsStream.WriteBoolean(self.getMember("fullscreenkey"))
-		settingsStream.WriteBoolean(self.getMember("helpkey"))
-		settingsStream.WriteBoolean(self.getMember("quitkey"))
-		settingsStream.WriteBoolean(self.getMember("savekey"))
-		settingsStream.WriteBoolean(self.getMember("screenshotkey"))
-		settingsStream.WriteBoolean(self.getMember("closesecondary"))
-		settingsStream.WriteDword(self.getMember("priority"))
-		settingsStream.WriteBoolean(self.getMember("freeze"))
-		settingsStream.WriteDword(self.getMember("showprogress"))
-		if self.getMember("showprogress") == GameSettings.LpbtCustom:
-			print_error("showprogress not none")
-			settingsStream.WriteBitmap(self.backImage)
-			settingsStream.WriteBitmap(self.frontImage)
-		if self.getMember("loadImage") != None:
-			print_error("loadimage not none")
-			settingsStream.WriteBoolean(True)
-			settingsStream.WriteBitmap(self.getMember("loadImage"))
-		else:
-			settingsStream.WriteBoolean(False)
-		settingsStream.WriteBoolean(self.getMember("loadtransparent"))
-		settingsStream.WriteDword(self.getMember("loadalpha"))
-		settingsStream.WriteBoolean(self.getMember("scaleprogress"))
-		settingsStream.Serialize(self.iconImage, False)
-		settingsStream.WriteBoolean(self.getMember("displayerrors"))
-		settingsStream.WriteBoolean(self.getMember("writeerrors"))
-		settingsStream.WriteBoolean(self.getMember("aborterrors"))
-		settingsStream.WriteDword(((self.getMember("argumenterrors") & 0x01) << 1) | (self.getMember("treatUninitializedVariablesAsZero") & 0x01))
-		settingsStream.WriteString(self.getMember("author"))
-		settingsStream.WriteString(self.getMember("version"))
-		settingsStream.WriteTimestamp()
-		settingsStream.WriteString(self.getMember("version_information"))
-		settingsStream.WriteDword(self.getMember("version_major"))
-		settingsStream.WriteDword(self.getMember("version_minor"))
-		settingsStream.WriteDword(self.getMember("version_release"))
-		settingsStream.WriteDword(self.getMember("version_build"))
-		settingsStream.WriteString(self.getMember("version_company"))
-		settingsStream.WriteString(self.getMember("version_product"))
-		settingsStream.WriteString(self.getMember("version_copyright"))
-		settingsStream.WriteString(self.getMember("version_description"))
-		settingsStream.WriteTimestamp()
-		stream.Serialize(settingsStream)
-
-	def WriteGGG(self):
-		stri="@settings {\n"
-		for key in self.members:
-			if not self.ifDefault(key):
-				stri+="\t"+key+"="+str(self.getMember(key))+"\n"
-		stri+="}\n"
-		return stri
-
-	def WriteESGameSettings(self,es):
-		og=es.gameSettings
-		og.startFullscreen = self.getMember("fullscreen")
-		og.interpolate = self.getMember("interpolate")
-		og.dontDrawBorder = self.getMember("noborder")
-		og.displayCursor = self.getMember("showcursor")
-		og.scaling = self.getMember("scale")
-		og.allowWindowResize = self.getMember("sizeable")
-		og.alwaysOnTop = self.getMember("stayontop")
-		og.colorOutsideRoom = ARGBtoRGBA(self.getMember("windowcolor"))
-		og.setResolution = self.getMember("changeresolution")
-		og.colorDepth = self.getMember("colordepth")
-		og.resolution = self.getMember("resolution")
-		og.frequency = self.getMember("frequency")
-		og.dontShowButtons = self.getMember("nobuttons")
-		og.useSynchronization = self.getMember("vsync")
-		og.disableScreensavers = self.getMember("noscreensaver")
-		og.letF4SwitchFullscreen = self.getMember("fullscreenkey")
-		og.letF1ShowGameInfo = self.getMember("helpkey")
-		og.letEscEndGame = self.getMember("quitkey")
-		og.letF9Screenshot = self.getMember("screenshotkey")
-		og.treatCloseAsEscape = self.getMember("closesecondary")#clifix
-		og.gamePriority = self.getMember("priority")
-		og.freezeOnLoseFocus = self.getMember("freeze")
-		og.loadBarMode = self.getMember("showprogress")
-		og.imagePartiallyTransparent = self.getMember("loadtransparent")
-		og.loadImageAlpha = self.getMember("loadalpha")
-		og.scaleProgressBar = self.getMember("scaleprogress")
-		og.displayErrors = self.getMember("displayerrors")
-		og.writeToLog = self.getMember("writeerrors")
-		og.abortOnError = self.getMember("aborterrors")
-		og.treatUninitializedAs0 = self.getMember("treatUninitializedVariablesAsZero")
-		og.author = self.getMember("author").encode()
-		og.version = self.getMember("version").encode()
-		og.information = self.getMember("version_information").encode()
-		#og.includeFolder = GmFile.GS_INCFOLDER_CODE.get(ig.get(PGameSettings.INCLUDE_FOLDER));
-		#og.overwriteExisting = ig.get(PGameSettings.OVERWRITE_EXISTING);
-		#og.removeAtGameEnd = ig.get(PGameSettings.REMOVE_AT_GAME_END);
-		og.versionMajor = self.getMember("version_major")
-		og.versionMinor = self.getMember("version_minor")
-		og.versionRelease = self.getMember("version_release")
-		og.versionBuild = self.getMember("version_build")
-		og.company = self.getMember("version_company").encode()
-		og.product = self.getMember("version_product").encode()
-		og.copyright = self.getMember("version_copyright").encode()
-		og.description = self.getMember("version_description").encode()
-		#All this shit is just to write the icon to a temp file and provide the filename...
-		"""ICOFile ico = ig.get(PGameSettings.GAME_ICON);
-		OutputStream os = null;
-		String fn = null;
-		if (ico != null) try
-			{
-			File f = File.createTempFile("gms_ico",".ico");
-			ico.write(os = new FileOutputStream(f));
-			fn = f.getAbsolutePath();
-			}
-		catch (IOException e)
-			{
-			e.printStackTrace();
-			}
-		finally
-			{
-			if (os != null) try
-				{
-				os.close();
-				}
-			catch (IOException e)
-				{
-				e.printStackTrace();
-				}
-			}"""
-		og.gameIcon = "../../CompilerSource/stupidity-buffer/enigma.ico"
-
-class GameInformation(GameResource):
-	defaults={"id":-1,"backgroundcolor":(255<<16) | (255<<8) | 255,#BuildColor(255, 255, 225)),
-	"showInSeperateWindow":True,"caption":"Game Information","left":-1,
-	"top":-1,"width":600,"height":400,"showborder":True,"sizeable":True,
-	"alwaysontop":False,"freeze":True,"information":"""{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033
-					  {\\fonttbl{\\f0\\fnil Arial;}}{\\colortbl ;\\red0\\green0\\blue0;}
-					  \\viewkind4\\uc1\\pard\\cf1\\f0\\fs24}"""}
-
-	def __init__(self, gameFile):
-		GameResource.__init__(self, gameFile, -1)
-
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
-		y=YamlParser()
-		r=y.parseStream(stream)
-		self.setMember("backgroundcolor",r.getMhex('BACKGROUND_COLOR'))
-		self.setMember("showInSeperateWindow",r.getMbool('MIMIC_GAME_WINDOW'))#clifix
-		self.setMember("caption",r.getMstr('FORM_CAPTION'))
-		self.setMember("left",r.getMint('LEFT'))
-		self.setMember("top",r.getMint('TOP'))
-		self.setMember("width",r.getMint('WIDTH'))
-		self.setMember("height",r.getMint('HEIGHT'))
-		self.setMember("showborder",r.getMbool('SHOW_BORDER'))
-		self.setMember("sizeable",r.getMbool('ALLOW_RESIZE'))
-		self.setMember("alwaysontop",r.getMbool('STAY_ON_TOP'))
-		self.setMember("freeze",r.getMbool('PAUSE_GAME'))
-
-	def ReadGmk(self, stream):
-		gameInfoStream = stream.Deserialize()
-		self.setMember("backgroundcolor",gameInfoStream.ReadDword())
-		self.setMember("showInSeperateWindow",gameInfoStream.ReadBoolean())
-		self.setMember("caption",gameInfoStream.ReadString())
-		self.setMember("left",gameInfoStream.readInt32())
-		self.setMember("top",gameInfoStream.readInt32())
-		self.setMember("width",gameInfoStream.ReadDword())
-		self.setMember("height",gameInfoStream.ReadDword())
-		self.setMember("showborder",gameInfoStream.ReadBoolean())
-		self.setMember("sizeable",gameInfoStream.ReadBoolean())
-		self.setMember("alwaysontop",gameInfoStream.ReadBoolean())
-		self.setMember("freeze",gameInfoStream.ReadBoolean())
-		gameInfoStream.ReadTimestamp()
-		self.setMember("information",gameInfoStream.ReadString())
-		#Background Color of Game Information
-		if len(self.getMember("information"))>400:
-			print_warning("game information too big "+str(len(self.getMember("information"))))
-			self.setMember("information","")
-
-	def WriteGmk(self, stream):
-		gameInfoStream = BinaryStream()
-		gameInfoStream.writeUInt32(self.getMember("backgroundcolor"))
-		gameInfoStream.WriteBoolean(self.getMember("showInSeperateWindow"))
-		gameInfoStream.WriteString(self.getMember("caption"))
-		gameInfoStream.WriteDword(self.getMember("left"))
-		gameInfoStream.WriteDword(self.getMember("top"))
-		gameInfoStream.WriteDword(self.getMember("width"))
-		gameInfoStream.WriteDword(self.getMember("height"))
-		gameInfoStream.WriteBoolean(self.getMember("showborder"))
-		gameInfoStream.WriteBoolean(self.getMember("sizeable"))
-		gameInfoStream.WriteBoolean(self.getMember("alwaysontop"))
-		gameInfoStream.WriteBoolean(self.getMember("freeze"))
-		gameInfoStream.WriteTimestamp()
-		gameInfoStream.WriteString(self.getMember("information"))
-		stream.Serialize(gameInfoStream)
-
-	def WriteGGG(self):
-		stri="@gameinformation {\n"
-		for key in self.members:
-			if not self.ifDefault(key):
-				if key != "information":
-					stri+="\t"+key+"="+str(self.getMember(key))+"\n"
-		stri+="\t@information {\n"+str(self.getMember("information"))+"}\n"
-		stri+="}\n"
-		return stri
-
-class GameIncludeFile(GameResource):
-	#ExportKind
-	EkDont=0
-	EkTempDirectory=1
-	EkWorkingDirectory=2
-	EkFollowingFolder=3
-
-	defaults={"id":-1,"name":"noname","filename":"","filepath":"","originalFile":False,"originalFileSize":0,"data":None,
-	"exportKind":EkDont,"exportPath":"","overwrite":False,"freeMemory":True,"removeAtEndOfGame":True}
-
-	def __init__(self, gameFile, id):
-		GameResource.__init__(self, gameFile, id)
-
-	def WriteGGG(self):
-		stri="@includefile {\n"
-		for key in self.members:
-			if not self.ifDefault(key):
-				if key != "data":
-					try:
-						stri+="\t"+key+"="+str(self.getMember(key))+"\n"
-					except:
-						print_error("exception "+key)
-		stri+="\t@data {\n"+str(self.getMember("data").EncodeBase64().decode())+"}\n"
-		stri+="}\n"
-		return stri
-
-	def WriteGmk(self, stream):
-		includeFileStream = BinaryStream()
-		includeFileStream.WriteTimestamp()
-		includeFileStream.WriteDword(800)
-		includeFileStream.WriteString(self.getMember("filename"))
-		includeFileStream.WriteString(self.getMember("filepath"))
-		includeFileStream.WriteBoolean(self.getMember("originalFile"))
-		includeFileStream.WriteDword(self.getMember("originalFileSize"))
-		if self.getMember("data"):
-			includeFileStream.WriteBoolean(True)
-			includeFileStream.Serialize(self.getMember("data"), False)
-		else:
-			includeFileStream.WriteBoolean(False)
-		includeFileStream.WriteDword(self.getMember("exportKind"))
-		includeFileStream.WriteString(self.getMember("exportPath"))
-		includeFileStream.WriteBoolean(self.getMember("overwrite"))
-		includeFileStream.WriteBoolean(self.getMember("freeMemory"))
-		includeFileStream.WriteBoolean(self.getMember("removeAtEndOfGame"))
-		stream.Serialize(includeFileStream)
-
-	def ReadGmk(self, stream):
-		includeFileStream = stream.Deserialize()
-		includeFileStream.ReadTimestamp()
-		includeFileStream.ReadDword()
-		self.setMember("filename",includeFileStream.ReadString())
-		self.setMember("filepath",includeFileStream.ReadString())
-		self.setMember("originalFile",includeFileStream.ReadBoolean())
-		self.setMember("originalFileSize",includeFileStream.ReadDword())
-		if includeFileStream.ReadBoolean():
-			self.setMember("data", includeFileStream.Deserialize(False))
-		self.setMember("exportKind",includeFileStream.ReadDword())
-		self.setMember("exportPath",includeFileStream.ReadString())
-		self.setMember("overwrite",includeFileStream.ReadBoolean())
-		self.setMember("freeMemory",includeFileStream.ReadBoolean())
-		self.setMember("removeAtEndOfGame",includeFileStream.ReadBoolean())
-
-class GameTreeNode(object):
-	def __init__(self,_status, _group, _index, _name):
-		self.index=_index
-		self.name=_name
-		self.status=_status
-		self.group=_group
-		self.resource=None
-		self.contents=[]
-
-	def Finalize(self,parent):
-		groupKind = [
-			GameFile.RtUnknown,
-			GameObject,
-			GameSprite,
-			GameSound,
-			GameRoom,
-			GameFile.RtUnknown,
-			GameBackground,
-			GameScript,
-			GamePath,
-			GameFont,
-			GameFile.RtUnknown,
-			GameFile.RtUnknown,
-			GameTimeline,
-			GameFile.RtUnknown,
-			GameShader]
-		self.resource = parent.gameFile.GetResource(groupKind[self.group], self.index)
-		for i in range(len(self.contents)):
-			self.contents[i].Finalize(parent)
-
-	def AddResource(self,resource):
-		self.index = resource.GetId()
-		node = GameTreeNode(StatusSecondary, self.group, self.index, self.resource.name)
-		node.resource = self.resource
-		self.contents.append(node)
-
-	def AddFilter(self,value):
-		node = GameTreeNode(StatusGroup, self.group, -1, value)
-		self.contents.push_back(node)
-		return node
-
-class GameTree(GameResource):
-	if Class:
-		StatusPrimary = 1
-		StatusGroup = 2
-		StatusSecondary = 3
-
-		GroupObjects = 1
-		GroupSprites = 2
-		GroupSounds = 3
-		GroupRooms = 4
-		GroupBackgrounds = 6
-		GroupScripts = 7
-		GroupShaders=14
-		GroupPaths = 8
-		GroupDataFiles = 9
-		GroupFonts = GroupDataFiles
-		GroupGameInformation = 10
-		GroupGameOptions = 11
-		GroupGlobalGameOptions = GroupGameOptions
-		GroupTimelines = 12
-		GroupExtensionPackages = 13
-		GroupCount = 15
-
-	def __init__(self, gameFile):
-		GameResource.__init__(self, gameFile, -1)
-		self.contents=[]
-
-	def ReadGmk(self, stream):
-		for i in range(12):
-			status = stream.ReadDword()
-			group = stream.ReadDword()
-			stream.ReadDword()
-			name = stream.ReadString()
-			node = GameTreeNode(status, group, -1, name)
-			self.ReadRecursiveTree(stream, node, stream.ReadDword())
-			self.contents.append(node)
-
-	def ReadRecursiveTree(self, stream, parent, count):
-		for c in range(count):
-			status = stream.ReadDword()
-			group = stream.ReadDword()
-			index = stream.ReadDword()
-			name = stream.ReadString()
-			node = GameTreeNode(status, group, index, name)
-			self.ReadRecursiveTree(stream, node, stream.ReadDword())
-			parent.contents.append(node)
-
-	def WriteGmk(self, stream):
-		for i in range(12):
-			stream.WriteDword(self.contents[i].status)
-			stream.WriteDword(self.contents[i].group)
-			stream.WriteDword(0)
-			stream.WriteString(self.contents[i].name)
-			stream.WriteDword(len(self.contents[i].contents))
-			self.WriteRecursiveTree(stream, self.contents[i], len(self.contents[i].contents))
-
-	def WriteRecursiveTree(self, stream, parent, count):
-		for i in range(count):
-			if parent.contents[i].resource == None and parent.contents[i].status != GameTree.StatusGroup:
-				if parent.contents[i].status == GameTree.StatusPrimary:
-					print_warning("StatusPrimary")
-				else:
-					print_error("NULL resource \"" + parent.contents[i].name + "\" in resource tree")
-			stream.WriteDword(parent.contents[i].status)
-			stream.WriteDword(parent.contents[i].group)
-			if parent.contents[i].status == GameTree.StatusGroup or parent.contents[i].status == GameTree.StatusPrimary:#fucking StatusPrimary
-				stream.WriteDword(0)
-				stream.WriteString(parent.contents[i].name)
-			else:
-				stream.WriteDword(parent.contents[i].resource.getMember("id"))
-				stream.WriteString(parent.contents[i].resource.getMember("name"))
-			stream.WriteDword(len(parent.contents[i].contents))
-			self.WriteRecursiveTree(stream, parent.contents[i], len(parent.contents[i].contents))
-
-	def Finalize(self):
-		for i in range(len(self.contents)):
-			self.contents[i].Finalize(self)
-		names=[]
-		for node in self.contents:
-			names.append(node.name)
-		if "Shaders" not in names:
-			for count in range(len(self.contents)):
-				if self.contents[count].name=="Scripts":
-					group,status = self.PrimaryGroupName("Shaders")
-					node = GameTreeNode(status, group, -1, "Shaders")
-					self.contents.insert(count+1,node)
-
-	def PrimaryGroupName(self, name):
-		status=GameTree.StatusPrimary
-		name=name.lower()
-		if name=="objects":
-			group=GameTree.GroupObjects
-		elif name=="sprites":
-			group=GameTree.GroupSprites
-		elif name=="sounds":
-			group=GameTree.GroupSounds
-		elif name=="rooms":
-			group=GameTree.GroupRooms
-		elif name=="backgrounds" or name=="background":
-			group=GameTree.GroupBackgrounds
-		elif name=="scripts":
-			group=GameTree.GroupScripts
-		elif name=="shaders":
-			group=GameTree.GroupShaders
-		elif name=="paths":
-			group=GameTree.GroupPaths
-		elif name=="fonts":
-			group=GameTree.GroupFonts
-		elif name=="game information":
-			group=GameTree.GroupGameInformation
-			status=GameTree.StatusSecondary
-		elif name=="global game settings":
-			group=GameTree.GroupGameOptions
-			status=GameTree.StatusSecondary
-		elif name=="timelines":
-			group=GameTree.GroupTimelines
-		elif name=="extensions":
-			group=GameTree.GroupExtensionPackages
-			status=GameTree.StatusSecondary
-		else:
-			print_error("unsupported group name "+name)
-		return group,status
-
-	def AddGroupName(self, name):
-		group,status = self.PrimaryGroupName(name)
-		node = GameTreeNode(status, group, -1, name)
-		self.contents.append(node)
-		return node
-
-	def FindNodeName(self, name):
-		return self.FindRecursiveNodeName(name, self)
-
-	def FindRecursiveNodeName(self, name, r):
-		for x in r.contents:
-			if x.name==name:
-				return x,r
-			node,tree=self.FindRecursiveNodeName(name, x)
-			if node:
-				return node,tree
-		return None,None
-
-	def AddResourcePath(self, path, resource):
-		p=path.split("/")
-		r=self
-		status=GameTree.StatusPrimary
-		group=0
-		for name in p:
-			node=None
-			for x in r.contents:
-				if x.name.lower()==name.lower():
-					node=x
-					group=node.group
-			if node==None:
-				if r==self:
-					group,status = self.PrimaryGroupName(name)
-					if status!=GameTree.StatusPrimary:
-						print_error("status isn't StatusPrimary")
-				node = GameTreeNode(status, group, -1, name)
-				r.contents.append(node)
-			r=node
-		r.status=GameTree.StatusSecondary
-		r.resource=resource
-		r.index=resource.getMember("id")
-
 class GameFile(GameResource):
 	defaults={"version":0,"gameId":0,"settings":None,"triggers":[]}
 
@@ -978,10 +164,6 @@ class GameFile(GameResource):
 		GMK_MAX_ID				= 100000000
 		GMK_MIN_INSTANCE_LAST_ID	= 100000
 		GMK_MIN_TILE_LAST_ID		= 1000000
-
-		#ResourceType
-		RtUnknown=9
-		RtCount=10
 
 	def __init__(self):
 		GameResource.__init__(self, self, -1)
@@ -1826,92 +1008,94 @@ class GameFile(GameResource):
 		if self.resourceTree:
 			self.resourceTree.Finalize()
 
-	def GetResourceHighestId(self, type):
+	def GetResourceHighestId(self, typec):
 		highest=-1
-		if type==GameSprite:
+		if type(typec)==str:
+			typec=eval(typec)
+		if typec==GameSprite:
 			for s in self.sprites:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameSound:
+		elif typec==GameSound:
 			for s in self.sounds:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameBackground:
+		elif typec==GameBackground:
 			for s in self.backgrounds:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GamePath:
+		elif typec==GamePath:
 			for s in self.paths:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameScript:
+		elif typec==GameScript:
 			for s in self.scripts:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameShader:
+		elif typec==GameShader:
 			for s in self.shaders:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameFont:
+		elif typec==GameFont:
 			for s in self.fonts:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameTimeline:
+		elif typec==GameTimeline:
 			for s in self.timelines:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameObject:
+		elif typec==GameObject:
 			for s in self.objects:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
-		elif type==GameRoom:
+		elif typec==GameRoom:
 			for s in self.rooms:
 				id = s.getMember("id")
 				if id>highest:
 					highest=id
 		return highest
 
-	def GetResource(self, type, index):
-		if type==str:
-			type=eval(str)
-		if type==GameSprite:
+	def GetResource(self, typec, index):
+		if type(typec)==str:
+			typec=eval(typec)
+		if typec==GameSprite:
 			for s in self.sprites:
 				if s.getMember("id")==index:
 					return s
-		elif type==GameSound:
+		elif typec==GameSound:
 			for s in self.sounds:
 				if s.getMember("id")==index: return s
-		elif type==GameBackground:
+		elif typec==GameBackground:
 			for s in self.backgrounds:
 				if s.getMember("id")==index: return s
-		elif type==GamePath:
+		elif typec==GamePath:
 			for s in self.paths:
 				if s.getMember("id")==index: return s
-		elif type==GameScript:
+		elif typec==GameScript:
 			for s in self.scripts:
 				if s.getMember("id")==index: return s
-		elif type==GameShader:
+		elif typec==GameShader:
 			for s in self.shaders:
 				if s.getMember("id")==index: return s
-		elif type==GameFont:
+		elif typec==GameFont:
 			for s in self.fonts:
 				if s.getMember("id")==index: return s
-		elif type==GameTimeline:
+		elif typec==GameTimeline:
 			for s in self.timelines:
 				if s.getMember("id")==index: return s
-		elif type==GameObject:
+		elif typec==GameObject:
 			for s in self.objects:
 				if s.getMember("id")==index: return s
-		elif type==GameRoom:
+		elif typec==GameRoom:
 			for s in self.rooms:
 				if s.getMember("id")==index: return s
 		return None

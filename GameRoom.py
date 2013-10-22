@@ -23,9 +23,6 @@ from GameResource import *
 def ABGRtoARGB(color):
 	return (color&0xff000000) | ((color&0xff)<<16) | (color&0xff00) | ((color&0xff0000)>>16)
 
-def ARGBtoRGBA(color):
-	return ((color&0xff0000)<<8) | ((color&0xff00)<<8) | ((color&0xff)<<8) | ((color&0xff000000)>>24)
-
 def BuildColor(r, g, b):
 	return (b << 16) | (g << 8) | r
 

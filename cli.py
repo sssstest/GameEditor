@@ -148,9 +148,9 @@ def cli():
 			print_notice("saving "+args.writefile)
 			gameFile.Save(ext,args.writefile)
 		sys.exit(0)
-	print_notice("writing EnigmaStruct")
+	#print_notice("writing EnigmaStruct")
 	gameFile.app=app
-	es=gameFile.WriteES()
+	#es=gameFile.WriteES()
 	if args.test:
 		sys.exit(0)
 	emode=emode_compile#make turns compile into debug
@@ -160,7 +160,8 @@ def cli():
 	#realStdout=sys.stdout
 	setRealStdout(realStdout)
 	LoadPluginLib()
-	GameFile.compileRunES(es,testGameFile,emode,open(cliDir+"gamesettings.ey","r").read())
+	gameFile.compileRunEnigma(testGameFile,emode)
+	#GameFile.compileRunES(es,testGameFile,emode,open(cliDir+"gamesettings.ey","r").read())
 	restoreStdout()
 	if emode==emode_compile:
 		print_notice("run game")
