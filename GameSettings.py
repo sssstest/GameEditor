@@ -478,4 +478,4 @@ class GameSettings(GameResource):
 				e.printStackTrace();
 				}
 			}"""
-		og.gameIcon = "../../CompilerSource/stupidity-buffer/enigma.ico"
+		og.gameIcon = b"../../CompilerSource/stupidity-buffer/enigma.ico"

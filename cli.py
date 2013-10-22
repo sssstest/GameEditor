@@ -30,7 +30,6 @@ testGameFile=tmpDir+"testgame.exe"
 
 def newGame(code):
 	resourcePath=os.path.join(module_path(),"ideicons")+"/"
-
 	game=GameFile()
 	room=game.newRoom()
 	room.setMember("caption","room 0")
@@ -50,45 +49,6 @@ def newGame(code):
 	game.newSettings()
 	game.newGameInformation()
 	return game
-
-def newGameCode(code):
-	es=EnigmaStruct()
-	obj=ESObject()
-	ev=ESEvent()
-	ev.code = code
-	ev.id = 0
-	mev=ESMainEvent()
-	mev.id = 0
-	mev.eventCount = 1
-	mev.events = pointer(ev)
-	obj.mainEventCount = 1
-	obj.mainEvents = pointer(mev)
-	obj.name = "obj_0"
-	obj.id=0
-	obj.spriteId = obj.parentId = obj.maskId = -1
-	es.gmObjects = pointer(obj)
-	es.gmObjectCount = 1
-	inst=ESRoomInstance()
-	inst.x=20
-	inst.y=20
-	inst.objectId=obj.id
-	inst.id=100001
-	inst.creationCode=""
-	room=ESRoom()
-	room.name="room_0"
-	room.id=0
-	room.caption="room 0"
-	room.width=640
-	room.height=480
-	room.speed=30
-	room.background=0xff00a0e6
-	room.drawBackgroundColor=1
-	room.creationCode=""
-	room.instances=pointer(inst)
-	room.instanceCount=1
-	es.rooms = pointer(room)
-	es.roomCount = 1
-	return es
 
 def loadPreferences():
 	print_notice("loading preferences: "+os.path.expanduser("~/.GameEditor.cfg"))
@@ -148,9 +108,7 @@ def cli():
 			print_notice("saving "+args.writefile)
 			gameFile.Save(ext,args.writefile)
 		sys.exit(0)
-	#print_notice("writing EnigmaStruct")
 	gameFile.app=app
-	#es=gameFile.WriteES()
 	if args.test:
 		sys.exit(0)
 	emode=emode_compile#make turns compile into debug
@@ -160,8 +118,8 @@ def cli():
 	#realStdout=sys.stdout
 	setRealStdout(realStdout)
 	LoadPluginLib()
+	print_notice("ENIGMA compile")
 	gameFile.compileRunEnigma(testGameFile,emode)
-	#GameFile.compileRunES(es,testGameFile,emode,open(cliDir+"gamesettings.ey","r").read())
 	restoreStdout()
 	if emode==emode_compile:
 		print_notice("run game")
