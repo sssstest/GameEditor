@@ -907,8 +907,9 @@ class MainWindow(QtGui.QMainWindow):
 
 	def updateHierarchyTree(self):
 		self.hierarchyTree.clear()
-		for treeNode in self.gmk.resourceTree.contents:
-			self.updateHierarchyTreeRecursive(self.hierarchyTree, treeNode, None, True)
+		if self.gmk.resourceTree!=None:
+			for treeNode in self.gmk.resourceTree.contents:
+				self.updateHierarchyTreeRecursive(self.hierarchyTree, treeNode, None, True)
 
 	def addResourceToGroup(self, groupName, res, icon):
 		if type(res)==tuple:
@@ -1236,5 +1237,6 @@ if __name__ == '__main__':
 	window = MainWindow(app)
 	window.show()
 	if len(sys.argv)>1:
-		window.openProject(sys.argv[1])
+		if sys.argv[1]!="":
+			window.openProject(sys.argv[1])
 	sys.exit(app.exec_())
