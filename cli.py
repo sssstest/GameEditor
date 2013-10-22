@@ -26,7 +26,7 @@ if sys.version_info[0]<3:
 else:
 	from configparser import *
 
-testGameFile=tmpDir+"testgame"
+testGameFile=tmpDir+"testgame.exe"
 
 def newGame(code):
 	resourcePath=os.path.join(module_path(),"ideicons")+"/"

@@ -45,9 +45,12 @@ from IdeGameInformationEditor import *
 from IdeGameSettingsEditor import *
 
 class SpriteQIconUpdateThread(QtCore.QThread):
-			#outputSignal = pyqtSignal(str, name = 'stepIncreased')
+			outputSignal = pyqtSignal(object, name = 'stepIncreased')
 			def run(self):
-				self.mainwindow
+				for s in self.mainwindow.gmk.sprites:
+					self.outputSignal.emit(s)
+					#s.updateQIcon()
+				#self.mainwindow
 			#def outputLine(self, text):
 			#	self.outputSignal.emit(text)
 
@@ -788,6 +791,8 @@ class MainWindow(QtGui.QMainWindow):
 			s = GGGWindow(self,item.res)
 		elif item.res.__class__==CliClass.GameSprite:
 			s = SpriteWindow(self,item.res)
+			item.res.updateQIcon()
+			self.updateHierarchyTree()
 		elif item.res.__class__==CliClass.GameSound:
 			s = SoundWindow(self,item.res)
 		elif item.res.__class__==CliClass.GameBackground:
@@ -1133,11 +1138,16 @@ class MainWindow(QtGui.QMainWindow):
 
 	def startBackgroundThread(self):
 		global backgroundThread
-		backgroundThread = AThread()
-		#backgroundThread.outputSignal.connect(self.outputLine)
+		backgroundThread = SpriteQIconUpdateThread()
+		backgroundThread.outputSignal.connect(self.backgroundSignal)
 		backgroundThread.mainwindow=self
 		#thread.finished.connect(app.exit)
 		backgroundThread.start()
+
+	def backgroundSignal(self, s):
+		#s.updateQIcon()
+		#CliClass.print_warning("background signal")
+		self.updateHierarchyTree()
 
 	def handleOpenAction(self):
 		self.projectPath = QFileDialog.getOpenFileName(self,"Open", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
