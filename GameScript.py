@@ -37,7 +37,6 @@ class GameScript(GameResource):
 	def ReadGmx(self, gmkfile, gmxdir, name):
 		self.setMember("name",os.path.splitext(name)[0])
 		self.setMember("value",open(os.path.join(gmxdir,name),"r").read())
-		print_warning("unsupported gmx shaders")
 
 	def ReadGmk(self, stream):
 		scriptStream = stream.Deserialize()

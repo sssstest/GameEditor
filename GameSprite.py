@@ -171,7 +171,7 @@ class GameSprite(GameResource):
 					else:
 						print_error("tag isn't frame "+chil.tag)
 				if len(child)==0:
-					print_error("no frames")
+					print_warning("sprite with no frames")
 			else:
 				print_error("unsupported tag "+child.tag)
 
@@ -223,7 +223,7 @@ class GameSprite(GameResource):
 				spriteStream.WriteDword(self.subimages[i].width)
 				spriteStream.WriteDword(self.subimages[i].height)
 				if self.subimages[i].width != 0 and self.subimages[i].height != 0:
-					spriteStream.Serialize(self.subimages[i].data, False)
+					spriteStream.Serialize(self.subimages[i].getGmkData(), False)
 			spriteStream.WriteDword(self.getMember("maskshape"))
 			spriteStream.WriteDword(self.getMember("alphatolerance"))
 			spriteStream.WriteBoolean(self.getMember("seperatemasks"))

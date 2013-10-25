@@ -37,6 +37,13 @@ class GameShader(GameResource):
 		self.setMember("type",r.getMstr('type'))
 		self.setMember("precompile",r.getMbool('precompile'))
 
+	def ReadGmx(self, gmkfile, gmxdir, name):
+		self.setMember("name",os.path.splitext(name)[0])
+		shader=open(os.path.join(gmxdir,name),"r").read()
+		vertex,fragment=shader.split("//######################_==_YOYO_SHADER_MARKER_==_######################@~//")
+		self.setMember("vertex",vertex)
+		self.setMember("fragment",fragment)
+
 	def WriteGGG(self):
 		stri="@shader "+self.getMember("name")+" {\n"
 		for key in ["name","id","type","precompile"]:

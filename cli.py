@@ -76,6 +76,7 @@ def cli():
 	parser.add_argument('-r', dest='run', action='store_true', help="run game emode")
 	parser.add_argument('-t', dest='test', action='store_true', help="test")
 	parser.add_argument('-s', dest='stats', action='store_true', help="stats")
+	parser.add_argument('-i', dest='interactive', action='store_true', help="interactive")
 	if len(sys.argv)==1:
 		args = parser.parse_args(["--help"])
 	else:
@@ -97,6 +98,12 @@ def cli():
 	if args.stats:
 		gameFile.printBasicStats()
 		sys.exit(0)
+	if args.interactive:
+		gameFile.resourceTree.PrintRecursive()
+		import code
+		t=code.InteractiveConsole(locals())
+		t.interact()
+		sys.exit(0)
 	if args.writefile:
 		if args.writefile=="-":
 			ext=".ggg"
@@ -114,9 +121,10 @@ def cli():
 	emode=emode_compile#make turns compile into debug
 	if args.run:
 		emode=emode_run
-	redirectStdout()
-	#realStdout=sys.stdout
-	setRealStdout(realStdout)
+	#if os.name!="nt":
+	#	redirectStdout()
+		#realStdout=sys.stdout
+	#	setRealStdout(realStdout)
 	LoadPluginLib()
 	print_notice("ENIGMA compile")
 	gameFile.compileRunEnigma(testGameFile,emode)

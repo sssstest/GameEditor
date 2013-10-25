@@ -94,6 +94,7 @@ def print_error(msg):
 	printcolor("ERROR ", BRIGHT, RED)
 	printfcln(msg, RESET, WHITE)
 	traceback.print_stack(file=sys.stdout)
+	sys.exit(1)
 
 def print_warning(msg):
 	printcolor("WARNING ", BRIGHT, YELLOW)

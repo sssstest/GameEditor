@@ -74,14 +74,14 @@ class GamePath(GameResource):
 
 	def WriteGmk(self, stream):
 		pathStream = BinaryStream()
-		pathStream.WriteBoolean(exists)
+		pathStream.WriteBoolean(self.exists)
 		pathStream.WriteString(self.getMember("name"))
 		pathStream.WriteTimestamp()
 		pathStream.WriteDword(530)
 		pathStream.WriteDword(self.getMember("connectionKind"))
 		pathStream.WriteBoolean(self.getMember("closed"))
 		pathStream.WriteDword(self.getMember("precision"))
-		if self.room:
+		if self.getMember("room"):
 			pathStream.WriteDword(self.room.getMember("id"))
 		else:
 			pathStream.WriteDword(GamePath.RoomIndexNone)

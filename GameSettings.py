@@ -202,6 +202,8 @@ class GameSettings(GameResource):
 			option="option_"
 		else:
 			print_error("unsupported options root "+root.tag)
+		if root[0].tag=="Options":
+			root=root[0]
 		for child in root:
 			if seen.get(child.tag,0)>0:
 				print_error("duplicated tag "+child.tag)
@@ -336,6 +338,7 @@ class GameSettings(GameResource):
 				elif child.tag.startswith(option+"win8_"):pass
 				elif child.tag.startswith(option+"windows_"):pass
 				elif child.tag.startswith(option+"winphone_"):pass
+				elif child.tag.startswith(option+"ouya_"):pass
 				elif child.tag.startswith(option+"textureGroup"):pass
 				else:
 					print_error("unsupported tag "+child.tag)
@@ -379,7 +382,7 @@ class GameSettings(GameResource):
 		settingsStream.WriteBoolean(self.getMember("loadtransparent"))
 		settingsStream.WriteDword(self.getMember("loadalpha"))
 		settingsStream.WriteBoolean(self.getMember("scaleprogress"))
-		settingsStream.Serialize(self.iconImage, False)
+		settingsStream.Serialize(self.getMember("iconImage"), False)
 		settingsStream.WriteBoolean(self.getMember("displayerrors"))
 		settingsStream.WriteBoolean(self.getMember("writeerrors"))
 		settingsStream.WriteBoolean(self.getMember("aborterrors"))

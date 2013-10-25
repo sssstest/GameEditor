@@ -130,6 +130,24 @@ class GameFont(GameResource):
 		self.setMember("characterRangeBegin",value & 0xFFFF)
 		self.setMember("characterRangeEnd",fontStream.ReadDword())
 
+	def WriteGmk(self, stream):
+		fontStream = BinaryStream()
+		fontStream.WriteBoolean(self.exists)
+		fontStream.WriteString(self.getMember("name"))
+		fontStream.WriteTimestamp()
+		fontStream.WriteDword(800)
+		fontStream.WriteString(self.getMember("fontName"))
+		fontStream.WriteDword(self.getMember("size"))
+		fontStream.WriteBoolean(self.getMember("bold"))
+		fontStream.WriteBoolean(self.getMember("italic"))
+		value = 0
+		value |= (self.getMember("characterSet") & 0xFF) << 16
+		value |= (self.getMember("antiAliasing") & 0xFF) << 24
+		value |= self.getMember("characterRangeBegin") & 0xFFFF
+		fontStream.WriteDword(value)
+		fontStream.WriteDword(self.getMember("characterRangeEnd"))
+		stream.Serialize(fontStream)
+
 	def WriteGGG(self):
 		stri="@font "+self.getMember("name")+" {\n"
 		for key in self.members:

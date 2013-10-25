@@ -19,6 +19,7 @@
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from GameResource import *
+from GameSprite import *
 
 class GameBackground(GameResource):
 	defaults={"id":-1,"name":"noname","transparent":False,"smoothEdges":False,"preload":False,"useAsTileset":False,
@@ -94,14 +95,17 @@ class GameBackground(GameResource):
 				self.setMember("height",int(child.text))
 			elif child.tag=="data":
 				filep=emptyTextToString(child.text).replace("\\","/")
-				data=open(os.path.join(gmxdir,filep),"rb")
-				data=data.read()
-				image=QtGui.QImage()
-				image.loadFromData(data)
-				width,height,data=GameSpriteSubimage.FromQImage(image)
-				self.setMember("data",data)
-				if width == 0 or height == 0:
-					print_error("background size is 0")
+				if os.path.exists(os.path.join(gmxdir,filep)):
+					data=open(os.path.join(gmxdir,filep),"rb")
+					data=data.read()
+					image=QtGui.QImage()
+					image.loadFromData(data)
+					width,height,data=GameSpriteSubimage.FromQImage(image)
+					self.setMember("data",data)
+					if width == 0 or height == 0:
+						print_error("background size is 0")
+				else:
+					self.setMember("data",b"")
 			else:
 				print_error("unsupported tag "+child.tag)
 
@@ -129,7 +133,27 @@ class GameBackground(GameResource):
 		if (self.getMember("width") != 0 and self.getMember("height") != 0):
 			self.setMember("data",backgroundStream.Deserialize(False))
 		if not self.getMember("data"):
-			print_error("background has no data")
+			print_warning("background has no data")
+
+	def WriteGmk(self, stream):
+		backgroundStream = BinaryStream()
+                backgroundStream.WriteBoolean(self.exists)
+		backgroundStream.WriteString(self.getMember("name"))
+		backgroundStream.WriteTimestamp()
+		backgroundStream.WriteDword(710)
+		backgroundStream.WriteBoolean(self.getMember("useAsTileset"))
+		backgroundStream.WriteDword(self.getMember("tileWidth"))
+		backgroundStream.WriteDword(self.getMember("tileHeight"))
+		backgroundStream.WriteDword(self.getMember("tileHorizontalOffset"))
+		backgroundStream.WriteDword(self.getMember("tileVerticalOffset"))
+		backgroundStream.WriteDword(self.getMember("tileHorizontalSeperation"))
+		backgroundStream.WriteDword(self.getMember("tileVerticalSeperation"))
+		backgroundStream.WriteDword(800)
+		backgroundStream.WriteDword(self.getMember("width"))
+		backgroundStream.WriteDword(self.getMember("height"))
+		if self.getMember("width") != 0 and self.getMember("height") != 0:
+			backgroundStream.Serialize(self.getMember("data"), False)
+		stream.Serialize(backgroundStream)
 
 	def WriteGGG(self):
 		stri="@background "+self.getMember("name")+"{\n"

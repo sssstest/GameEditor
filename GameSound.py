@@ -83,6 +83,8 @@ class GameSound(GameResource):
 			elif child.tag=="effects":
 				self.setMember("effects",int(child.text))
 			elif child.tag=="volume":
+				if len(child)>0 and child[0].tag=="volume":
+					child=child[0]
 				self.setMember("volume",gmxFloat(child.text))
 			elif child.tag=="pan":
 				self.setMember("pan",gmxFloat(child.text))
@@ -92,6 +94,20 @@ class GameSound(GameResource):
 				self.setMember("oggQuality",int(child.text))
 			elif child.tag=="preload":
 				self.setMember("preload",bool(int(child.text)))
+			elif child.tag=="bitRates":
+				print_warning("unsupported tag bitRates")
+			elif child.tag=="sampleRates":
+				print_warning("unsupported tag sampleRates")
+			elif child.tag=="types":
+				print_warning("unsupported tag types")
+			elif child.tag=="bitDepths":
+				print_warning("unsupported tag bitDepths")
+			elif child.tag=="compressed":
+				print_warning("unsupported tag compressed")
+			elif child.tag=="streamed":
+				print_warning("unsupported tag streamed")
+			elif child.tag=="uncompressOnLoad":
+				print_warning("unsupported tag uncompressOnLoad")
 			elif child.tag=="data":#<data>snd_0.wav</data>
 				name=emptyTextToString(child.text)
 				data=open(os.path.join(gmxdir, "audio", name), "rb")
@@ -128,7 +144,7 @@ class GameSound(GameResource):
 			soundStream.WriteDword(self.getMember("kind"))
 			soundStream.WriteString(self.getMember("extension"))
 			soundStream.WriteString(self.getMember("origname"))
-			if self.data:
+			if self.getMember("data") and len(self.getMember("data"))>0:
 				soundStream.WriteBoolean(True)
 				soundStream.Serialize(self.getMember("data"), False)
 			else:

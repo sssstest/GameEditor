@@ -21,8 +21,21 @@
 from CliEnigmaStruct import *
 from CliBinaryStream import *
 from PyQt4 import QtGui, QtCore#font
+import xml.etree.ElementTree
 
 Class=1
+
+def gmxFloat(string):
+	return float(string.replace(",","."))
+
+def emptyTextToString(chil):
+	if not chil:
+		return ""
+	return chil
+
+def tabStringLines(stri,tab="\t"):
+	stri="\n".join([tab+y for y in stri.strip().split("\n")])+"\n"
+	return stri
 
 def ARGBtoRGBA(color):
 	return ((color&0xff0000)<<8) | ((color&0xff00)<<8) | ((color&0xff)<<8) | ((color&0xff000000)>>24)

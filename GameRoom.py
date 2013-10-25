@@ -19,6 +19,8 @@
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from GameResource import *
+from GameSprite import *
+from GameBackground import *
 
 def ABGRtoARGB(color):
 	return (color&0xff000000) | ((color&0xff)<<16) | (color&0xff00) | ((color&0xff0000)>>16)
@@ -56,7 +58,7 @@ class GameRoomBackground(GameResource):
 		stream.WriteBoolean(self.getMember("visible"))
 		stream.WriteBoolean(self.getMember("foreground"))
 		if self.getMember("image"):
-			stream.WriteDword(self.self.getMember("image").getMember("id"))
+			stream.WriteDword(self.getMember("image").getMember("id"))
 		else:
 			stream.WriteDword(-1)
 		stream.WriteDword(self.getMember("x"))
@@ -198,7 +200,7 @@ class GameRoomInstance(GameResource):
 		stream.WriteDword(self.getMember("x"))
 		stream.WriteDword(self.getMember("y"))
 		if self.getMember("object"):
-			stream.WriteDword(self.self.getMember("object").getMember("id"))
+			stream.WriteDword(self.getMember("object").getMember("id"))
 		else:
 			stream.WriteDword(-1)
 		stream.WriteDword(self.getMember("id"))

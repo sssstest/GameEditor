@@ -33,10 +33,6 @@ from GameTrigger import *
 RtUnknown=9
 from CliLexer import *
 
-def tabStringLines(stri,tab="\t"):
-	stri="\n".join([tab+y for y in stri.strip().split("\n")])+"\n"
-	return stri
-
 def ifWordArgumentValue(chil):
 	for child in chil:
 		if child not in "1234567890abcdefghijklmnopqrstuvwxyz_":
@@ -1505,6 +1501,9 @@ class GameObject(GameResource):
 						code+=codel+"\n"
 					c=chil+i-1
 			i+=1
+
+	def WriteGmx(self, gmkfile, gmxdir, name):
+		print()
 
 	def WriteGmk(self, stream):
 		objectStream = BinaryStream()

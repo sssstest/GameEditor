@@ -101,6 +101,21 @@ class GameTree(GameResource):
 		GameResource.__init__(self, gameFile, -1)
 		self.contents=[]
 
+	def NewTree(self):
+		self.AddGroupName("Sprites")
+		self.AddGroupName("Sounds")
+		self.AddGroupName("Backgrounds")
+		self.AddGroupName("Paths")
+		self.AddGroupName("Scripts")
+		self.AddGroupName("Shaders")
+		self.AddGroupName("Fonts")
+		self.AddGroupName("Timelines")
+		self.AddGroupName("Objects")
+		self.AddGroupName("Rooms")
+		self.AddGroupName("Game Information")
+		self.AddGroupName("Global Game Settings")
+		self.AddGroupName("Extensions")
+
 	def ReadGmk(self, stream):
 		for i in range(12):
 			status = stream.ReadDword()
@@ -168,7 +183,7 @@ class GameTree(GameResource):
 			group=GameTree.GroupObjects
 		elif name=="sprites":
 			group=GameTree.GroupSprites
-		elif name=="sounds":
+		elif name=="sounds" or name=="sound":
 			group=GameTree.GroupSounds
 		elif name=="rooms":
 			group=GameTree.GroupRooms
@@ -202,6 +217,14 @@ class GameTree(GameResource):
 		node = GameTreeNode(status, group, -1, name)
 		self.contents.append(node)
 		return node
+
+	def PrintRecursive(self):
+		self.PrintRecursiveNode(self, "-")
+
+	def PrintRecursiveNode(self, r, start):
+		for x in r.contents:
+			print_notice(start+x.name)
+			self.PrintRecursiveNode(x,start+"-")
 
 	def FindNodeName(self, name):
 		return self.FindRecursiveNodeName(name, self)

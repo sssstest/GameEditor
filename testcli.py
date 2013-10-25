@@ -23,7 +23,7 @@ import subprocess
 
 class TestCase(unittest.TestCase):
 	def test(self):
-		subprocess.check_output(["cli.py", "test.ggg"])
+		subprocess.check_output(["./cli.py", "test.gm81"])
 		self.assertTrue(True)
 
 	def test2(self):

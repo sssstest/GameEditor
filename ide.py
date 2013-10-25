@@ -58,6 +58,7 @@ class PreferencesDialog(QDialog):
 	def __init__(self, parent=None):
 		self.mainwindow=parent
 		self.enigmaPath=parent.enigmaPath
+		self.projectSavingEnabled=parent.projectSavingEnabled
 		super(PreferencesDialog, self).__init__(parent)
 		label = QLabel("enigma-dev path:")
 		lineEdit = QLineEdit()
@@ -65,6 +66,10 @@ class PreferencesDialog(QDialog):
 		lineEdit.setMaximumWidth(400)
 		lineEdit.setFixedWidth(420)
 		label.setBuddy(lineEdit)
+		savingEnabledLabel = QLabel("saving gmk enabled:")
+		self.savingEnabledQCheckBox = QCheckBox("saving")
+		if self.projectSavingEnabled:
+			self.savingEnabledQCheckBox.setChecked(True)
 
 		setButton = QPushButton("&Set")
 		setButton.clicked.connect(self.handleSetAction)
@@ -81,8 +86,12 @@ class PreferencesDialog(QDialog):
 		topLeftLayout.addWidget(label, 0, 0)
 		topLeftLayout.addWidget(lineEdit, 0, 1)
 		topLeftLayout.addWidget(setButton, 0, 2)
+		savingEnabledLayout = QGridLayout()
+		savingEnabledLayout.addWidget(savingEnabledLabel, 0, 0)
+		savingEnabledLayout.addWidget(self.savingEnabledQCheckBox, 0, 1)
 		leftLayout = QVBoxLayout()
 		leftLayout.addLayout(topLeftLayout)
+		leftLayout.addLayout(savingEnabledLayout)
 		mainLayout = QVBoxLayout()
 		mainLayout.setSizeConstraint(QLayout.SetFixedSize)
 		mainLayout.addLayout(leftLayout)
@@ -92,11 +101,13 @@ class PreferencesDialog(QDialog):
 
 	def handleDoneAction(self):
 		self.mainwindow.enigmaPath=self.enigmaPath
+		self.mainwindow.projectSavingEnabled=self.savingEnabledQCheckBox.checkState()
 		self.mainwindow.savePreferences()
 		self.accept()
 
 	def handleCloseAction(self):
 		self.mainwindow.enigmaPath=self.enigmaPath
+		self.mainwindow.projectSavingEnabled=self.savingEnabledQCheckBox.checkState()
 		self.mainwindow.savePreferences()
 		self.accept()
 
@@ -104,6 +115,7 @@ class PreferencesDialog(QDialog):
 		self.enigmaPath = QFileDialog.getExistingDirectory(self,"Open", "", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 		if self.enigmaPath!="":
 			self.mainwindow.enigmaPath=self.enigmaPath
+			self.mainwindow.projectSavingEnabled=self.savingEnabledQCheckBox.checkState()
 			CliClass.print_notice("new enigma path: "+self.enigmaPath)
 			self.mainwindow.savePreferences()
 			self.accept()
@@ -228,6 +240,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.editorFont=QFont("DejaVu Sans Mono", 8)#Courier 10 Pitch
 		self.ideTheme=0
 		self.enigmaPath="enigma-dev"
+		self.projectSavingEnabled=False
 		self.colors = {0: 0xff000000,#DOCUMENT_DEFAULT                        = 0
 		1: 0xff008400,#COMMENT                        = 1
 		2: 0xff008400,#COMMENTLINE                    = 2
@@ -253,7 +266,6 @@ class MainWindow(QtGui.QMainWindow):
 		self.projectLoadPluginLib=False
 		self.projectPath=None
 		self.debuggerCommands=[]
-		self.projectSavingEnabled=False
 		self.projectEmode=CliClass.emode_run
 		CliClass.print_error=self.outputLine
 		CliClass.print_warning=self.outputLine
@@ -521,6 +533,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.editorFont=QFont(self.editorFontName, self.editorSize)
 		self.ideTheme=not int(config.get('Editor', 'theme'))
 		self.enigmaPath = config.get('Editor', 'enigmadev')
+		self.projectSavingEnabled = config.get('Editor', 'savingenabled') in ["True","2"]
 		#CliClass.print_notice("changing directory to enigma-dev: "+self.enigmaPath)
 		try:
 			os.chdir(self.enigmaPath)
@@ -540,6 +553,7 @@ class MainWindow(QtGui.QMainWindow):
 		for x in self.recentFiles:
 			config.set("Recent", str(x), str(x))
 		config.add_section('Editor')
+		config.set('Editor', 'savingenabled', str(self.projectSavingEnabled))
 		config.set('Editor', 'enigmadev', str(self.enigmaPath))
 		try:
 			os.chdir(self.enigmaPath)
@@ -1107,19 +1121,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.gmk = CliClass.GameFile()
 		self.gmk.app=self.app
 		self.gmk.resourceTree=CliClass.GameTree(self.gmk)
-		self.gmk.resourceTree.AddGroupName("Sprites")
-		self.gmk.resourceTree.AddGroupName("Sounds")
-		self.gmk.resourceTree.AddGroupName("Backgrounds")
-		self.gmk.resourceTree.AddGroupName("Paths")
-		self.gmk.resourceTree.AddGroupName("Scripts")
-		self.gmk.resourceTree.AddGroupName("Shaders")
-		self.gmk.resourceTree.AddGroupName("Fonts")
-		self.gmk.resourceTree.AddGroupName("Timelines")
-		self.gmk.resourceTree.AddGroupName("Objects")
-		self.gmk.resourceTree.AddGroupName("Rooms")
-		self.gmk.resourceTree.AddGroupName("Game Information")
-		self.gmk.resourceTree.AddGroupName("Global Game Settings")
-		self.gmk.resourceTree.AddGroupName("Extensions")
+		self.gmk.resourceTree.NewTree()
 		self.gmk.newSettings()
 		self.gmk.newGameInformation()
 		self.projectTitle="<new game>"
@@ -1159,7 +1161,8 @@ class MainWindow(QtGui.QMainWindow):
 	def handleSaveAction(self):
 		self.saveOpenResources()
 		if not self.projectSavingEnabled:
-			CliClass.print_error("saving not enabled")
+			CliClass.print_warning("saving not enabled")
+			self.actionPreferences()
 			return
 		if self.projectPath:
 			CliClass.print_notice("save file "+fileName)
@@ -1172,6 +1175,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.saveOpenResources()
 		if not self.projectSavingEnabled:
 			CliClass.print_error("saving not enabled")
+			self.actionPreferences()
 			return
 		self.projectPath = QFileDialog.getSaveFileName(self,"Save", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
 		if self.projectPath!="":
@@ -1232,10 +1236,12 @@ class MainWindow(QtGui.QMainWindow):
 
 if __name__ == '__main__':
 	app = QtGui.QApplication(sys.argv)
-	#app.setStyleSheet(open(resourcePath+"theme.qss").read())
 	app.setStyleSheet(" QTabBar::tab { height: 16; icon-size: 18px; } QStatusBar::item { border: 0px solid black; }");
 	window = MainWindow(app)
 	window.show()
+	#if os.name=="nt":
+	#	CliClass.redirectStdout()
+	#	CliClass.setRealStdout(CliClass.realStdout)
 	if len(sys.argv)>1:
 		if sys.argv[1]!="":
 			window.openProject(sys.argv[1])

@@ -62,12 +62,12 @@ class GameTimeline(GameResource):
 
 	def WriteGmk(self, stream):
 		timelineStream = BinaryStream()
-		timelineStream.WriteBoolean(exists)
-		timelineStream.WriteString(name)
+		timelineStream.WriteBoolean(self.exists)
+		timelineStream.WriteString(self.getMember("name"))
 		timelineStream.WriteTimestamp()
 		timelineStream.WriteDword(500)
-		timelineStream.WriteDword(moments.size())
-		for i in len(self.moments):
+		timelineStream.WriteDword(len(self.moments))
+		for i in range(len(self.moments)):
 			timelineStream.WriteDword(self.moments[i].position)
 			timelineStream.WriteDword(400)
 			timelineStream.WriteDword(len(self.moments[i].actions))
