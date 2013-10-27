@@ -285,7 +285,7 @@ class parser():
 	def for_std(self):
 		self.advance()
 
-		self.advance(l_paren)
+		self.advance2(l_paren)
 
 		init = self.getstatement()
 
@@ -295,7 +295,7 @@ class parser():
 
 		inc = self.getstatement()
 
-		self.advance(r_paren)
+		self.advance2(r_paren)
 
 		stmt = self.getstatement()
 
