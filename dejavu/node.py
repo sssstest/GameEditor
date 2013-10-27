@@ -145,14 +145,14 @@ class invocation(statement):
 	#call *c
 
 class declaration(statement):
-	def __init__(self, type, names):
+	def __init__(self, types, names):
 		super(declaration, self).__init__()
 		self.statement=declaration_node
-		self.type=type
+		self.types=types
 		self.names=names
 
 	def __str__(self):
-		return "declaration("+str(map(str,self.names))+")"
+		return "declaration("+str(map(lambda x:x.namekey,self.types))+" "+str(map(str,self.names))+")"
 		#return "declaration("+str(self.type)+" "+str(map(str,self.names))+")"
 	#token type
 	#std::vector<value*> names

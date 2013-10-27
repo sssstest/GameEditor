@@ -104,8 +104,17 @@ class token_stream():
 		self.current=0
 		self.buffer_end=len(b)
 
+	def backup(self):
+		self.current=self.backup_current
+		self.row=self.backup_row
+		self.col=self.backup_col
+
 	# todo: potential cleanup/optimization with a switch statement
 	def gettoken(self):
+		self.backup_current=self.current
+		self.backup_row=self.row
+		self.backup_col=self.col
+		
 		self.skipwhitespace()
 
 		# eof
@@ -212,7 +221,7 @@ class token_stream():
 		# todo: figure out a better way than constructing an std::string?
 		key = self.source[t.stringdata:t.stringdata+t.stringlength]
 		t.namekey=key
-		if key in ["int","bool","float"]:
+		if key in ["char","short","int","bool","float","double","unsigned","signed","uint","const"]:
 			key="var"
 
 		if keywords.has_key(key):

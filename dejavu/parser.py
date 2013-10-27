@@ -179,6 +179,15 @@ class parser():
 
 		return stmt
 
+	def global_local_std(self):
+		t = self.advance()
+		if self.current.type == dot:
+			self.backup(t)
+			return self.expr_std()
+		else:
+			self.backup(t)
+			return self.var_std()
+
 	def expr_std(self):
 		lvalue = self.getexpression(symbols[equals].precedence)
 
@@ -202,14 +211,19 @@ class parser():
 
 		names=[]
 		assignments=[]
+		types=[t]
 		while self.current.type != semicolon and self.current.type != eof:
+			if self.current.type == kw_var:
+				t=self.advance()
+				types.append(t)
+				continue
 			n = self.advance2(name)
 			if n.type != name:
 				if len(assignments)>0:
-					stmts = [declaration(t, names)]
+					stmts = [declaration(types, names)]
 					stmts.extend(assignments)
 					return block(stmts, False)
-				return declaration(t, names)
+				return declaration(types, names)
 
 			names.append(symbols[n.type].nud(self, n))
 
@@ -225,10 +239,10 @@ class parser():
 		self.advance2(semicolon)
 
 		if len(assignments)>0:
-			stmts = [declaration(t, names)]
+			stmts = [declaration(types, names)]
 			stmts.extend(assignments)
 			return block(stmts, False)
-		return declaration(t, names)
+		return declaration(types, names)
 
 	def brace_std(self):
 		self.advance()
@@ -350,6 +364,10 @@ class parser():
 	def null_std(self):
 		return self.error_stmt(unexpected_token_error(self.current, "statement"))
 
+	def backup(self, r):
+		self.current = r
+		self.lexer.backup()
+
 	def advance(self):
 		r = self.current
 		self.current = self.lexer.gettoken()
@@ -469,8 +487,8 @@ class symbol_table(dict):#token_type, symbol
 		self[kw_other].std = parser.expr_std
 		self[kw_all].std = parser.expr_std
 		self[kw_noone].std = parser.expr_std
-		self[kw_global].std = parser.expr_std
-		self[kw_local].std = parser.expr_std
+		self[kw_global].std = parser.global_local_std#expr_std
+		self[kw_local].std = parser.global_local_std#expr_std
 
 		self[l_brace]=symbol()
 		self[l_brace].std = parser.brace_std
