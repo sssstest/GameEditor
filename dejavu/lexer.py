@@ -195,7 +195,7 @@ class token_stream():
 		self.col = 1
 
 		if self.source[self.current] == '\r' and self.source[self.current + 1] == '\n':
-			current+=1
+			self.current+=1
 
 	# returns the name or keyword at the current position
 	# if there is none, behavior is undefined
