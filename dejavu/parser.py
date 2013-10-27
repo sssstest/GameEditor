@@ -538,6 +538,9 @@ class symbol_table(dict):#token_type, symbol
 		self[kw_unsigned]=symbol()
 		self[kw_unsigned].std = parser.unsigned_std
 		self[kw_unsigned].precedence=0
+		self[kw_else]=symbol()
+		self[kw_else].std = parser.unsigned_std
+		self[kw_else].precedence=0
 
 symbols = symbol_table()
 
