@@ -260,7 +260,7 @@ class parser():
 		self.advance()
 		cond = self.getexpression()
 
-		if current.type == kw_do:
+		if self.current.type == kw_do:
 			self.advance()
 		stmt = self.getstatement()
 
