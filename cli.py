@@ -77,6 +77,7 @@ def cli():
 	parser.add_argument('-t', dest='test', action='store_true', help="test")
 	parser.add_argument('-s', dest='stats', action='store_true', help="stats")
 	parser.add_argument('-i', dest='interactive', action='store_true', help="interactive")
+	parser.add_argument('-j', dest='dejavu', action='store_true', help="print dejavu AST for scripts")
 	if len(sys.argv)==1:
 		args = parser.parse_args(["--help"])
 	else:
@@ -103,6 +104,23 @@ def cli():
 		import code
 		t=code.InteractiveConsole(locals())
 		t.interact()
+		sys.exit(0)
+	if args.dejavu:
+		import dejavu.parser
+		for s in gameFile.scripts:
+			print_notice("AST for script "+s.getMember("name"))
+			code=s.getMember("value")
+			tokens = dejavu.parser.token_stream(code)
+			parser = dejavu.parser.parser(tokens, dejavu.parser.error_printer(dejavu.parser.build_log()))
+			print parser.getprogram()
+		for o in gameFile.objects:
+			for ec in o.events:
+				print_notice("AST for object "+o.getMember("name")+" event "+str(ec.eventNumber)+" "+str(ec.getMember("eventKind")))
+				code = getActionsCode(ec.actions).encode()
+				#print code
+				tokens = dejavu.parser.token_stream(code)
+				parser = dejavu.parser.parser(tokens, dejavu.parser.error_printer(dejavu.parser.build_log()))
+				print parser.getprogram()
 		sys.exit(0)
 	if args.writefile:
 		if args.writefile=="-":

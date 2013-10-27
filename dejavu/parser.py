@@ -523,6 +523,10 @@ class symbol_table(dict):#token_type, symbol
 		self[r_square].std = parser.null_std
 		self[r_square].nud = parser.null_nud
 		self[r_square].precedence=0
+		self[r_brace]=symbol()
+		self[r_brace].std = parser.null_std
+		self[r_brace].nud = parser.null_nud
+		self[r_brace].precedence=0
 		self[unexpected]=symbol()
 		self[unexpected].std = parser.null_std
 		self[unexpected].nud = parser.null_nud
