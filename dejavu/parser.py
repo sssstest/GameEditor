@@ -290,7 +290,7 @@ class parser():
 		init = self.getstatement()
 
 		cond = self.getexpression()
-		if current.type == semicolon:
+		if self.current.type == semicolon:
 			self.advance()
 
 		inc = self.getstatement()
