@@ -632,11 +632,3 @@ def parseGML(name, code):
 	parser2 = parser(tokens, errors)
 	errors.set_context(name)
 	return parser2.getprogram()
-
-if __name__=="__main__":
-	import sys
-	if len(sys.argv)>1:
-		for file in sys.argv[1:]:
-			#print(file)
-			code=open(file).read()
-			print(parseGML(file, code))
