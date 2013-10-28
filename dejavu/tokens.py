@@ -37,6 +37,8 @@ colon="colon"#":"
 semicolon="semicolon"#";"
 question="question"#"?"
 
+dollar="dollar"#"$"
+
 plusplus="plusplus"#"++"
 minusminus="minusminus"#"--"
 

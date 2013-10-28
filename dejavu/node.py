@@ -93,7 +93,7 @@ class subscript(expression):
 		self.indices=indices
 
 	def __str__(self):
-		return "subscript("+str(self.array)+" "+str(map(str,self.indices))+")"
+		return "subscript("+str(self.array)+" "+str(list(map(str,self.indices)))+")"
 	#expression *array
 	#std::vector<expression*> indices
 
@@ -106,7 +106,7 @@ class call(expression):
 		self.args=args
 
 	def __str__(self):
-		return "call("+str(self.function)+" "+str(map(str,self.args))+")"
+		return "call("+str(self.function)+" "+str(list(map(str,self.args)))+")"
 	#value *function
 	#std::vector<expression*> args
 
@@ -152,8 +152,8 @@ class declaration(statement):
 		self.names=names
 
 	def __str__(self):
-		return "declaration("+str(map(lambda x:x.namekey,self.types))+" "+str(map(str,self.names))+")"
-		#return "declaration("+str(self.type)+" "+str(map(str,self.names))+")"
+		return "declaration("+str(list(map(lambda x:x.namekey,self.types)))+" "+str(list(map(str,self.names)))+")"
+		#return "declaration("+str(self.type)+" "+str(list(map(str,self.names)))+")"
 	#token type
 	#std::vector<value*> names
 
@@ -174,7 +174,7 @@ class block(statement):
 				stri+="  "+z+"\n"
 		stri+="}"
 		return stri
-		#return "block("+str(map(str,self.stmts))+")"
+		#return "block("+str(list(map(str,self.stmts)))+")"
 	#std::vector<statement*> stmts
 
 class ifstatement(statement):

@@ -137,7 +137,7 @@ class GameBackground(GameResource):
 
 	def WriteGmk(self, stream):
 		backgroundStream = BinaryStream()
-                backgroundStream.WriteBoolean(self.exists)
+		backgroundStream.WriteBoolean(self.exists)
 		backgroundStream.WriteString(self.getMember("name"))
 		backgroundStream.WriteTimestamp()
 		backgroundStream.WriteDword(710)

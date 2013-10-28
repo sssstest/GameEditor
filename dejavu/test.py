@@ -98,5 +98,13 @@ class TestCase(unittest.TestCase):
 		p = parseGML("x = (y == 0) ? 1 : 2;")
 		self.assertEqual(p.stmts[0].rvalue.cond.op, is_equals)
 
+	def testHex(self):
+		p = parseGML("x = 0xa;")
+		self.assertEqual(p.stmts[0].rvalue.t.real, 10)
+
+	def testHex2(self):
+		p = parseGML("x = $a;")
+		self.assertEqual(p.stmts[0].rvalue.t.real, 10)
+
 if __name__ == "__main__":
 	unittest.main()

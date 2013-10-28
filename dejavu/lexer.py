@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
 import re
-from tokens import *
+from .tokens import *
 
 class token():
 	def __init__(self, t, r, c):
 		self.type=t
 		self.row=r
 		self.col=c
+		self.real=None
+		self.stringlength=0
+		self.stringdata=""
 
 	def __str__(self):
 		if self.type==real:
@@ -18,17 +21,6 @@ class token():
 			return "string("+str(self.stringkey)+")"
 		return "token("+str(self.type)+")"
 		#return "token("+str(self.type)+" "+str(self.row)+" "+str(self.col)+")"
-
-	#token_type type
-	#size_t row, col
-
-	#union {
-	#	double real
-	#	struct {
-	#		size_t length
-	#		const char *data
-	#	} string
-	#}
 
 def isspace(c):
 	return c == ' ' or c == '\t' or c == '\n' or c == '\r'
@@ -126,6 +118,13 @@ class token_stream():
 		# skip comments
 		# todo: can we pull this out into a helper function?
 		# the control flow interacts weirdly with whitespace and division
+		if self.source[self.current] == '#' and self.col==1:
+			self.current+=1
+			while self.current != self.buffer_end and not isnewline(self.source[self.current]):
+				self.current+=1
+			self.skipnewline()
+			return self.gettoken()
+
 		if self.source[self.current] == '/':
 			# don't increment current yet, it might be a / token
 
@@ -224,10 +223,11 @@ class token_stream():
 		# todo: figure out a better way than constructing an std::string?
 		key = self.source[t.stringdata:t.stringdata+t.stringlength]
 		t.namekey=key
-		if key in ["char","short","int","bool","float","double","unsigned","signed","uint","const","variant"]:#"string"
-			key="var"
+		if 1:
+			if key in ["char","short","int","bool","float","double","unsigned","signed","uint","const","variant"]:#"string"
+				key="var"
 
-		if keywords.has_key(key):
+		if key in keywords:
 			t.type = keywords[key]
 
 		return t
@@ -386,8 +386,8 @@ class token_stream():
 		elif c=='/':
 			ch=self.source[self.current]
 			if ch=='=':
-				col+=1
-				current+=1
+				self.col+=1
+				self.current+=1
 				t.type = div_equals
 				return t
 			else:
@@ -447,16 +447,21 @@ class token_stream():
 	def getnumber(self):
 		t = token(real, self.row, self.col)
 
-		if self.source[self.current] == '$':
-			key = re.findall(r"(\d*)\D",self.source[self.current+1:])[0]
+		if self.source[self.current:].startswith("0x"):
+			key = re.findall(r"([\dA-Fa-f]*)\D",self.source[self.current+2:])[0]
+			t.real = int(key,16)
+			endlen=len(key)+2
+		elif self.source[self.current] == '$':
+			key = re.findall(r"([\dA-Fa-f]*)\D",self.source[self.current+1:])[0]
 			t.real = int(key,16)#strtoul(current + 1, &end, 16)
+			endlen=len(key)+1
 		else:
 			key = re.findall(r"([\d.]*)\D",self.source[self.current:])[0]
 			if "." in key:
 				t.real = float(key)
 			else:
 				t.real = int(key,10)#strtod(current, &end)
-		endlen=len(key)
+			endlen=len(key)
 		self.col += endlen - self.current
 		self.current += endlen
 

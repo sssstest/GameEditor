@@ -110,18 +110,15 @@ def cli():
 		for s in gameFile.scripts:
 			print_notice("AST for script "+s.getMember("name"))
 			code=s.getMember("value")
-			print code
-			tokens = dejavu.parser.token_stream(code)
-			parser = dejavu.parser.parser(tokens, dejavu.parser.error_printer(dejavu.parser.build_log()))
-			print parser.getprogram()
+			#print code
+			print(dejavu.parser.parseGML(s.getMember("name"), code.decode()))
 		for o in gameFile.objects:
 			for ec in o.events:
-				print_notice("AST for object "+o.getMember("name")+" event "+str(ec.eventNumber)+" "+str(ec.getMember("eventKind")))
+				name = o.getMember("name") + "_" + str(ec.eventNumber) + "_" + str(ec.getMember("eventKind"))
+				print_notice("AST for "+name)
 				code = getActionsCode(ec.actions)#.encode()
-				print code
-				tokens = dejavu.parser.token_stream(code)
-				parser = dejavu.parser.parser(tokens, dejavu.parser.error_printer(dejavu.parser.build_log()))
-				print parser.getprogram()
+				#print code
+				print(dejavu.parser.parseGML(name, code))
 		sys.exit(0)
 	if args.writefile:
 		if args.writefile=="-":

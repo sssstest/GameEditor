@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from tokens import *
-from lexer import *
-from driver import *
-from node import *
-from error_stream import *
+from .tokens import *
+from .lexer import *
+from .driver import *
+from .node import *
+from .error_stream import *
 
 def isassignment(t):#token_type
 	if t in [equals,plus_equals,minus_equals,times_equals,div_equals,and_equals,or_equals,xor_equals]:
@@ -532,9 +532,13 @@ class symbol_table(dict):#token_type, symbol
 		self[question].led = parser.ternary_led
 		self[question].precedence=9
 
-		self.infix(minus_equals, 9)
 		self.infix(plus_equals, 9)
+		self.infix(minus_equals, 9)
 		self.infix(times_equals, 9)
+		self.infix(div_equals, 9)
+		self.infix(and_equals, 9)
+		self.infix(or_equals, 9)
+		self.infix(xor_equals, 9)
 
 		self[kw_var]=symbol()
 		self[kw_var].std = parser.var_std
@@ -622,8 +626,17 @@ class symbol_table(dict):#token_type, symbol
 
 symbols = symbol_table()
 
-if __name__=="__main__":
-	code=open("test.gml").read()
+def parseGML(name, code):
 	tokens = token_stream(code)
-	parser = parser(tokens, error_printer(build_log()))
-	print parser.getprogram()
+	errors = error_printer(build_log())
+	parser2 = parser(tokens, errors)
+	errors.set_context(name)
+	return parser2.getprogram()
+
+if __name__=="__main__":
+	import sys
+	if len(sys.argv)>1:
+		for file in sys.argv[1:]:
+			#print(file)
+			code=open(file).read()
+			print(parseGML(file, code))
