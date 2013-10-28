@@ -309,7 +309,7 @@ class EEFReader(object):
 		return str.replace("\\\\","\\")
 
 	def readItem(self, parent, line):
-		if line==u"\r\n":
+		if line==u"\r\n" or line==u"\n":
 			print("broken eef blank line item")
 			return
 		read_attrs = self.readAttrs(line,parent.blockName)
