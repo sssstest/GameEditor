@@ -14,6 +14,8 @@ class token():
 			return "real("+str(self.real)+")"
 		if self.type==name:
 			return "name("+str(self.namekey)+")"
+		if self.type==string:
+			return "string("+str(self.stringkey)+")"
 		return "token("+str(self.type)+")"
 		#return "token("+str(self.type)+" "+str(self.row)+" "+str(self.col)+")"
 
@@ -35,7 +37,8 @@ def isnewline(c):
 	return c == '\n' or c == '\r'
 
 def isnamestart(c):
-	return ('a' <= c and c <= 'z') or ('A' <= c and c <= 'Z')
+	return c == '_' or ('a' <= c and c <= 'z') or ('A' <= c and c <= 'Z')
+	#return ('a' <= c and c <= 'z') or ('A' <= c and c <= 'Z')
 
 def isname(c):
 	return c == '_' or isnamestart(c) or isdigit(c)
@@ -221,7 +224,7 @@ class token_stream():
 		# todo: figure out a better way than constructing an std::string?
 		key = self.source[t.stringdata:t.stringdata+t.stringlength]
 		t.namekey=key
-		if key in ["char","short","int","bool","float","double","unsigned","signed","uint","const"]:
+		if key in ["char","short","int","bool","float","double","unsigned","signed","uint","const","variant"]:#"string"
 			key="var"
 
 		if keywords.has_key(key):
@@ -314,6 +317,11 @@ class token_stream():
 				self.current+=1
 				t.type = less_equals
 				return t
+			elif ch=='>':
+				self.col+=1
+				self.current+=1
+				t.type = not_equals
+				return t
 			else:
 				t.type = less
 				return t
@@ -342,6 +350,11 @@ class token_stream():
 				self.current+=1
 				t.type = plus_equals
 				return t
+			elif ch=='+':
+				self.col+=1
+				self.current+=1
+				t.type = plusplus
+				return t
 			else:
 				t.type = plus
 				return t
@@ -351,6 +364,11 @@ class token_stream():
 				self.col+=1
 				self.current+=1
 				t.type = minus_equals
+				return t
+			elif ch=='-':
+				self.col+=1
+				self.current+=1
+				t.type = minusminus
 				return t
 			else:
 				t.type = minus
@@ -462,6 +480,7 @@ class token_stream():
 			self.current+=1
 			self.col += 1
 		t.stringlength = self.current - t.stringdata
+		t.stringkey=self.source[t.stringdata:t.stringdata+t.stringlength]
 
 		self.current+=1
 		self.col += 1

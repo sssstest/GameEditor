@@ -89,6 +89,10 @@ def getActionsCode(actions):
 			else:
 				code+=act.argumentValue[0]+" = "+act.argumentValue[1]+"\n"
 		elif act.getMember("kind")==GameAction.ACT_NORMAL:
+			if act.getMember("actionId") == 605:
+				if act.getMember("type") != 0:
+					print_warning("comment type not 0")
+				return ""
 			if act.getMember("type") == GameAction.EXEC_NONE:
 				return ""
 			if act.getMember("appliesToSomething") and act.getMember("appliesToObject") != GameObject.OBJECT_SELF:

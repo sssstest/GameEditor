@@ -37,6 +37,9 @@ colon="colon"#":"
 semicolon="semicolon"#";"
 question="question"#"?"
 
+plusplus="plusplus"#"++"
+minusminus="minusminus"#"--"
+
 plus="plus"#"+"
 minus="minus"#"-"
 times="times"#"*"

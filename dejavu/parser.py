@@ -31,14 +31,14 @@ class parser():
 		e.parser=self
 
 	def getprogram(self):
-		if self.current.type == l_brace:
-			stmt = self.getstatement()
-		else:
-			stmts=[]
-			while self.current.type != eof:
-				stmts.append(self.getstatement())
+		#if self.current.type == l_brace:
+		#	stmt = self.getstatement()
+		#else:
+		stmts=[]
+		while self.current.type != eof:
+			stmts.append(self.getstatement())
 
-			stmt = block(stmts)
+		stmt = block(stmts)
 
 		self.advance2(eof)
 		return stmt
@@ -79,6 +79,7 @@ class parser():
 					self.advance()
 
 				return self.error_expr(unexpected_token_error(t, "operator"))
+
 			left = l(self, t, left)
 
 		return left
@@ -94,10 +95,25 @@ class parser():
 		self.advance2(r_paren)
 		return expr
 
+	def semicolon_nud(self, t):
+		return attrnode(";")
+
 	def null_nud(self, t):
-		return error_expr(unexpected_token_error(t, "expression"))
+		return self.error_expr(unexpected_token_error(t, "expression"))
 
 	def infix_led(self, t, left):#expression
+		if t.type == plusplus:
+			o = token(real, self.lexer.row, self.lexer.col)
+			o.real=1
+			e = binary(plus_equals, left, o)
+			e.type=unary_node
+			return e
+		elif t.type == minusminus:
+			o = token(real, self.lexer.row, self.lexer.col)
+			o.real=1
+			e = binary(minus_equals, left, o)
+			e.type=unary_node
+			return e
 		if t.type == equals:
 			type = is_equals#token_type
 		else:
@@ -162,8 +178,12 @@ class parser():
 		return ifstatement(cond, branch_true, branch_false)
 
 	def getstatement(self):
+		if self.current.type == semicolon:
+			return attrnode(";")
+
 		if self.current.type == comma:
 			self.advance()
+
 		s = symbols[self.current.type].std
 		if not s:
 			# skip to the next token that could start a statement
@@ -172,6 +192,7 @@ class parser():
 				self.advance()
 
 			return self.error_stmt(unexpected_token_error(e, "statement"))
+
 		stmt = s(self)
 
 		while self.current.type == semicolon:
@@ -190,6 +211,10 @@ class parser():
 
 	def expr_std(self):
 		lvalue = self.getexpression(symbols[equals].precedence)
+		
+		if lvalue.type == unary_node:
+			#print "unary_node"
+			return lvalue
 
 		if lvalue.type == call_node:
 			return invocation(lvalue)
@@ -217,7 +242,17 @@ class parser():
 				t=self.advance()
 				types.append(t)
 				continue
+			
+			#if self.current.type != name:
+				#print "not name"
+			#	if len(assignments)>0:
+			#		stmts = [declaration(types, names)]
+			#		stmts.extend(assignments)
+			#		return block(stmts, False)
+			#	return declaration(types, names)
+
 			n = self.advance2(name)
+
 			if n.type != name:
 				if len(assignments)>0:
 					stmts = [declaration(types, names)]
@@ -235,6 +270,17 @@ class parser():
 				assignments.append(assignment(op, names[-1], rvalue))
 				if self.current.type == comma:
 					self.advance()
+				elif self.current.type != semicolon:
+					#print "not semicolon"
+					if len(assignments)>0:
+						stmts = [declaration(types, names)]
+						stmts.extend(assignments)
+						return block(stmts, False)
+					return declaration(types, names)
+				#s = symbols[self.current.type].std
+				#if s:
+				#	print "new statement"
+					
 
 		self.advance2(semicolon)
 
@@ -263,7 +309,7 @@ class parser():
 			self.advance()
 		branch_true = self.getstatement()
 
-		branch_false = 0
+		branch_false = None
 		if self.current.type == kw_else:
 			self.advance()
 			branch_false = self.getstatement()
@@ -284,7 +330,7 @@ class parser():
 		self.advance()
 		stmt = self.getstatement()
 
-		self.advance(kw_until)
+		self.advance2(kw_until)
 
 		cond = self.getexpression()
 
@@ -304,11 +350,17 @@ class parser():
 		init = self.getstatement()
 
 		cond = self.getexpression()
+
 		if self.current.type == semicolon:
-			self.advance()
+			t=self.advance()
+
+			if self.current.type == r_paren:
+				self.backup(t)
 
 		inc = self.getstatement()
 
+		while self.current.type == semicolon:
+			self.advance()
 		self.advance2(r_paren)
 
 		stmt = self.getstatement()
@@ -349,7 +401,7 @@ class parser():
 	def case_std(self):
 		t = self.advance()
 
-		expr = 0
+		expr = None
 		if t.type == kw_case:
 			expr = self.getexpression()
 
@@ -357,9 +409,10 @@ class parser():
 
 		return casestatement(expr)
 
-	def unsigned_std(self):
-		unsigned = self.advance()
-		return attrnode("unsigned")
+	def prefix_std(self):
+		op = self.advance()
+		expr = self.getexpression(70)
+		return unary(op.type, expr)
 
 	def null_std(self):
 		return self.error_stmt(unexpected_token_error(self.current, "statement"))
@@ -429,6 +482,13 @@ class symbol_table(dict):#token_type, symbol
 		self[name].nud = parser.id_nud
 
 		self.infix(dot, 90, parser.dot_led)
+
+		self.prefix(plusplus, parser.prefix_nud)
+		self.prefix(minusminus, parser.prefix_nud)
+		self.infix(plusplus, 90)
+		self.infix(minusminus, 90)
+		self[plusplus].std = parser.prefix_std
+		self[minusminus].std = parser.prefix_std
 
 		self.prefix(l_paren, parser.paren_nud)
 
@@ -527,7 +587,7 @@ class symbol_table(dict):#token_type, symbol
 
 		self[semicolon]=symbol()
 		self[semicolon].std = parser.null_std
-		self[semicolon].nud = parser.null_nud
+		self[semicolon].nud = parser.semicolon_nud
 		self[comma]=symbol()
 		self[comma].std = parser.null_std
 		self[comma].nud = parser.null_nud
@@ -554,10 +614,10 @@ class symbol_table(dict):#token_type, symbol
 		self[colon].nud = parser.null_nud
 		self[colon].precedence=0
 		self[kw_unsigned]=symbol()
-		self[kw_unsigned].std = parser.unsigned_std
 		self[kw_unsigned].precedence=0
+		self[kw_then]=symbol()
+		self[kw_then].precedence=0
 		self[kw_else]=symbol()
-		self[kw_else].std = parser.unsigned_std
 		self[kw_else].precedence=0
 
 symbols = symbol_table()
