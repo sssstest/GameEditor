@@ -1130,6 +1130,7 @@ class MainWindow(QtGui.QMainWindow):
 
 	def openProject(self,fileName):
 		self.recentFiles.append(fileName)
+		self.savePreferences()
 		fileName=str(fileName)
 		self.gmk = CliClass.GameFile()
 		self.gmk.app=self.app
