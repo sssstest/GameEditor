@@ -29,19 +29,20 @@ class SpriteWindow(ResourceWindow):
 		"alphatolerance","precisecollisionchecking","seperatemasks",
 		"HTile","VTile","For3D","width","height"]
 		self.propertiesType={"maskshape":"spriteMaskshape","bboxmode":"spriteBboxmode"}
-		imageLabel = QLabel()
-		p=QPixmap()
-		if len(res.subimages)>0:
-			p.convertFromImage(res.subimages[0].getQImage())
-		imageLabel.setPixmap(p)
-		imageLabel.setBackgroundRole(QPalette.Base)
-		#imageLabel.setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-		imageLabel.setScaledContents(True)
-		w=p.size().width()
-		h=p.size().height()
-		ww = self.size().width()
-		wh = self.size().height()
-		imageLabel.resize(w,h)
+		for subimage in res.subimages:
+			imageLabel = QLabel()
+			p=QPixmap()
+			if len(res.subimages)>0:
+				p.convertFromImage(subimage.getQImage())
+			imageLabel.setPixmap(p)
+			imageLabel.setBackgroundRole(QPalette.Base)
+			#imageLabel.setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+			imageLabel.setScaledContents(True)
+			w=p.size().width()
+			h=p.size().height()
+			ww = self.size().width()
+			wh = self.size().height()
+			imageLabel.resize(w,h)
 		scrollArea = QScrollArea()
 		scrollArea.setBackgroundRole(QPalette.Dark)
 		scrollArea.setWidget(imageLabel)

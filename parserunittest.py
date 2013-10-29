@@ -19,10 +19,10 @@
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from parser import *
+from dejavu.parser import *
 
 def parseGML(code):
-	tokens = token_stream(code)
+	tokens = token_stream(code+" ")
 	parser2 = parser(tokens, error_printer(build_log()))
 	return parser2.getprogram()
 
@@ -105,6 +105,49 @@ class TestCase(unittest.TestCase):
 	def testHex2(self):
 		p = parseGML("x = $a;")
 		self.assertEqual(p.stmts[0].rvalue.t.real, 10)
+
+#https://code.google.com/p/game-creator/source/browse/GameCreator.Test/GmlTest.cs
+	def VerifyExpressionString(str, expected):
+		self.assertEqual(expected, parseGML(str).toGML());
+
+	def VerifyStatementString(str, expected):
+		self.assertEqual(expected, parseGML(str).toGMLMinifier());
+
+	def testParseEmptyExpression(self):
+		p = parseGML("  /* Empty expression */  ")
+		self.assertEqual(len(p.stmts), 0)
+
+	def nottestParseIdentifier(self):
+		p = parseGML("abc")
+		self.assertEqual(p.stmts[0], "abc")
+
+	def nottestBlockToString(self):
+		p = parseGML(" { a=3; } ")
+		generated = "{\r\n    a = 3;\r\n}\r\n";
+		self.assertEqual(generated, p.toGML())
+
+		minified = "{a=3;}";
+		self.assertEqual(minified, p.toGMLMinifier())
+
+	def nottestExpressionToString(self):
+		self.VerifyExpressionString("a");
+		self.VerifyExpressionString("a + 1");
+		self.VerifyExpressionString("a + (3 * 2)");
+		self.VerifyExpressionString("(a - 1) / t");
+		self.VerifyExpressionString("a == 1");
+
+		self.VerifyExpressionString("a <> 1", "a != 1");
+		self.VerifyExpressionString("a mod 3");
+		self.VerifyExpressionString("a and 1", "a && 1");
+		self.VerifyExpressionString("a xor b", "a ^^ b");
+
+	def nottestStatementToString(self):
+		self.VerifyStatementString("a := 0",                                                 "a=0;");
+		self.VerifyStatementString("if t then x = 3",                                        "if(t)x=3;");
+		self.VerifyStatementString("if t then begin x := 3 y = 4 end",                       "if(t){x=3;y=4;}");
+		self.VerifyStatementString("for ({case 2:};0;exit)t=3",                              "for({case 2:};0;exit)t=3;");
+		self.VerifyStatementString("for (repeat 5 i = 0;;;;; i < 3; globalvar;;;;;)a=3",     "for(repeat(5)i=0;;i<3;globalvar)a=3;");
+		self.VerifyStatementString("for (i := 0 i<3; {case 3:exit};;;)string(4);",           "for(i=0;i<3;{case 3:exit;})string(4);");
 
 if __name__ == "__main__":
 	unittest.main()
