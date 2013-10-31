@@ -56,7 +56,9 @@ class ResourceQComboBox(QComboBox):
 				resIcon=QIcon(resourcePath+"resources/object.png")
 				sprite=s.getMember("sprite")
 				if sprite:
-					resIcon=sprite.getQIcon()
+					resIcon=sprite.getQIcon(True)
+				if not resIcon:
+					resIcon=QIcon(resourcePath+"resources/object.png")
 				self.addItem(resIcon, s.getMember("name"))
 				if resSelected==s:
 					self.setCurrentIndex(self.count()-1)

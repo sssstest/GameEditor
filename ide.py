@@ -973,19 +973,22 @@ class MainWindow(QtGui.QMainWindow):
 				redir=open(filepath.decode()).read()
 				CliClass.print_error(redir)
 			def ede_dia_progress(progress):
-				self.engimaProgressTitle=str(progress)+"%"
+				self.setCompileProgress(progress)
+				#self.progressSignal.emit(progress)
 			CliClass.ede_output_redirect_file=ede_output_redirect_file
-			CliClass.ede_dia_progress=ede_dia_progress
+			#CliClass.ede_dia_progress=ede_dia_progress
 			CliClass.LoadPluginLib()
 			self.projectLoadPluginLib=True
 
 		class AThread(QtCore.QThread):
 			outputSignal = pyqtSignal(str, name = 'stepIncreased')
+			progressSignal = pyqtSignal(int, name = 'progressSignal')
+
 			def run(self):
 				CliClass.print_error=self.outputLine
 				CliClass.print_warning=self.outputLine
 				CliClass.print_notice=self.outputLine
-				
+
 				self.mainwindow.gmk.compileRunEnigma(CliClass.tmpDir+"testgame.exe",self.mainwindow.projectEmode)
 				if self.mainwindow.projectEmode == CliClass.emode_compile:#emode_debug
 					self.mainwindow.gameProcessGdb=False
@@ -994,7 +997,7 @@ class MainWindow(QtGui.QMainWindow):
 					self.gameProcess.readyReadStandardOutput.connect(self.handleProcessOutput)
 					self.gameProcess.readyReadStandardError.connect(self.handleProcessErrorOutput)
 					#self.mainwindow.gameProcess.finished.connect(self.mainwindow.handleProcessFinished)
-			
+
 			def outputLine(self, text):
 				self.outputSignal.emit(text)
 
@@ -1028,6 +1031,7 @@ class MainWindow(QtGui.QMainWindow):
 		global thread
 		thread = AThread()
 		thread.outputSignal.connect(self.outputLine)
+		thread.progressSignal.connect(self.setCompileProgress)
 		thread.mainwindow=self
 		#thread.finished.connect(app.exit)
 		thread.start()
@@ -1091,6 +1095,11 @@ class MainWindow(QtGui.QMainWindow):
 						c=self.debuggerCommands.pop()
 						self.gameProcess.write(c+"\n")
 						self.outputLine(c)
+
+	def setCompileProgress(self, progress):
+		self.setWindowTitle("GameEditor - " + self.projectTitle+" "+["","*"][self.projectModified]+str(progress)+"%")
+		#if progress==100:
+		#	self.projectUpdateWindowTitle()
 
 	def actionPreferences(self):
 		#if not self.prefsDialog:

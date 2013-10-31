@@ -370,7 +370,7 @@ class RoomWindow(ResourceWindow):
 				resIcon=QIcon(resourcePath+"resources/object.png")
 				sprite=s.getMember("sprite")
 				if sprite:
-					resIcon=sprite.getQIcon()
+					resIcon=sprite.getQIcon(True)
 			else:
 				name=""
 				print("no object"+repr(i))

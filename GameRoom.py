@@ -391,7 +391,8 @@ class GameRoom(GameResource):
 		data=z.open(os.path.split(entry)[0]+"/"+data,'r')
 		data=data.read()
 		stream = BinaryStream(io.BytesIO(data))
-		print("code",stream.ReadString())#clifix
+		code = stream.ReadString()
+
 		nobackgrounds=stream.ReadDword()
 		#print_notice(entry+" nobackgrounds "+str(nobackgrounds))
 		for count in range(nobackgrounds):
@@ -427,7 +428,7 @@ class GameRoom(GameResource):
 			view.setMember("horizontalSpeed",stream.ReadDword())
 			view.setMember("verticalSpeed",stream.ReadDword())
 			objectFollowing=stream.ReadString()
-			print("objectFollowing",objectFollowing)
+			#print("objectFollowing",objectFollowing)
 		noinstances=stream.ReadDword()
 		#print_notice(entry+" noinstances "+str(noinstances))
 		if noinstances==-1:
