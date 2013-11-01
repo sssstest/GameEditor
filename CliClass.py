@@ -987,12 +987,12 @@ class GameFile(GameResource):
 		# Write header
 		stream.WriteDword(self.gameId)
 		for i in range(self.GMK_GUID_LENGTH):
-			guidByte = self.gameId >> i / 4
+			guidByte = self.gameId >> int(i / 4)
 			guidByte %= ((i >> 6) + guidByte & 0x7F) + 0xFF
 			guidByte ^= (i * guidByte >> 3) & 0xAB
 			if guidByte>256:#clifix
 				guidByte=0
-			stream.WriteByte(chr(guidByte))
+			stream.WriteByte(chr(guidByte).encode())
 		# Write settings
 		stream.WriteDword(800)
 		if self.settings == None:

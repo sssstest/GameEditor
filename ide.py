@@ -324,6 +324,11 @@ class MainWindow(QtGui.QMainWindow):
 		openAction.setShortcuts(QKeySequence.Open)
 		fileToolbar.addAction(openAction)
 		fileMenu.addAction(openAction)
+		revertAction = QAction(QIcon(resourcePath+"actions/open.png"), "&Revert", self)
+		openAction.triggered.connect(self.handleRevertAction)
+		#revertAction.setShortcuts(QKeySequence.Revert)
+		#fileToolbar.addAction(revertAction)
+		fileMenu.addAction(revertAction)
 		saveAction = QAction(QIcon(resourcePath+"actions/save.png"), "&Save", self)
 		saveAction.triggered.connect(self.handleSaveAction)
 		saveAction.setShortcuts(QKeySequence.Save)
@@ -1144,6 +1149,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.gmk = CliClass.GameFile()
 		self.gmk.app=self.app
 		self.gmk.Read(fileName)
+		self.projectSetModified(False)
 		self.projectTitle=os.path.split(fileName)[1]
 		self.projectUpdateWindowTitle()
 		self.updateHierarchyTree()
@@ -1163,9 +1169,15 @@ class MainWindow(QtGui.QMainWindow):
 		self.updateHierarchyTree()
 
 	def handleOpenAction(self):
-		self.projectPath = QFileDialog.getOpenFileName(self,"Open", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
-		if self.projectPath!="":
-			CliClass.print_notice(self.projectPath)
+		projectPath = QFileDialog.getOpenFileName(self,"Open", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
+		if projectPath and projectPath!="":
+			self.projectPath=projectPath
+			CliClass.print_notice("opening file "+self.projectPath)
+			self.openProject(self.projectPath)
+
+	def handleRevertAction(self):
+		if self.projectPath and self.projectPath!="":
+			CliClass.print_notice("opening file "+self.projectPath)
 			self.openProject(self.projectPath)
 
 	def handleSaveAction(self):
@@ -1174,9 +1186,12 @@ class MainWindow(QtGui.QMainWindow):
 			CliClass.print_warning("saving not enabled")
 			self.actionPreferences()
 			return
-		if self.projectPath:
-			CliClass.print_notice("save file "+fileName)
-			self.gmk.Save(fileName)
+		if self.projectPath and self.projectPath!="":
+			#reply = QMessageBox::question(this, "save", MESSAGE, QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+			#if reply == QMessageBox::Yes:
+			#elif reply == QMessageBox::No:
+			CliClass.print_notice("saving file "+self.projectPath)
+			self.gmk.Save(os.path.splitext(self.projectPath)[1], self.projectPath)
 			self.projectSetModified(False)
 		else:
 			self.handleSaveAsAction()
@@ -1187,10 +1202,11 @@ class MainWindow(QtGui.QMainWindow):
 			CliClass.print_error("saving not enabled")
 			self.actionPreferences()
 			return
-		self.projectPath = QFileDialog.getSaveFileName(self,"Save", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
-		if self.projectPath!="":
-			CliClass.print_notice("save file "+fileName)
-			self.gmk.Save(fileName)
+		projectPath = QFileDialog.getSaveFileName(self,"Save", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
+		if projectPath and projectPath!="":
+			self.projectPath=projectPath
+			CliClass.print_notice("saving file "+self.projectPath)
+			self.gmk.Save(os.path.splitext(self.projectPath)[1], self.projectPath)
 			self.projectSetModified(False)
 
 	def handleCloseApplication(self):
@@ -1244,9 +1260,23 @@ class MainWindow(QtGui.QMainWindow):
 		treeItem.setIcon(0, icon)
 		treeItem.res=None
 
+import traceback
+import io
+
 if __name__ == '__main__':
 	app = QtGui.QApplication(sys.argv)
 	app.setStyleSheet(" QTabBar::tab { height: 16; icon-size: 18px; } QStatusBar::item { border: 0px solid black; }");
+	errorMessageDialog=QErrorMessage()
+	def my_excepthook(type, value, tback):
+		s=io.StringIO()
+		traceback.print_last(file=s)
+		s.seek(0)
+		errorMessageDialog.showMessage("exception\n"+s.read())
+
+		# then call the default handler
+		sys.__excepthook__(type, value, tback) 
+
+	sys.excepthook = my_excepthook
 	window = MainWindow(app)
 	window.show()
 	#if os.name=="nt":

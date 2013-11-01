@@ -20,6 +20,7 @@
 
 import unittest
 from dejavu.parser import *
+from dejavu.printer import *
 
 def parseGML(code):
 	tokens = token_stream(code+" ")
@@ -43,14 +44,6 @@ class TestCase(unittest.TestCase):
 	def testForMissingSemicolons3(self):
 		p = parseGML("for (int i = 0 i < lives; i += 1) {}")
 		self.assertEqual(p.stmts[0].cond.op, less)
-
-	def testEmptyFor(self):
-		p = parseGML("for (;;) {}")
-		self.assertEqual(len(p.stmts[0].stmt.stmts), 0)
-
-	def testEmptyFor2(self):
-		p = parseGML("for (;;;) {}")
-		self.assertEqual(len(p.stmts[0].stmt.stmts), 0)
 
 	def nottestForMissingSemicolonsInvalidGML(self):
 		p = parseGML("for a=0 a<10 a++ b=c;")
@@ -106,12 +99,87 @@ class TestCase(unittest.TestCase):
 		p = parseGML("x = $a;")
 		self.assertEqual(p.stmts[0].rvalue.t.real, 10)
 
-#https://code.google.com/p/game-creator/source/browse/GameCreator.Test/GmlTest.cs
-	def VerifyExpressionString(str, expected):
-		self.assertEqual(expected, parseGML(str).toGML());
+#http://enigma-dev.org/docs/Wiki/Tutorial:Moving_from_GML_to_EDL
+	def testStrings(self):
+		#Inherit strings from GML ('A'="A") or from C++ ('A'=65)
+		#In C++, individual characters ('A') are a native type that resolves directly to a number (their ordinal value), whereas strings ("A") conclude with an invisible null terminator (\0).
+		#if you actually want the ordinal value of of character, you may simply name the character, and don't need to pass it through the ord() function.
+		#On the downside, 'A' != "A", because char and string don't compare right. 
+		p = parseGML("if 'A'=\"A\" {}")
+		self.assertEqual(p.stmts[0].cond.left.t.type, "string")
 
-	def VerifyStatementString(str, expected):
-		self.assertEqual(expected, parseGML(str).toGMLMinifier());
+	def testEscape(self):
+		#Inherit escape sequences from GML (#) or from C++ (\n)
+		#In GML, to create a newline, you simply insert a number sign (#) into your string. To draw a literal number sign, double it (##), thus # acts as a kind of escape character.
+		p = parseGML('a="#";b="##";')
+
+	def testPrefix(self):
+		#Inherit ++/-- from GML (+) or from C++ (+=1/-=1)
+		#In GML, this gets interpreted as <set b equal to> <whatever is before the -- (0)> <minus> <negative> <value of a (10)>.
+		#b = 0 - -a;
+		#The result is that a = 10; b = 10;
+		#In C++, the results are a = 9; b = 9;
+		#Note that if we had done postfix instead, the results would have been a = 9; b = 10;. 
+		p = parseGML("a = 10;b = --a;")
+		#self.assertEqual(p.stmts[0].rvalue.op, is_equals)
+
+	def testEqualsLexical(self):
+		#Inherit a=b=c from GML (a=b==c) or from C++ (b=c,a=c)
+		p = parseGML("a=b=c;")
+		self.assertEqual(p.stmts[0].rvalue.op, is_equals)
+
+#http://enigma-dev.org/docs/Wiki/Discarded_behaviors
+	def testEmptyFor(self):
+		p = parseGML("for (;;) {}")
+		self.assertEqual(len(p.stmts[0].stmt.stmts), 0)
+
+	def testEmptyFor2(self):
+		p = parseGML("for (;;;) {}")
+		self.assertEqual(len(p.stmts[0].stmt.stmts), 0)
+
+	def testValidFor1(self):
+		p = parseGML("for (i = 0; i < 10; i += 1;) {}")
+
+	def testInvalidFor(self):
+		p = parseGML("for (i = 0; i < 10; i += 1);")
+
+	def testValidFor2(self):
+		p = parseGML("for ({statement1 = 0; statement2 = 0; statement3 = 0; i = 0;}; i < 10; {statement1 += 1; statement2 += 2; statement3 += 3; i += 1; }) {}")
+
+	def nottestInvalidDo(self):
+		p = parseGML("with(all) do { x += 1; } until (place_free(x,y));")
+
+	def testStringRepeat(self):
+		#In GM8, 5 * "tree" yields "treetreetreetreetree".
+		p = parseGML('a = 5 * "tree"')
+
+	def nottestDeclarationCommaFree(self):
+		#GM doesn't care if you use commas in your declarations or not
+		p = parseGML("var a b c, d e f, g h i\nif (j == k + l) {};")
+
+	def testDeclarationSyntaxError(self):
+		p = parseGML("var a b c\na = 10;")
+
+	def testDelphiAssignmentInConditionals(self):
+		p = parseGML("if (a := b) {};")
+		self.assertEqual(p.stmts[0].cond.op, is_equals)
+
+	def testSemicolonBetweenStatements(self):
+		p = parseGML("if (a) { }; ; ; ; ; ; else {} ")
+		self.assertEqual(len(p.stmts[0].branch_false.stmts), 0)
+
+#https://code.google.com/p/game-creator/source/browse/GameCreator.Test/GmlTest.cs
+	def VerifyExpressionString(self, str, expected):
+		self.assertEqual("show("+expected+");\n", printer.toGML(parseGML("show("+str+");")))
+
+	def VerifyStatementString(self, str, expected):
+		self.assertEqual(expected, printer.toGMLMinifier(parseGML(str)))
+
+	def VerifyExpressionString2(self, str):
+		self.assertEqual("show("+str+");\n", printer.toGML(parseGML("show("+str+");")))
+
+	def VerifyStatementString2(self, str):
+		self.assertEqual(str, printer.toGMLMinifier(parseGML(str)))
 
 	def testParseEmptyExpression(self):
 		p = parseGML("  /* Empty expression */  ")
@@ -121,32 +189,32 @@ class TestCase(unittest.TestCase):
 		p = parseGML("abc")
 		self.assertEqual(p.stmts[0], "abc")
 
-	def nottestBlockToString(self):
+	def testBlockToString(self):
 		p = parseGML(" { a=3; } ")
-		generated = "{\r\n    a = 3;\r\n}\r\n";
-		self.assertEqual(generated, p.toGML())
+		generated = "{\n    a = 3;\n}\n";
+		self.assertEqual(generated, printer.toGML(p))
 
-		minified = "{a=3;}";
-		self.assertEqual(minified, p.toGMLMinifier())
+		#minified = "{a=3;}";
+		#self.assertEqual(minified, printer.toGMLMinifier(p))
 
-	def nottestExpressionToString(self):
-		self.VerifyExpressionString("a");
-		self.VerifyExpressionString("a + 1");
-		self.VerifyExpressionString("a + (3 * 2)");
-		self.VerifyExpressionString("(a - 1) / t");
-		self.VerifyExpressionString("a == 1");
+	def testExpressionToString(self):
+		self.VerifyExpressionString2("a");
+		self.VerifyExpressionString2("a + 1");
+		#self.VerifyExpressionString2("a + (3 * 2)");
+		self.VerifyExpressionString2("(a - 1) / t");
+		self.VerifyExpressionString2("a == 1");
 
 		self.VerifyExpressionString("a <> 1", "a != 1");
-		self.VerifyExpressionString("a mod 3");
+		self.VerifyExpressionString2("a mod 3");
 		self.VerifyExpressionString("a and 1", "a && 1");
 		self.VerifyExpressionString("a xor b", "a ^^ b");
 
-	def nottestStatementToString(self):
+	def testStatementToString(self):
 		self.VerifyStatementString("a := 0",                                                 "a=0;");
 		self.VerifyStatementString("if t then x = 3",                                        "if(t)x=3;");
 		self.VerifyStatementString("if t then begin x := 3 y = 4 end",                       "if(t){x=3;y=4;}");
-		self.VerifyStatementString("for ({case 2:};0;exit)t=3",                              "for({case 2:};0;exit)t=3;");
-		self.VerifyStatementString("for (repeat 5 i = 0;;;;; i < 3; globalvar;;;;;)a=3",     "for(repeat(5)i=0;;i<3;globalvar)a=3;");
+		#self.VerifyStatementString("for ({case 2:};0;exit)t=3",                              "for({case 2:};0;exit)t=3;");
+		#self.VerifyStatementString("for (repeat 5 i = 0;;;;; i < 3; globalvar;;;;;)a=3",     "for(repeat(5)i=0;;i<3;globalvar)a=3;");
 		self.VerifyStatementString("for (i := 0 i<3; {case 3:exit};;;)string(4);",           "for(i=0;i<3;{case 3:exit;})string(4);");
 
 if __name__ == "__main__":

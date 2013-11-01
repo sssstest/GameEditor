@@ -17,7 +17,9 @@ class BinaryStream:
 		return self.base_stream.read(1)
 
 	def readBytes(self, length):
-		return self.base_stream.read(length)
+		l = self.base_stream.read(length)
+		print(len(l))
+		return l
 
 	def readChar(self):
 		return self.unpack('b')
@@ -96,6 +98,8 @@ class BinaryStream:
 		self.pack('d', value)
 
 	def writeString(self, value):
+		if type(value)==str:
+			value=value.encode()
 		length = len(value)
 		self.writeUInt16(length)
 		self.pack(str(length) + 's', value)

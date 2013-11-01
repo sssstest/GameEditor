@@ -94,3 +94,52 @@ kw_break="kw_break"
 kw_continue="kw_continue"
 kw_exit="kw_exit"
 kw_return="kw_return"
+
+OPERATORS={}
+
+OPERATORS[l_brace] = "{"
+OPERATORS[r_brace] = "}"
+OPERATORS[l_paren] = "("
+OPERATORS[r_paren] = ")"
+OPERATORS[l_square] = "["
+OPERATORS[r_square] = "]"
+
+OPERATORS[equals] = "="
+
+OPERATORS[less] = "<"
+OPERATORS[less_equals] = "<="
+OPERATORS[is_equals] = "=="
+OPERATORS[not_equals] = "!="
+OPERATORS[greater_equals] = ">="
+OPERATORS[greater] = ">"
+
+OPERATORS[plus_equals] = "+="
+OPERATORS[minus_equals] = "-="
+OPERATORS[times_equals] = "*="
+OPERATORS[div_equals] = "/="
+OPERATORS[and_equals] = "&="
+OPERATORS[or_equals] = "|="
+OPERATORS[xor_equals] = "^="
+
+OPERATORS[comma] = ","
+OPERATORS[dot] = "."
+OPERATORS[colon] = ":"
+OPERATORS[semicolon] = ";"
+
+OPERATORS[plus] = "+"
+OPERATORS[minus] = "-"
+OPERATORS[times] = "*"
+OPERATORS[divide] = "/"
+
+OPERATORS[exclaim] = "!"
+OPERATORS[tilde] = "~"
+
+OPERATORS[ampamp] = "&&"
+OPERATORS[pipepipe] = "||"
+OPERATORS[caretcaret] = "^^"
+
+OPERATORS[bit_and] = "&"
+OPERATORS[bit_or] = "|"
+OPERATORS[bit_xor] = "^"
+OPERATORS[shift_left] = "<<"
+OPERATORS[shift_right] = ">>"
