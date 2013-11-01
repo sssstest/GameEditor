@@ -12,6 +12,24 @@ import io
 import re
 from CliPrintColors import *
 
+def boolToEgmBool(b):
+	if b:
+		return "true"
+	else:
+		return "false"
+
+def intEgmChange(b):
+	return "NO_CHANGE"
+
+def intEgmResolution(b):
+	return "RES_640X480"
+
+def intEgmPriority(b):
+	return "NORMAL"
+
+def intEgmShowProgress(b):
+	return "DEFAULT"
+
 class Scanner(object):
 	def __init__(self,stream):
 		self.data=stream.read()

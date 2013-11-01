@@ -184,6 +184,7 @@ class GameFile(GameResource):
 		self.readPath=""
 		self.gmxRoot=None
 		self.EnigmaSettingsEef=None
+		self.EnigmaSettingsEefData=None
 		if os.name=="nt":
 			self.EnigmaTargetAudio="OpenAL"
 			self.EnigmaTargetWindowing="Win32"
@@ -315,7 +316,8 @@ class GameFile(GameResource):
 		global tempeef
 		tempeef=tempfile.NamedTemporaryFile()
 		tempeef=open(tempeef.name+".eef","wb")
-		tempeef.write(f.read())
+		self.EnigmaSettingsEefData=f.read()
+		tempeef.write(self.EnigmaSettingsEefData)
 		f.close()
 		tempeef.seek(0)
 		self.EnigmaSettingsEef=tempeef.name
@@ -374,8 +376,10 @@ class GameFile(GameResource):
 					self.egmId[kind]=self.egmId.get(kind,-1)+1
 					self.egmNameId[os.path.split(entry)[1]]=self.egmId[kind]
 					self.egmEntries.append((z,kind,entry,self.egmId[kind]))
+				elif entry=="null":
+					1
 				else:
-					print_error("Extraneous TOC entry: "+entry)
+					print_warning("Extraneous TOC entry: "+entry)
 
 	def egmProcesEntry(self, z, kind, entry, id):
 		if kind=="EGS":
@@ -1105,13 +1109,52 @@ class GameFile(GameResource):
 		for s in self.rooms:
 			self.resourceTree.AddResourcePath("Rooms/"+s.getMember("name"),s)
 
+	def SaveEgm(self, f):
+		z=zipfile.ZipFile(f,'w')
+		toc=""
+		for s in self.resourceTree.contents:
+			if s.group==GameTree.GroupSprites:
+				toc += self.SaveEgmRecursiveTree("SPR", "Sprites", s)
+			elif s.group==GameTree.GroupSounds:
+				toc += self.SaveEgmRecursiveTree("SND", "Sounds", s)
+			elif s.group==GameTree.GroupBackgrounds:
+				toc += self.SaveEgmRecursiveTree("BKG", "Backgrounds", s)
+			elif s.group==GameTree.GroupPaths:
+				toc += self.SaveEgmRecursiveTree("PTH", "Paths", s)
+			elif s.group==GameTree.GroupScripts:
+				toc += self.SaveEgmRecursiveTree("SCR", "Scripts", s)
+			elif s.group==GameTree.GroupShaders:
+				toc += self.SaveEgmRecursiveTree("SHR", "Shaders", s)
+			elif s.group==GameTree.GroupFonts:
+				toc += self.SaveEgmRecursiveTree("FNT", "Fonts", s)
+			elif s.group==GameTree.GroupTimelines:
+				toc += self.SaveEgmRecursiveTree("TML", "Time Lines", s)
+			elif s.group==GameTree.GroupObjects:
+				toc += self.SaveEgmRecursiveTree("OBJ", "Objects", s)
+			elif s.group==GameTree.GroupRooms:
+				toc += self.SaveEgmRecursiveTree("RMM", "Rooms", s)
+		toc += "GMI\tGame Information"
+		self.gameInformation.SaveEgm(self, z)
+		toc += "GMS\tGlobal Game Settings"
+		self.settings.SaveEgm(self, z)
+		toc += "EGS\tEnigma Settings"
+		if self.EnigmaSettingsEefData:
+			z.writestr("Enigma Settings.eef", self.EnigmaSettingsEefData)
+		z.writestr("Enigma Settings.ey", self.EnigmaSettingsEy())
+		z.writestr("toc.txt", toc)
+		z.close()
+
+	def SaveEgmRecursiveTree(self, type, path, node):
+		for s in node.contents:
+			print(s)
+		return type+"\t"+path
+
 	def Save(self, ext, filename, wfile=None):
 		if ext in [".gmk",".gm81"]:
 			stream=open(filename,"wb")
 			self.SaveGmk(stream)
 		elif ext == ".egm":
-			stream=open(filename,"wb")
-			self.SaveEgm(stream)
+			self.SaveEgm(filename)
 		elif ext == ".gmx":
 			self.SaveGmx(filename)
 		elif ext == ".gmz":

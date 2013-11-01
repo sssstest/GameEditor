@@ -46,6 +46,9 @@ class GameInformation(GameResource):
 		self.setMember("sizeable",r.getMbool('ALLOW_RESIZE'))
 		self.setMember("alwaysontop",r.getMbool('STAY_ON_TOP'))
 		self.setMember("freeze",r.getMbool('PAUSE_GAME'))
+		data=r.getMstr("Data")
+		information=z.open(data, "rU").read()
+		self.setMember("information", information)
 
 	def ReadGmk(self, stream):
 		gameInfoStream = stream.Deserialize()
@@ -63,7 +66,7 @@ class GameInformation(GameResource):
 		gameInfoStream.ReadTimestamp()
 		self.setMember("information",gameInfoStream.ReadString())
 		#Background Color of Game Information
-		if len(self.getMember("information"))>400:
+		if len(self.getMember("information"))>4000:
 			print_warning("game information too big "+str(len(self.getMember("information"))))
 			self.setMember("information","")
 
@@ -83,6 +86,22 @@ class GameInformation(GameResource):
 		gameInfoStream.WriteTimestamp()
 		gameInfoStream.WriteString(self.getMember("information"))
 		stream.Serialize(gameInfoStream)
+
+	def SaveEgm(self, gmkfile, z):
+		ey = "Data: Game Information.rtf\n"
+		ey += "BACKGROUND_COLOR: "+hex(self.getMember("backgroundcolor"))+"\n"
+		ey += "MIMIC_GAME_WINDOW: "+boolToEgmBool(self.getMember("showInSeperateWindow"))+"\n"
+		ey += "FORM_CAPTION: "+self.getMember("caption")+"\n"
+		ey += "LEFT: "+str(self.getMember("left"))+"\n"
+		ey += "TOP: "+str(self.getMember("top"))+"\n"
+		ey += "WIDTH: "+str(self.getMember("width"))+"\n"
+		ey += "HEIGHT: "+str(self.getMember("height"))+"\n"
+		ey += "SHOW_BORDER: "+boolToEgmBool(self.getMember("showborder"))+"\n"
+		ey += "ALLOW_RESIZE: "+boolToEgmBool(self.getMember("sizeable"))+"\n"
+		ey += "STAY_ON_TOP: "+boolToEgmBool(self.getMember("alwaysontop"))+"\n"
+		ey += "PAUSE_GAME: "+boolToEgmBool(self.getMember("freeze"))+"\n"
+		z.writestr("Game Information.ey", ey)
+		z.writestr("Game Information.rtf", self.getMember("information"))
 
 	def WriteGGG(self):
 		stri="@gameinformation {\n"

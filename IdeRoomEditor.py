@@ -375,7 +375,8 @@ class RoomWindow(ResourceWindow):
 				name=""
 				print("no object"+repr(i))
 			item = QTreeWidgetItem(self.instancesItem,[name,str(i.getMember("x"))+","+str(i.getMember("y"))])
-			item.setIcon(0, resIcon)
+			if resIcon:
+				item.setIcon(0, resIcon)
 			item.res=i
 		for i in self.res.views:
 			item = QTreeWidgetItem(self.viewsItem,[str(i.getMember("objectFollowingIndex"))])

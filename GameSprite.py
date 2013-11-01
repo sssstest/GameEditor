@@ -47,14 +47,17 @@ class GameSprite(GameResource):
 		if self.qIcon:
 			return self.qIcon
 		if len(self.subimages)>0:
+			return None
 			if update==False and self.subimages[0].width>200:
-				1
+				image=None
 				#print("sprite too big not creating QIcon")
 			else:
+				#print("slow conversion",self.subimages[0].width)
 				q=self.subimages[0].getQImage()
 				image=QtGui.QPixmap()
 				image.convertFromImage(q)
-				image=image.scaled(16,16)
+				if self.subimages[0].width < 16:
+					image=image.scaled(16,16)
 				return QtGui.QIcon(image)
 		return None
 

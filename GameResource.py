@@ -79,7 +79,7 @@ class GameResource(object):
 		if not member in self.defaults:
 			print_warning("setting member not in defaults "+member)
 		if type(self.defaults[member])!=type(val) and type(self.defaults[member])!=type(None):
-			if type(self.defaults[member])!=str and type(val)!=unicode:
+			if type(self.defaults[member])!=str and sys.version_info[0]<3 and type(val)!=unicode:
 				if type(self.defaults[member])!=int and type(val)!=long:
 					print_error("changed type of "+member+" "+str(type(self.defaults[member]))+" "+str(type(val)))
 		if member=="name" and self.gameFile.resourceTree:

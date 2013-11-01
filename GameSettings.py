@@ -53,7 +53,7 @@ class GameSettings(GameResource):
 		LpbtNone=0
 		LpbtDefault=1
 		LpbtCustom=2
-	
+
 	defaults={"id":-1,"fullscreen":False,"interpolate":False,"noborder":False,"showcursor":True,
 	"scale":ScalingKeepAspectRatio,"sizeable":False,"stayontop":False,"windowcolor":0,
 	"changeresolution":False,"colordepth":CdNoChange,"resolution":ResolutionNoChange,"frequency":FrequencyNoChange,
@@ -64,7 +64,7 @@ class GameSettings(GameResource):
 	"displayerrors":True,"writeerrors":False,"aborterrors":False,"treatUninitializedVariablesAsZero":False,"argumenterrors":True,
 	"author":"","version":"100","version_information":"","version_major":1,"version_minor":0,"version_release":0,"version_build":0,
 	"version_company":"","version_product":"","version_copyright":"","version_description":"",
-	"errorFlags":0}
+	"errorFlags":0, "OVERWRITE_EXISTING":False, "REMOVE_AT_GAME_END":False}
 
 	def __init__(self, gameFile):
 		GameResource.__init__(self, gameFile, -1)
@@ -73,6 +73,8 @@ class GameSettings(GameResource):
 		stream=z.open(entry+".ey",'r')
 		y=YamlParser()
 		r=y.parseStream(stream)
+		#gmkfile.guid=r.getMint('DPLAY_GUID')
+		gmkfile.gameId=r.getMint('GAME_ID')
 		self.setMember("fullscreen",r.getMbool('START_FULLSCREEN'))
 		self.setMember("interpolate",r.getMbool('INTERPOLATE'))
 		self.setMember("noborder",r.getMbool('DONT_DRAW_BORDER'))
@@ -93,7 +95,7 @@ class GameSettings(GameResource):
 		self.setMember("quitkey",r.getMbool('LET_ESC_END_GAME'))
 		self.setMember("savekey",r.getMbool('LET_F5_SAVE_F6_LOAD'))
 		self.setMember("screenshotkey",r.getMbool('LET_F9_SCREENSHOT'))
-		self.setMember("closesecondary",r.getMbool('TREAT_CLOSE_AS_ESCAPE'))
+		self.setMember("closesecondary",r.getMbool('TREAT_CLOSE_AS_ESCAPE'))#clifix
 		self.setMember("priority",r.getMpriority('GAME_PRIORITY'))
 		self.setMember("freeze",r.getMbool('FREEZE_ON_LOSE_FOCUS'))
 		self.setMember("showprogress",r.getMmode('LOAD_BAR_MODE'))
@@ -116,8 +118,8 @@ class GameSettings(GameResource):
 		self.setMember("version",r.getMstr('VERSION'))
 		self.setMember("version_information",r.getMstr('INFORMATION'))
 		#INCLUDE_FOLDER
-		#OVERWRITE_EXISTING
-		#REMOVE_AT_GAME_END
+		self.setMember("OVERWRITE_EXISTING",r.getMstr('OVERWRITE_EXISTING'))
+		self.setMember("REMOVE_AT_GAME_END",r.getMstr('REMOVE_AT_GAME_END'))
 		self.setMember("version_major",r.getMint('VERSION_MAJOR'))
 		self.setMember("version_minor",r.getMint('VERSION_MINOR'))
 		self.setMember("version_release",r.getMint('VERSION_RELEASE'))
@@ -342,6 +344,69 @@ class GameSettings(GameResource):
 				elif child.tag.startswith(option+"textureGroup"):pass
 				else:
 					print_error("unsupported tag "+child.tag)
+
+	def SaveEgm(self, gmkfile, z):
+		ey = "Icon: icon.ico\n"
+		ey += "Splash: null\n"
+		ey += "Filler: null\n"
+		ey += "Progress: null\n"
+		guid=''.join(map(lambda x:hex(x+0x100)[3:],gmkfile.guid))
+		ey += "DPLAY_GUID: 0x"+guid+"\n"
+		ey += "GAME_ID: "+str(gmkfile.gameId)+"\n"
+		ey += "START_FULLSCREEN: "+boolToEgmBool(self.getMember("fullscreen"))+"\n"
+		ey += "INTERPOLATE: "+boolToEgmBool(self.getMember("interpolate"))+"\n"
+		ey += "DONT_DRAW_BORDER: "+boolToEgmBool(self.getMember("noborder"))+"\n"
+		ey += "DISPLAY_CURSOR: "+boolToEgmBool(self.getMember("showcursor"))+"\n"
+		ey += "SCALING: "+str(self.getMember("scale"))+"\n"
+		ey += "ALLOW_WINDOW_RESIZE: "+boolToEgmBool(self.getMember("sizeable"))+"\n"
+		ey += "ALWAYS_ON_TOP: "+boolToEgmBool(self.getMember("stayontop"))+"\n"
+		ey += "COLOR_OUTSIDE_ROOM: "+hex(self.getMember("windowcolor"))+"\n"
+		ey += "SET_RESOLUTION: "+boolToEgmBool(self.getMember("changeresolution"))+"\n"
+		ey += "COLOR_DEPTH: "+intEgmChange(self.getMember("colordepth"))+"\n"#NO_CHANGE
+		ey += "RESOLUTION: "+intEgmResolution(self.getMember("colordepth"))+"\n"#RES_640X480
+		ey += "FREQUENCY: "+intEgmChange(self.getMember("colordepth"))+"\n"#NO_CHANGE
+		ey += "DONT_SHOW_BUTTONS: "+boolToEgmBool(self.getMember("nobuttons"))+"\n"
+		ey += "USE_SYNCHRONIZATION: "+boolToEgmBool(self.getMember("vsync"))+"\n"
+		ey += "DISABLE_SCREENSAVERS: "+boolToEgmBool(self.getMember("noscreensaver"))+"\n"
+		ey += "LET_F4_SWITCH_FULLSCREEN: "+boolToEgmBool(self.getMember("fullscreenkey"))+"\n"
+		ey += "LET_F1_SHOW_GAME_INFO: "+boolToEgmBool(self.getMember("helpkey"))+"\n"
+		ey += "LET_ESC_END_GAME: "+boolToEgmBool(self.getMember("quitkey"))+"\n"
+		ey += "LET_F5_SAVE_F6_LOAD: "+boolToEgmBool(self.getMember("savekey"))+"\n"
+		ey += "LET_F9_SCREENSHOT: "+boolToEgmBool(self.getMember("screenshotkey"))+"\n"
+		ey += "TREAT_CLOSE_AS_ESCAPE: "+boolToEgmBool(self.getMember("closesecondary"))+"\n"
+		ey += "GAME_PRIORITY: "+intEgmPriority(self.getMember("priority"))+"\n"#NORMAL
+		ey += "FREEZE_ON_LOSE_FOCUS: "+boolToEgmBool(self.getMember("freeze"))+"\n"
+		ey += "LOAD_BAR_MODE: "+intEgmShowProgress(self.getMember("showprogress"))+"\n"#DEFAULT
+		ey += "SHOW_CUSTOM_LOAD_IMAGE: "+boolToEgmBool(self.getMember("loadImage"))+"\n"
+		ey += "IMAGE_PARTIALLY_TRANSPARENTY: "+boolToEgmBool(self.getMember("loadtransparent"))+"\n"
+		ey += "LOAD_IMAGE_ALPHA: "+str(self.getMember("loadalpha"))+"\n"
+		ey += "SCALE_PROGRESS_BAR: "+boolToEgmBool(self.getMember("scaleprogress"))+"\n"
+		ey += "DISPLAY_ERRORS: "+boolToEgmBool(self.getMember("displayerrors"))+"\n"
+		ey += "WRITE_TO_LOG: "+boolToEgmBool(self.getMember("writeerrors"))+"\n"
+		ey += "ABORT_ON_ERROR: "+boolToEgmBool(self.getMember("aborterrors"))+"\n"
+		ey += "TREAT_UNINIT_AS_0: "+boolToEgmBool(self.getMember("treatUninitializedVariablesAsZero"))+"\n"
+		ey += "ERROR_ON_ARGS: "+boolToEgmBool(self.getMember("argumenterrors"))+"\n"
+		ey += "AUTHOR: "+self.getMember("author")+"\n"
+		ey += "VERSION: "+str(self.getMember("version"))+"\n"
+		ey += "LAST_CHANGED: "+str(41000)+"\n"
+		ey += "INFORMATION: "+self.getMember("version_information")+"\n"
+		ey += "INCLUDE_FOLDER: MAIN\n"
+		ey += "OVERWRITE_EXISTING: "+boolToEgmBool(self.getMember("OVERWRITE_EXISTING"))+"\n"
+		ey += "REMOVE_AT_GAME_END: "+boolToEgmBool(self.getMember("REMOVE_AT_GAME_END"))+"\n"
+		ey += "VERSION_MAJOR: "+str(self.getMember("version_major"))+"\n"
+		ey += "VERSION_MINOR: "+str(self.getMember("version_minor"))+"\n"
+		ey += "VERSION_RELEASE: "+str(self.getMember("version_release"))+"\n"
+		ey += "VERSION_BUILD: "+str(self.getMember("version_build"))+"\n"
+		ey += "COMPANY: "+self.getMember("version_company")+"\n"
+		ey += "PRODUCT: "+self.getMember("version_product")+"\n"
+		ey += "COPYRIGHT: "+self.getMember("version_copyright")+"\n"
+		ey += "DESCRIPTION: "+self.getMember("version_description")+"\n"
+		z.writestr("Global Game Settings.ey", ey)
+		if self.getMember("iconImage"):
+			z.writestr("icon.ico", self.getMember("iconImage").Read())
+		else:
+			z.writestr("icon.ico", "")
+			print_error("no iconImage")
 
 	def WriteGmk(self, stream):
 		settingsStream = BinaryStream()
