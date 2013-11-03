@@ -992,7 +992,7 @@ class GameFile(GameResource):
 			guidByte ^= (i * guidByte >> 3) & 0xAB
 			if guidByte>256:#clifix
 				guidByte=0
-			stream.WriteByte(chr(guidByte).encode())
+			stream.WriteByte(chr(guidByte))
 		# Write settings
 		stream.WriteDword(800)
 		if self.settings == None:

@@ -76,6 +76,7 @@ class ResourceWindow(QtGui.QMdiSubWindow):
 	def __init__(self, mainwindow, res, defaultTitle=None):
 		QtGui.QMdiSubWindow.__init__(self)
 		self.mainwindow=mainwindow
+		self.sciEditor=None
 		self.res=res
 		self.setWindowTitle(res.getMember("name",defaultTitle))
 		n=QLabel("Properties panel")

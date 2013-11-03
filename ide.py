@@ -123,35 +123,44 @@ class PreferencesDialog(QDialog):
 class FindDialog(QDialog):
 	def __init__(self, parent=None):
 		super(FindDialog, self).__init__(parent)
+		self.mainwindow=parent
+		self.col=0
+		self.row=0
 		label = QLabel("Find what:")
-		lineEdit = QLineEdit()
-		label.setBuddy(lineEdit)
+		self.findEdit = QLineEdit()
+		label.setBuddy(self.findEdit)
 		label2 = QLabel("Replace with:")
-		lineEdit2 = QLineEdit()
-		label2.setBuddy(lineEdit2)
-		wholeWordCheckBox = QCheckBox("Whole word")
-		caseCheckBox = QCheckBox("Case sensitive")
-		escapeCheckBox = QCheckBox("Escape sequences")
-		reCheckBox = QCheckBox("Regular expression")
-		fromStartCheckBox = QCheckBox("Search from &start")
-		wrapAroundCheckBox = QCheckBox("Wrap around")
-		wrapAroundCheckBox.setChecked(True)
-		searchBackwardsCheckBox = QCheckBox("Search backwards")
+		self.replaceEdit = QLineEdit()
+		label2.setBuddy(self.replaceEdit)
+		self.wholeWordCheckBox = QCheckBox("Whole word")
+		self.caseCheckBox = QCheckBox("Case sensitive")
+		self.escapeCheckBox = QCheckBox("Escape sequences")
+		self.reCheckBox = QCheckBox("Regular expression")
+		self.fromStartCheckBox = QCheckBox("Search from &start")
+		self.wrapAroundCheckBox = QCheckBox("Wrap around")
+		self.wrapAroundCheckBox.setChecked(True)
+		self.searchBackwardsCheckBox = QCheckBox("Search backwards")
+		self.showAllResults = QCheckBox("Show all results")
 
-		selectionRadio= QRadioButton("Selection")
-		resourceRadio = QRadioButton("Open Resource")
-		resourceRadio.setChecked(True)
-		allOpenResourcesRadio = QRadioButton("All Open Resources")
-		allScriptsRadio = QRadioButton("All Scripts")
-		allObjectsRadio = QRadioButton("All Objects")
-		allScriptsAndObjectsRadio = QRadioButton("All Scripts and Objects")
-		allResourcesGGG = QRadioButton("All Resources")
+		self.selectionRadio= QRadioButton("Selection")
+		self.resourceRadio = QRadioButton("Open Resource")
+		self.resourceRadio.setChecked(True)
+		self.allOpenResourcesRadio = QRadioButton("All Open Resources")
+		self.allScriptsRadio = QRadioButton("All Scripts")
+		self.allObjectsRadio = QRadioButton("All Objects")
+		self.allScriptsAndObjectsRadio = QRadioButton("All Scripts and Objects")
+		self.allResourcesGGG = QRadioButton("All Resources")
+		self.memberName = QRadioButton("Member Name")
 
 		findButton = QPushButton("&Find")
+		findButton.clicked.connect(self.handleFind)
 		findButton.setDefault(True)
 		replaceButton = QPushButton("&Replace")
+		replaceButton.clicked.connect(self.handleReplace)
 		replaceAllButton = QPushButton("Replace all")
+		replaceAllButton.clicked.connect(self.handleReplaceAll)
 		closeButton = QPushButton("Close")
+		closeButton.clicked.connect(self.handleClose)
 		buttonBox = QDialogButtonBox(Qt.Horizontal)
 		buttonBox.addButton(findButton, QDialogButtonBox.ActionRole)
 		buttonBox.addButton(replaceButton, QDialogButtonBox.ActionRole)
@@ -160,26 +169,29 @@ class FindDialog(QDialog):
 		#moreButton.toggled.connect=setVisible
 		topLeftLayout = QGridLayout()
 		topLeftLayout.addWidget(label, 0, 0)
-		topLeftLayout.addWidget(lineEdit, 0, 1)
+		topLeftLayout.addWidget(self.findEdit, 0, 1)
 		topLeftLayout.addWidget(label2, 1, 0) 
-		topLeftLayout.addWidget(lineEdit2, 1,1)
+		topLeftLayout.addWidget(self.replaceEdit, 1,1)
 		leftLayout = QVBoxLayout()
 		leftLayout.addLayout(topLeftLayout)
 		leftLayout4 = QVBoxLayout()
-		leftLayout4.addWidget(wholeWordCheckBox)
-		leftLayout4.addWidget(caseCheckBox)
-		leftLayout4.addWidget(escapeCheckBox)
-		leftLayout4.addWidget(reCheckBox)
-		leftLayout4.addWidget(fromStartCheckBox)
-		leftLayout4.addWidget(wrapAroundCheckBox)
+		leftLayout4.addWidget(self.wholeWordCheckBox)
+		leftLayout4.addWidget(self.caseCheckBox)
+		leftLayout4.addWidget(self.escapeCheckBox)
+		leftLayout4.addWidget(self.reCheckBox)
+		leftLayout4.addWidget(self.fromStartCheckBox)
+		leftLayout4.addWidget(self.wrapAroundCheckBox)
+		leftLayout4.addWidget(self.searchBackwardsCheckBox)
+		leftLayout4.addWidget(self.showAllResults)
 		leftLayout2 = QVBoxLayout()
-		leftLayout2.addWidget(selectionRadio)
-		leftLayout2.addWidget(resourceRadio)
-		leftLayout2.addWidget(allOpenResourcesRadio)
-		leftLayout2.addWidget(allScriptsRadio)
-		leftLayout2.addWidget(allObjectsRadio)
-		leftLayout2.addWidget(allScriptsAndObjectsRadio)
-		leftLayout2.addWidget(allResourcesGGG)
+		leftLayout2.addWidget(self.selectionRadio)
+		leftLayout2.addWidget(self.resourceRadio)
+		leftLayout2.addWidget(self.allOpenResourcesRadio)
+		leftLayout2.addWidget(self.allScriptsRadio)
+		leftLayout2.addWidget(self.allObjectsRadio)
+		leftLayout2.addWidget(self.allScriptsAndObjectsRadio)
+		leftLayout2.addWidget(self.allResourcesGGG)
+		leftLayout2.addWidget(self.memberName)
 		topLeftLayout3 = QHBoxLayout()
 		topLeftLayout3.addLayout(leftLayout4)
 		topLeftLayout3.addLayout(leftLayout2)
@@ -190,6 +202,59 @@ class FindDialog(QDialog):
 		mainLayout.addWidget(buttonBox)
 		self.setLayout(mainLayout)
 		self.setWindowTitle("Find")
+
+	def handleFind(self):
+		findText=self.findEdit.text()
+		w=self.mainwindow.mainMdiArea.activeSubWindow()
+		findRe=self.reCheckBox.isChecked()
+		caseSensitive=self.caseCheckBox.isChecked()
+		wholeWord=self.wholeWordCheckBox.isChecked()
+		findWrap = self.wrapAroundCheckBox.isChecked()
+		findForward = not self.searchBackwardsCheckBox.isChecked()
+		if self.selectionRadio.isChecked():
+			if w.sciEditor:
+				w.sciEditor.findFirstInSelection(findText, findRe, caseSensitive, wholeWord, findForward)
+
+		elif self.resourceRadio.isChecked():
+			if w.sciEditor:
+				w.sciEditor.findFirst(findText, findRe, caseSensitive, wholeWord, findWrap, findForward)
+
+		elif self.allOpenResourcesRadio.isChecked():
+			for w in self.mainwindow.mainMdiArea.subWindowList():
+				w.res.toGGG()
+
+		elif self.allScriptsRadio.isChecked():
+			for s in self.mainwindow.gmk.scripts:
+				if findText in s.getMember("value"):
+					print("found "+findText)
+					w=self.mainwindow.openResource(s)
+					t=w.sciEditor.findFirst(findText, findRe, caseSensitive, wholeWord, False, findForward)
+					if t:
+						return
+
+		elif self.allObjectsRadio.isChecked():
+			for s in self.mainwindow.gmk.objects:
+				if findText in s.WriteGGG():
+					print("found "+findText)
+					w=self.mainwindow.openResource(s)
+					t=w.sciEditor.findFirst(findText, findRe, caseSensitive, wholeWord, False, findForward)
+
+		elif self.allScriptsAndObjectsRadio.isChecked():
+			1
+		elif self.allResourcesGGG.isChecked():
+			1
+		elif self.memberName.isChecked():
+			1
+		#CliClass.print_error("not supported")
+
+	def handleReplace(self):
+		CliClass.print_error("not supported")
+
+	def handleReplaceAll(self):
+		CliClass.print_error("not supported")
+
+	def handleClose(self):
+		self.close()
 
 class PropertiesTable(QTableWidget):
 	def __init__(self, parent):
@@ -273,8 +338,8 @@ class MainWindow(QtGui.QMainWindow):
 		self.exitAction = QAction("E&xit", self)
 		self.exitAction.setShortcuts(QKeySequence.Quit)
 		self.exitAction.triggered.connect(self.handleCloseApplication)
-		#self.mdiAction = QAction("&Multiple Document Interface", self)
-		#self.mdiAction.triggered.connect(self.handleToggleMdiTabs)
+		self.mdiAction = QAction("&Multiple Document Interface", self)
+		self.mdiAction.triggered.connect(self.handleToggleMdiTabs)
 		self.licenseAction = QAction("&License", self)
 		self.licenseAction.triggered.connect(self.handleShowLicenseDialog)
 		self.aboutAction = QAction("&About", self)
@@ -299,7 +364,7 @@ class MainWindow(QtGui.QMainWindow):
 		statsAction = QAction("Game Stats", self)
 		statsAction.triggered.connect(self.handleGameStats)
 		viewMenu.addAction(statsAction)
-		resourceMenu = QMenu("&Resources", self)
+		#resourceMenu = QMenu("&Resources", self)
 		windowMenu = QMenu("&Window", self)
 		helpMenu = QMenu("&Help", self)
 		helpMenu.addAction(self.licenseAction)
@@ -309,7 +374,7 @@ class MainWindow(QtGui.QMainWindow):
 		mainMenuBar.addMenu(debugMenu)
 		mainMenuBar.addMenu(editMenu)
 		mainMenuBar.addMenu(viewMenu)
-		mainMenuBar.addMenu(resourceMenu)
+		#mainMenuBar.addMenu(resourceMenu)
 		mainMenuBar.addMenu(windowMenu)
 		mainMenuBar.addMenu(helpMenu)
 		self.setMenuBar(mainMenuBar)
@@ -520,9 +585,9 @@ class MainWindow(QtGui.QMainWindow):
 		self.handleNewAction()
 		self.updateHierarchyTree()
 		if CliClass.IfEnigmaDir():
-			CliClass.print_notice("enigma installation found: "+self.enigmaPath)
+			CliClass.print_notice("Enigma installation found: "+self.enigmaPath)
 		else:
-			CliClass.print_error("enigma compiler library not found: "+self.enigmaPath)
+			CliClass.print_error("Enigma compiler library not found: "+self.enigmaPath)
 			if self.enigmaPath==".":
 				self.actionPreferences()
 			runAction.setDisabled(True)
@@ -798,51 +863,58 @@ class MainWindow(QtGui.QMainWindow):
 	def deleteTreeGroup(self, event):
 		CliClass.print_error("unsupported delete tree group")
 
-	def handleItemActivated(self, item, column, GGG=False, parent=True):
-		if not item.res:
-			#CliClass.print_notice("no res "+str(item.res))
-			return
+	def closeResourceWindows(self):
 		for w in self.mainMdiArea.subWindowList():
-			if w.res==item.res:
+			w.close()
+
+	def openResource(self, res, GGG=False, parent=True):
+		if not res:
+			return None
+		for w in self.mainMdiArea.subWindowList():
+			if w.res==res:
 				self.mainMdiArea.setActiveSubWindow(w)
-				return
+				return w
 		if GGG:
-			s = GGGWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameSprite:
-			s = SpriteWindow(self,item.res)
-			item.res.updateQIcon()
+			s = GGGWindow(self, res)
+		elif res.__class__==CliClass.GameSprite:
+			s = SpriteWindow(self, res)
+			res.updateQIcon()
 			self.updateHierarchyTree()
-		elif item.res.__class__==CliClass.GameSound:
-			s = SoundWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameBackground:
-			s = BackgroundWindow(self,item.res)
-		elif item.res.__class__==CliClass.GamePath:
-			s = PathWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameScript:
-			s = ScriptWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameShader:
-			s = ShaderWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameFont:
-			s = FontWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameTimeline:
-			s = TimelineWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameObject:
-			s = ObjectWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameRoom:
-			s = RoomWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameInformation:
-			s = GameInformationWindow(self,item.res)
-		elif item.res.__class__==CliClass.GameSettings:
-			s = GameSettingsWindow(self,item.res)
+		elif res.__class__==CliClass.GameSound:
+			s = SoundWindow(self, res)
+		elif res.__class__==CliClass.GameBackground:
+			s = BackgroundWindow(self, res)
+		elif res.__class__==CliClass.GamePath:
+			s = PathWindow(self, res)
+		elif res.__class__==CliClass.GameScript:
+			s = ScriptWindow(self, res)
+		elif res.__class__==CliClass.GameShader:
+			s = ShaderWindow(self, res)
+		elif res.__class__==CliClass.GameFont:
+			s = FontWindow(self, res)
+		elif res.__class__==CliClass.GameTimeline:
+			s = TimelineWindow(self, res)
+		elif res.__class__==CliClass.GameObject:
+			s = ObjectWindow(self, res)
+		elif res.__class__==CliClass.GameRoom:
+			s = RoomWindow(self, res)
+		elif res.__class__==CliClass.GameInformation:
+			s = GameInformationWindow(self, res)
+		elif res.__class__==CliClass.GameSettings:
+			s = GameSettingsWindow(self, res)
 		else:
-			CliClass.print_notice("unsupported class "+str(item.res))
-			return
+			CliClass.print_notice("unsupported class "+str(res))
+			return s
 		self.mainMdiArea.addSubWindow(s, Qt.Window)
 		if not parent:
 			self.mainMdiArea.removeSubWindow(s)
 			s.show()
-			return
+			return s
 		s.showMaximized()
+		return s
+
+	def handleItemActivated(self, item, column, GGG=False, parent=True):
+		self.openResource(item.res, GGG, parent)
 
 	def saveOpenResources(self):
 		for w in self.mainMdiArea.subWindowList():
@@ -1142,7 +1214,8 @@ class MainWindow(QtGui.QMainWindow):
 		self.projectUpdateWindowTitle()
 		self.updateHierarchyTree()
 
-	def openProject(self,fileName):
+	def openProject(self, fileName):
+		self.closeResourceWindows()
 		self.recentFiles.append(fileName)
 		self.savePreferences()
 		fileName=str(fileName)
@@ -1226,12 +1299,12 @@ class MainWindow(QtGui.QMainWindow):
 			self.aboutDialog = AboutDialog()
 		self.aboutDialog.show(":/about.html", "About");
 
-	#def handleToggleMdiTabs(self):
-	#	self.mainMdiArea.setDocumentMode(True);
-	#	if self.mainMdiArea.viewMode()==QMdiArea.TabbedView:
-	#		self.mainMdiArea.setViewMode(QMdiArea.SubWindowView)
-	#	if self.mainMdiArea.viewMode()==QMdiArea.SubWindowView:
-	#		self.mainMdiArea.setViewMode(QMdiArea.TabbedView)
+	def handleToggleMdiTabs(self):
+		self.mainMdiArea.setDocumentMode(True);
+		if self.mainMdiArea.viewMode()==QMdiArea.TabbedView:
+			self.mainMdiArea.setViewMode(QMdiArea.SubWindowView)
+		if self.mainMdiArea.viewMode()==QMdiArea.SubWindowView:
+			self.mainMdiArea.setViewMode(QMdiArea.TabbedView)
 
 	def outputClear(self):
 		self.logText.clear()
@@ -1271,6 +1344,7 @@ if __name__ == '__main__':
 		s=io.StringIO()
 		traceback.print_last(file=s)
 		s.seek(0)
+		errorMessageDialog.setMinimumSize(600,400)
 		errorMessageDialog.showMessage("exception\n"+s.read())
 
 		# then call the default handler

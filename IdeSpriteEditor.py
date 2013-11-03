@@ -20,6 +20,20 @@
 
 from IdeResource import *
 
+class Subimage(QLabel):
+	def __init__(self):
+		QLabel.__init__(self)
+		self.band=QRubberBand(QRubberBand.Rectangle, self)
+
+	def paintEvent(self, event):
+		painter = QtGui.QPainter(self)
+		painter.setBrush(QColor(0xaaaaaa))
+		#painter.setPen(Qt.NoPen)
+		painter.setPen(QColor(0))
+		p=self.pixmap()
+		painter.drawRect(0,0,p.width(),p.height())
+		painter.drawPixmap(0,0,p)
+
 class SpriteWindow(ResourceWindow):
 	def __init__(self, mainwindow, res):
 		ResourceWindow.__init__(self, mainwindow, res)
@@ -29,23 +43,26 @@ class SpriteWindow(ResourceWindow):
 		"alphatolerance","precisecollisionchecking","seperatemasks",
 		"HTile","VTile","For3D","width","height"]
 		self.propertiesType={"maskshape":"spriteMaskshape","bboxmode":"spriteBboxmode"}
+		scrollArea = QScrollArea()
+		scrollArea.setBackgroundRole(QPalette.Dark)
+		#scrollArea.setWidget(imageLabel)
+		subimagesLayout=QHBoxLayout(scrollArea)
+		scrollArea.setLayout(subimagesLayout)
 		for subimage in res.subimages:
-			imageLabel = QLabel()
+			imageLabel = Subimage()
 			p=QPixmap()
 			if len(res.subimages)>0:
 				p.convertFromImage(subimage.getQImage())
 			imageLabel.setPixmap(p)
 			imageLabel.setBackgroundRole(QPalette.Base)
 			#imageLabel.setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-			imageLabel.setScaledContents(True)
+			imageLabel.setScaledContents(False)
 			w=p.size().width()
 			h=p.size().height()
 			ww = self.size().width()
 			wh = self.size().height()
-			imageLabel.resize(w,h)
-		scrollArea = QScrollArea()
-		scrollArea.setBackgroundRole(QPalette.Dark)
-		scrollArea.setWidget(imageLabel)
+			imageLabel.resize(w*2,h*2)
+			subimagesLayout.addWidget(imageLabel)
 		q=QWidget()
 		self.setWidget(q)
 		layout = QVBoxLayout(q)

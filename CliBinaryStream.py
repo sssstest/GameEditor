@@ -99,7 +99,7 @@ class BinaryStream:
 
 	def writeString(self, value):
 		if type(value)==str:
-			value=value.encode()
+			value=value.encode("iso8859-1")
 		length = len(value)
 		self.writeUInt16(length)
 		self.pack(str(length) + 's', value)
@@ -206,6 +206,8 @@ class BinaryStream:
 		self.writeInt32(value)
 
 	def WriteByte(self, value):
+		if type(value)==str:
+			value=value.encode("iso8859-1")
 		self.writeChar(value)
 
 	def WriteDouble(self, value):
@@ -219,6 +221,8 @@ class BinaryStream:
 		self.WriteDword(int(bool(value)))
 
 	def WriteString(self, value):
+		if type(value)==str:
+			value=value.encode("iso8859-1")
 		length = len(value)
 		self.WriteDword(length)
 		self.pack(str(length) + 's', value)

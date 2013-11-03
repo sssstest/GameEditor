@@ -118,7 +118,10 @@ class RoomView(QWidget):
 		self.roomWindow=roomWindow
 		self.app=self.roomWindow.app
 		self.rubberBand=None
-		self.resize(self.res.getMember("width"), self.res.getMember("height"))
+		if self.res:
+			self.resize(self.res.getMember("width"), self.res.getMember("height"))
+		else:
+			self.resize(1000, 1000)
 		self.gridX=160
 		self.gridY=160
 		self.updateBrush()
@@ -146,7 +149,10 @@ class RoomView(QWidget):
 		width=self.gridX
 		i=QtGui.QImage(width,height,QtGui.QImage.Format_ARGB32)
 		painter=QtGui.QPainter(i)
-		color = QColor(0xff000000 | self.res.getMember("color"))
+		if self.res:
+			color = QColor(0xff000000 | self.res.getMember("color"))
+		else:
+			color = QColor(0xff1ea0e6)
 		colorLighter=QColor()
 		colorLighter.setRgb((color.getRgb()[0]+40) % 255,(color.getRgb()[1]+40) % 255,(color.getRgb()[2]+40) % 255,255)
 		painter.setBrush(color)#0x1ea0e6))
@@ -187,7 +193,7 @@ class RoomView(QWidget):
 	def paintEvent(self, event):
 		side = min(self.width(), self.height())
 		painter = QtGui.QPainter(self)
-		if self.res.getMember("isometric"):
+		if self.res and self.res.getMember("isometric"):
 			painter.setBrush(self.isometricBrush)
 		else:
 			painter.setBrush(self.brush)
@@ -200,13 +206,14 @@ class RoomView(QWidget):
 		self.resizeSelection=False
 		self.rotateSelection=False
 		if self.app.keyboardModifiers() == Qt.ControlModifier:
-			item=self.res.gameFile.GetResourceName(CliClass.GameObject, self.roomWindow.activeItem)
-			if item:
-				inst=self.res.newInstance()
-				inst.setMember("x",self.origin.x())
-				inst.setMember("y",self.origin.y())
-				inst.setMember("object",item)
-				self.roomWindow.updateTree()
+			if self.res:
+				item=self.res.gameFile.GetResourceName(CliClass.GameObject, self.roomWindow.activeItem)
+				if item:
+					inst=self.res.newInstance()
+					inst.setMember("x",self.origin.x())
+					inst.setMember("y",self.origin.y())
+					inst.setMember("object",item)
+					self.roomWindow.updateTree()
 			return
 		for c in reversed(self.children()):
 			if type(c)==RoomViewInstance and c.geometry().contains(self.origin):

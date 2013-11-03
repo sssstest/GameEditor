@@ -118,8 +118,8 @@ class GameSettings(GameResource):
 		self.setMember("version",r.getMstr('VERSION'))
 		self.setMember("version_information",r.getMstr('INFORMATION'))
 		#INCLUDE_FOLDER
-		self.setMember("OVERWRITE_EXISTING",r.getMstr('OVERWRITE_EXISTING'))
-		self.setMember("REMOVE_AT_GAME_END",r.getMstr('REMOVE_AT_GAME_END'))
+		self.setMember("OVERWRITE_EXISTING",r.getMbool('OVERWRITE_EXISTING'))
+		self.setMember("REMOVE_AT_GAME_END",r.getMbool('REMOVE_AT_GAME_END'))
 		self.setMember("version_major",r.getMint('VERSION_MAJOR'))
 		self.setMember("version_minor",r.getMint('VERSION_MINOR'))
 		self.setMember("version_release",r.getMint('VERSION_RELEASE'))
