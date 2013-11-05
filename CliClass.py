@@ -893,12 +893,14 @@ class GameFile(GameResource):
 					writeFile=open(gmxPath,"w")
 					writeFile.write(sc.resource.getMember("value"))#.decode())
 					writeFile.close()
+					sound.text=path+"\\"+sc.resource.getMember("name")+".gml"
 				elif tagname=="shader":
 					if not os.path.exists(os.path.join(gmxdir, path)):
 						#print_notice("creating directory ",os.path.join(gmxdir, path))
 						os.mkdir(os.path.join(gmxdir, path))
 					gmxPath=os.path.join(gmxdir, path, sc.resource.getMember("name"))+".shader"
 					sc.resource.WriteGmxShader(gmxPath)
+					sound.text=path+"\\"+sc.resource.getMember("name")+".shader"
 				else:
 					print_error("what tag "+tagname)
 				et.append(sound)
@@ -941,7 +943,7 @@ class GameFile(GameResource):
 					self.SaveRecursiveGmxTree(gmxdir, s, "sound", et, "sound", "sounds")
 				elif s.group==GameTree.GroupSprites:
 					et=xml.etree.ElementTree.Element("sprites")
-					et.set("name","sprite")
+					et.set("name","sprites")
 					self.gmxRoot.append(et)
 					self.SaveRecursiveGmxTree(gmxdir, s, "sprites", et, "sprite", "sprites")
 				elif s.group==GameTree.GroupBackgrounds:
@@ -951,37 +953,37 @@ class GameFile(GameResource):
 					self.SaveRecursiveGmxTree(gmxdir, s, "background", et, "background", "backgrounds")
 				elif s.group==GameTree.GroupPaths:
 					et=xml.etree.ElementTree.Element("paths")
-					et.set("name","path")
+					et.set("name","paths")
 					self.gmxRoot.append(et)
 					self.SaveRecursiveGmxTree(gmxdir, s, "paths", et, "path", "paths")
 				elif s.group==GameTree.GroupScripts:
 					et=xml.etree.ElementTree.Element("scripts")
-					et.set("name","script")
+					et.set("name","scripts")
 					self.gmxRoot.append(et)
 					self.SaveRecursiveGmxTree(gmxdir, s, "scripts", et, "script", "scripts")
 				elif s.group==GameTree.GroupShaders:
 					et=xml.etree.ElementTree.Element("shaders")
-					et.set("name","shader")
+					et.set("name","shaders")
 					self.gmxRoot.append(et)
 					self.SaveRecursiveGmxTree(gmxdir, s, "shaders", et, "shader", "shaders")
 				elif s.group==GameTree.GroupFonts:
 					et=xml.etree.ElementTree.Element("fonts")
-					et.set("name","font")
+					et.set("name","fonts")
 					self.gmxRoot.append(et)
 					self.SaveRecursiveGmxTree(gmxdir, s, "fonts", et, "font", "fonts")
 				elif s.group==GameTree.GroupObjects:
 					et=xml.etree.ElementTree.Element("objects")
-					et.set("name","object")
+					et.set("name","objects")
 					self.gmxRoot.append(et)
 					self.SaveRecursiveGmxTree(gmxdir, s, "objects", et, "object", "objects")
 				elif s.group==GameTree.GroupTimelines:
 					et=xml.etree.ElementTree.Element("timelines")
-					et.set("name","timeline")
+					et.set("name","timelines")
 					self.gmxRoot.append(et)
 					self.SaveRecursiveGmxTree(gmxdir, s, "timelines", et, "timeline", "timelines")
 				elif s.group==GameTree.GroupRooms:
 					et=xml.etree.ElementTree.Element("rooms")
-					et.set("name","room")
+					et.set("name","rooms")
 					self.gmxRoot.append(et)
 					self.SaveRecursiveGmxTree(gmxdir, s, "rooms", et, "room", "rooms")
 			help=xml.etree.ElementTree.Element("help")

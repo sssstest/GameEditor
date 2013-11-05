@@ -1047,27 +1047,27 @@ class GameAction(GameResource):
 			argument=xml.etree.ElementTree.Element("argument")
 			argument.tail="\n"
 			arguments.append(argument)
-			gmxCreateTag(root, "kind", str(kind))
+			gmxCreateTag(argument, "kind", str(kind))
 			if kind in [GameAction.ArgumentKindExpression,GameAction.ArgumentKindString,GameAction.ArgumentKindBoth,GameAction.ArgumentKindBoolean,GameAction.ArgumentKindMenu,GameAction.ArgumentKindColor,GameAction.ArgumentKindFontString]:
-				gmxCreateTag(root, "string", value)
+				gmxCreateTag(argument, "string", value)
 			elif kind == GameAction.ArgumentKindSprite:
-				gmxCreateTag(root, "sprite", value)
+				gmxCreateTag(argument, "sprite", value)
 			elif kind == GameAction.ArgumentKindSound:
-				gmxCreateTag(root, "sound", value)
+				gmxCreateTag(argument, "sound", value)
 			elif kind == GameAction.ArgumentKindBackground:
-				gmxCreateTag(root, "background", value)
+				gmxCreateTag(argument, "background", value)
 			elif kind == GameAction.ArgumentKindPath:
-				gmxCreateTag(root, "path", value)
+				gmxCreateTag(argument, "path", value)
 			elif kind == GameAction.ArgumentKindScript:
-				gmxCreateTag(root, "script", value)
+				gmxCreateTag(argument, "script", value)
 			elif kind == GameAction.ArgumentKindObject:
-				gmxCreateTag(root, "object", value)
+				gmxCreateTag(argument, "object", value)
 			elif kind == GameAction.ArgumentKindRoom:
-				gmxCreateTag(root, "room", value)
+				gmxCreateTag(argument, "room", value)
 			elif kind == GameAction.ArgumentKindFont:
-				gmxCreateTag(root, "font", value)
+				gmxCreateTag(argument, "font", value)
 			elif kind == GameAction.ArgumentKindTimeline:
-				gmxCreateTag(root, "timeline", value)
+				gmxCreateTag(argument, "timeline", value)
 			else:
 				print_error("unsupported argument kind "+str(kind))
 

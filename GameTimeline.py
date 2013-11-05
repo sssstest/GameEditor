@@ -78,13 +78,13 @@ class GameTimeline(GameResource):
 
 	def WriteGmx(self, root):
 		for m in self.moments:
-			tag=xml.etree.ElementTree.Element("entry")
-			tag.tail="\n"
-			root.append(tag)
-			gmxCreateTag(tag, "step", str(m.position))
+			entry=xml.etree.ElementTree.Element("entry")
+			entry.tail="\n"
+			root.append(entry)
+			gmxCreateTag(entry, "step", str(m.position))
 			event=xml.etree.ElementTree.Element("event")
 			event.tail="\n"
-			root.append(event)
+			entry.append(event)
 			for a in m.actions:
 				action=xml.etree.ElementTree.Element("action")
 				action.tail="\n"

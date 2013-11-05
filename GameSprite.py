@@ -231,9 +231,9 @@ class GameSprite(GameResource):
 		gmxCreateTag(root, "For3D", str(self.getMember("For3D")))
 		gmxCreateTag(root, "width", str(self.getMember("width")))
 		gmxCreateTag(root, "height", str(self.getMember("height")))
-		tag=xml.etree.ElementTree.Element("frames")
-		tag.tail="\n"
-		root.append(tag)
+		frames=xml.etree.ElementTree.Element("frames")
+		frames.tail="\n"
+		root.append(frames)
 		c=0
 		for s in self.subimages:
 			if not os.path.exists(os.path.join(gmxdir, "images")):
@@ -246,7 +246,7 @@ class GameSprite(GameResource):
 			tag.tail="\n"
 			tag.text="images\\"+self.getMember("name")+"_"+str(c)+".png"
 			tag.set("index",str(c))
-			root.append(tag)
+			frames.append(tag)
 			c+=1
 
 	def WriteGmk(self, stream):
