@@ -36,7 +36,8 @@ class GameSound(GameResource):
 
 	defaults={"id":-1,"name":"noname","kind":KindNormal,
 	"extension":"","origname":"","effects":EffectNone,
-	"volume":1.0,"pan":0.0,"mp3BitRate":0,"oggQuality":0,"preload":True,"data":None}
+	"volume":1.0,"pan":0.0,"mp3BitRate":0,"oggQuality":0,"preload":True,"data":None,
+	"bitRate":192,"sampleRate":44100,"type":0,"bitDepth":16,"compressed":0,"streamed":0,"uncompressOnLoad":0}
 
 	def __init__(self, gameFile, id):
 		GameResource.__init__(self, gameFile, id)
@@ -92,22 +93,30 @@ class GameSound(GameResource):
 				self.setMember("mp3BitRate",int(child.text))
 			elif child.tag=="oggQuality":
 				self.setMember("oggQuality",int(child.text))
+			elif child.tag=="bitRates":
+				if len(child)>0 and child[0].tag=="bitRate":
+					child=child[0]
+				self.setMember("bitRate",int(child.text))
+			elif child.tag=="sampleRates":
+				if len(child)>0 and child[0].tag=="sampleRate":
+					child=child[0]
+				self.setMember("sampleRate",int(child.text))
+			elif child.tag=="types":
+				if len(child)>0 and child[0].tag=="type":
+					child=child[0]
+				self.setMember("type",int(child.text))
+			elif child.tag=="bitDepths":
+				if len(child)>0 and child[0].tag=="bitDepth":
+					child=child[0]
+				self.setMember("bitDepth",int(child.text))
 			elif child.tag=="preload":
 				self.setMember("preload",bool(int(child.text)))
-			elif child.tag=="bitRates":
-				print_warning("unsupported tag bitRates")
-			elif child.tag=="sampleRates":
-				print_warning("unsupported tag sampleRates")
-			elif child.tag=="types":
-				print_warning("unsupported tag types")
-			elif child.tag=="bitDepths":
-				print_warning("unsupported tag bitDepths")
 			elif child.tag=="compressed":
-				print_warning("unsupported tag compressed")
+				self.setMember("compressed",int(child.text))
 			elif child.tag=="streamed":
-				print_warning("unsupported tag streamed")
+				self.setMember("streamed",int(child.text))
 			elif child.tag=="uncompressOnLoad":
-				print_warning("unsupported tag uncompressOnLoad")
+				self.setMember("uncompressOnLoad",int(child.text))
 			elif child.tag=="data":#<data>snd_0.wav</data>
 				name=emptyTextToString(child.text)
 				data=open(os.path.join(gmxdir, "audio", name), "rb")
@@ -133,6 +142,40 @@ class GameSound(GameResource):
 		self.setMember("volume",soundStream.readDouble())
 		self.setMember("pan",soundStream.readDouble())
 		self.setMember("preload",soundStream.ReadBoolean())
+
+	def WriteGmx(self, root):
+		gmxCreateTag(root, "kind", str(self.getMember("kind")))
+		gmxCreateTag(root, "extension", self.getMember("extension"))
+		gmxCreateTag(root, "origname", self.getMember("origname"))
+		gmxCreateTag(root, "effects", str(self.getMember("effects")))
+		tag=xml.etree.ElementTree.Element("volume")
+		tag.tail="\n"
+		root.append(tag)
+		gmxCreateTag(tag, "volume", str(self.getMember("volume")))
+		gmxCreateTag(root, "pan", str(self.getMember("pan")))
+		tag=xml.etree.ElementTree.Element("bitRates")
+		tag.tail="\n"
+		root.append(tag)
+		gmxCreateTag(tag, "bitRate", str(self.getMember("bitRate")))
+		tag=xml.etree.ElementTree.Element("sampleRates")
+		tag.tail="\n"
+		root.append(tag)
+		gmxCreateTag(tag, "sampleRate", str(self.getMember("sampleRate")))
+		tag=xml.etree.ElementTree.Element("types")
+		tag.tail="\n"
+		root.append(tag)
+		#0 Mono 1 Stereo 2 3D
+		gmxCreateTag(tag, "type", str(self.getMember("type")))
+		tag=xml.etree.ElementTree.Element("bitDepths")
+		tag.tail="\n"
+		root.append(tag)
+		gmxCreateTag(tag, "bitDepth", str(self.getMember("bitDepth")))
+		gmxCreateTag(root, "preload", str(boolToGmxIntbool(self.getMember("preload"))))
+		gmxCreateTag(root, "compressed", str(self.getMember("compressed")))
+		gmxCreateTag(root, "streamed", str(self.getMember("streamed")))
+		gmxCreateTag(root, "uncompressOnLoad", str(self.getMember("uncompressOnLoad")))
+		if self.getMember("data") and len(self.getMember("data"))>0:
+			raise 4
 
 	def WriteGmk(self, stream):
 		soundStream = BinaryStream()

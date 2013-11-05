@@ -212,6 +212,43 @@ class GameSprite(GameResource):
 		self.setMember("bbox_bottom",spriteStream.ReadDword())
 		self.setMember("bbox_top",spriteStream.ReadDword())
 
+	def WriteGmx(self, root, gmxdir):
+		gmxCreateTag(root, "xorig", str(self.getMember("xorigin")))
+		gmxCreateTag(root, "yorigin", str(self.getMember("yorigin")))
+		gmxCreateTag(root, "colkind", str(self.getMember("maskshape")))
+		gmxCreateTag(root, "coltolerance", str(self.getMember("alphatolerance")))
+		gmxCreateTag(root, "sepmasks", str(boolToGmxIntbool(self.getMember("seperatemasks"))))
+		gmxCreateTag(root, "bboxmode", str(self.getMember("bboxmode")))
+		gmxCreateTag(root, "bbox_left", str(self.getMember("bbox_left")))
+		gmxCreateTag(root, "bbox_right", str(self.getMember("bbox_right")))
+		gmxCreateTag(root, "bbox_top", str(self.getMember("bbox_top")))
+		gmxCreateTag(root, "bbox_bottom", str(self.getMember("bbox_bottom")))
+		gmxCreateTag(root, "HTile", str(self.getMember("HTile")))
+		gmxCreateTag(root, "VTile", str(self.getMember("VTile")))
+		tag=xml.etree.ElementTree.Element("TextureGroups")
+		tag.tail="\n"
+		root.append(tag)
+		gmxCreateTag(root, "For3D", str(self.getMember("For3D")))
+		gmxCreateTag(root, "width", str(self.getMember("width")))
+		gmxCreateTag(root, "height", str(self.getMember("height")))
+		tag=xml.etree.ElementTree.Element("frames")
+		tag.tail="\n"
+		root.append(tag)
+		c=0
+		for s in self.subimages:
+			if not os.path.exists(os.path.join(gmxdir, "images")):
+				#print_notice("creating directory ",os.path.join(gmxdir, "images"))
+				os.mkdir(os.path.join(gmxdir, "images"))
+			path=os.path.join(gmxdir, "images", self.getMember("name")+"_"+str(c)+".png")
+			print_notice("writing image "+path)
+			s.getQImage().save(path)
+			tag=xml.etree.ElementTree.Element("frame")
+			tag.tail="\n"
+			tag.text="images\\"+self.getMember("name")+"_"+str(c)+".png"
+			tag.set("index",str(c))
+			root.append(tag)
+			c+=1
+
 	def WriteGmk(self, stream):
 		spriteStream = BinaryStream()
 		spriteStream.WriteBoolean(self.exists)

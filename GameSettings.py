@@ -211,35 +211,35 @@ class GameSettings(GameResource):
 				print_error("duplicated tag "+child.tag)
 			seen[child.tag]=seen.get(child.tag,0)+1
 			if child.tag==option+"aborterrors":
-				self.setMember("aborterrors",child.text=="true")
+				self.setMember("aborterrors",gmxBoolToBool(child.text))
 			elif child.tag==option+"argumenterrors":
-				self.setMember("argumenterrors",child.text=="true")
+				self.setMember("argumenterrors",gmxBoolToBool(child.text))
 			elif child.tag==option+"author":
 				self.setMember("author",emptyTextToString(child.text))
 			elif child.tag==option+"backimage":
 				pass#self.backImage=
 			elif child.tag==option+"changed":pass
 			elif child.tag==option+"changeresolution":
-				self.setMember("changeresolution",child.text=="true")
+				self.setMember("changeresolution",gmxBoolToBool(child.text))
 			elif child.tag==option+"closeesc":
-				self.setMember("closesecondary",child.text=="true")
+				self.setMember("closesecondary",gmxBoolToBool(child.text))
 			elif child.tag==option+"colordepth":
 				self.setMember("colordepth",int(child.text))
 			elif child.tag==option+"display_name":
 				pass#self.gameInformation.setMember("caption",emptyTextToString(child.text))
 			elif child.tag==option+"displayerrors":
-				self.setMember("displayerrors",child.text=="true")
+				self.setMember("displayerrors",gmxBoolToBool(child.text))
 			elif child.tag==option+"facebook_appid":pass
 			elif child.tag==option+"facebook_enable":pass
 			elif child.tag==option+"freeze":
-				#self.gameInformation.setMember("freeze",child.text=="true")
-				self.setMember("freeze",child.text=="true")
+				#self.gameInformation.setMember("freeze",gmxBoolToBool(child.text))
+				self.setMember("freeze",gmxBoolToBool(child.text))
 			elif child.tag==option+"frequency":
 				self.setMember("frequency",int(child.text))
 			elif child.tag==option+"frontimage":
 				pass#self.frontImage=
 			elif child.tag==option+"fullscreen":
-				self.setMember("fullscreen",child.text=="true")
+				self.setMember("fullscreen",gmxBoolToBool(child.text))
 			elif child.tag==option+"gameguid":pass
 			elif child.tag==option+"gameid":pass
 			elif child.tag==option+"GameID":pass
@@ -247,7 +247,7 @@ class GameSettings(GameResource):
 			elif child.tag==option+"haptic_effects":pass
 			elif child.tag==option+"hasloadimage":pass
 			elif child.tag==option+"helpkey":
-				self.setMember("helpkey",child.text=="true")
+				self.setMember("helpkey",gmxBoolToBool(child.text))
 			elif child.tag==option+"icon":
 				pass#self.iconImage=
 			elif child.tag==option+"in_app_purchase_enable":pass
@@ -256,32 +256,32 @@ class GameSettings(GameResource):
 			elif child.tag==option+"information":
 				pass#self.gameInformation.setMember("information",emptyTextToString(child.text))
 			elif child.tag==option+"interpolate":
-				self.setMember("interpolate",child.text=="true")
+				self.setMember("interpolate",gmxBoolToBool(child.text))
 			elif child.tag==option+"lastchanged":pass
 			elif child.tag==option+"loadalpha":
 				self.setMember("loadalpha",int(child.text))
 			elif child.tag==option+"loadimage":
 				pass#self.loadImage=
 			elif child.tag==option+"loadtransparent":
-				self.setMember("loadtransparent",child.text=="true")
+				self.setMember("loadtransparent",gmxBoolToBool(child.text))
 			elif child.tag==option+"noborder":
 				#self.gameInformation.setMember("showborder"
-				self.setMember("noborder",child.text=="true")
+				self.setMember("noborder",gmxBoolToBool(child.text))
 			elif child.tag==option+"nobuttons":
-				self.setMember("nobuttons",child.text=="true")
+				self.setMember("nobuttons",gmxBoolToBool(child.text))
 			elif child.tag==option+"noscreensaver":
-				self.setMember("noscreensaver",child.text=="true")
+				self.setMember("noscreensaver",gmxBoolToBool(child.text))
 			elif child.tag==option+"priority":
 				self.setMember("priority",int(child.text))
 			elif child.tag==option+"quitkey":
-				self.setMember("quitkey",child.text=="true")
+				self.setMember("quitkey",gmxBoolToBool(child.text))
 			elif child.tag==option+"resolution":
 				self.setMember("resolution",int(child.text))
 			elif child.tag==option+"savekey":pass
 			elif child.tag==option+"scale":
 				self.setMember("scale",int(child.text))
 			elif child.tag==option+"scaleprogress":
-				self.setMember("scaleprogress",child.text=="true")
+				self.setMember("scaleprogress",gmxBoolToBool(child.text))
 			elif child.tag==option+"sci_Password":pass
 			elif child.tag==option+"sci_RememberPassword":pass
 			elif child.tag==option+"sci_UseSCI":pass
@@ -289,17 +289,17 @@ class GameSettings(GameResource):
 			elif child.tag==option+"sci_serverlocation":pass
 			elif child.tag==option+"screenkey":pass
 			elif child.tag==option+"screenshotkey":
-				self.setMember("screenshotkey",child.text=="true")
+				self.setMember("screenshotkey",gmxBoolToBool(child.text))
 			elif child.tag==option+"showcursor":
-				self.setMember("showcursor",child.text=="true")
+				self.setMember("showcursor",gmxBoolToBool(child.text))
 			elif child.tag==option+"showprogress":
 				self.setMember("showprogress",int(child.text))
 			elif child.tag==option+"sizeable":
-				#self.gameInformation.setMember("sizeable",child.text=="true")
-				self.setMember("sizeable",child.text=="true")
+				#self.gameInformation.setMember("sizeable",gmxBoolToBool(child.text))
+				self.setMember("sizeable",gmxBoolToBool(child.text))
 			elif child.tag==option+"stayontop":
-				#self.gameInformation.setMember("alwaysontop",child.text=="true")
-				self.setMember("stayontop",child.text=="true")
+				#self.gameInformation.setMember("alwaysontop",gmxBoolToBool(child.text))
+				self.setMember("stayontop",gmxBoolToBool(child.text))
 			elif child.tag==option+"sync_vertex":#clifix
 				pass#self.vsync
 			elif child.tag==option+"sync":#options
@@ -328,7 +328,7 @@ class GameSettings(GameResource):
 			elif child.tag==option+"windowcolor":#clBlack
 				pass#self.windowcolor=
 			elif child.tag==option+"writeerrors":
-				self.setMember("writeerrors",child.text=="true")
+				self.setMember("writeerrors",gmxBoolToBool(child.text))
 			else:
 				if child.tag.startswith(option+"android_"):pass
 					#self.setMember("child.tag",child.text)
@@ -407,6 +407,90 @@ class GameSettings(GameResource):
 		else:
 			z.writestr("icon.ico", "")
 			print_error("no iconImage")
+
+	def WriteGmx(self, root):
+		if root.tag=="options":
+			option=""
+		elif root.tag=="Config":
+			option="option_"
+		else:
+			print_error("unsupported options root "+root.tag)
+		Options=xml.etree.ElementTree.Element("Options")
+		Options.tail="\n"
+		root.append(Options)
+
+		gmxCreateTag(Options, option+"aborterrors", boolToGmxBool(self.getMember("aborterrors")))
+		gmxCreateTag(Options, option+"argumenterrors", boolToGmxBool(self.getMember("argumenterrors")))
+		gmxCreateTag(Options, option+"author", self.getMember("author"))
+		gmxCreateTag(Options, option+"backimage", "nil")
+		gmxCreateTag(Options, option+"changed", boolToGmxBool(False))
+		gmxCreateTag(Options, option+"changeresolution", boolToGmxBool(self.getMember("changeresolution")))
+		gmxCreateTag(Options, option+"closeesc", boolToGmxBool(self.getMember("closesecondary")))#clifix
+		gmxCreateTag(Options, option+"colordepth", str(self.getMember("colordepth")))
+		gmxCreateTag(Options, option+"display_name", "")
+		gmxCreateTag(Options, option+"displayerrors", boolToGmxBool(self.getMember("displayerrors")))
+		gmxCreateTag(Options, option+"facebook_appid", "")
+		gmxCreateTag(Options, option+"facebook_enable", str(0))
+		gmxCreateTag(Options, option+"freeze", boolToGmxBool(self.getMember("freeze")))
+		gmxCreateTag(Options, option+"frequency", str(self.getMember("frequency")))
+		gmxCreateTag(Options, option+"frontimage", "nil")
+		gmxCreateTag(Options, option+"fullscreen", boolToGmxBool(self.getMember("fullscreen")))
+		gmxCreateTag(Options, option+"gameguid", "{00000000-0000-0000-0000-000000000000}")
+		gmxCreateTag(Options, option+"gameid", str(1))
+		gmxCreateTag(Options, option+"haptic_effects", str(0))
+		gmxCreateTag(Options, option+"hasloadimage", boolToGmxBool(False))
+		gmxCreateTag(Options, option+"helpkey", boolToGmxBool(self.getMember("helpkey")))
+		gmxCreateTag(Options, option+"icon", "nil")
+		gmxCreateTag(Options, option+"in_app_purchase_enable", str(0))
+		gmxCreateTag(Options, option+"in_app_purchase_sandbox_mode", str(0))
+		gmxCreateTag(Options, option+"in_app_purchase_server_url", "")
+		gmxCreateTag(Options, option+"information", "")
+		gmxCreateTag(Options, option+"interpolate", boolToGmxBool(self.getMember("interpolate")))
+		gmxCreateTag(Options, option+"lastchanged", "")
+		gmxCreateTag(Options, option+"loadalpha", str(self.getMember("loadalpha")))
+		gmxCreateTag(Options, option+"loadimage", "nil")
+		gmxCreateTag(Options, option+"loadtransparent", boolToGmxBool(self.getMember("loadtransparent")))
+		gmxCreateTag(Options, option+"noborder", boolToGmxBool(self.getMember("noborder")))
+		gmxCreateTag(Options, option+"nobuttons", boolToGmxBool(self.getMember("nobuttons")))
+		gmxCreateTag(Options, option+"noscreensaver", boolToGmxBool(self.getMember("noscreensaver")))
+		gmxCreateTag(Options, option+"priority", str(self.getMember("priority")))
+		gmxCreateTag(Options, option+"quitkey", boolToGmxBool(self.getMember("quitkey")))
+		gmxCreateTag(Options, option+"resolution", str(self.getMember("resolution")))
+		gmxCreateTag(Options, option+"savekey", boolToGmxBool(True))
+		gmxCreateTag(Options, option+"scale", str(self.getMember("scale")))
+		gmxCreateTag(Options, option+"scaleprogress", boolToGmxBool(self.getMember("scale")))
+		#gmxCreateTag(Options, option+"sci_Password", )
+		#gmxCreateTag(Options, option+"sci_RememberPassword", )
+		#gmxCreateTag(Options, option+"sci_UseSCI", )
+		#gmxCreateTag(Options, option+"sci_UserName", )
+		#gmxCreateTag(Options, option+"sci_serverlocation", )
+		gmxCreateTag(Options, option+"screenkey", boolToGmxBool(True))
+		gmxCreateTag(Options, option+"screenshotkey", boolToGmxBool(self.getMember("screenshotkey")))
+		gmxCreateTag(Options, option+"showcursor", boolToGmxBool(self.getMember("showcursor")))
+		gmxCreateTag(Options, option+"showprogress", str(self.getMember("showprogress")))
+		gmxCreateTag(Options, option+"sizeable", boolToGmxBool(self.getMember("sizeable")))
+		gmxCreateTag(Options, option+"stayontop", boolToGmxBool(self.getMember("stayontop")))
+		gmxCreateTag(Options, option+"sync_vertex", str(0))
+		gmxCreateTag(Options, option+"option_textureGroup0_border", str(2))
+		gmxCreateTag(Options, option+"option_textureGroup0_nocropping", str(0))
+		gmxCreateTag(Options, option+"option_textureGroup0_parent", "<none>")
+		gmxCreateTag(Options, option+"option_textureGroup0_scaled", str(0))
+		gmxCreateTag(Options, option+"option_textureGroup0_targets", "0")
+		gmxCreateTag(Options, option+"textureGroup_count", str(1))
+		gmxCreateTag(Options, option+"textureGroups0", "Default")
+		gmxCreateTag(Options, option+"use_new_audio", boolToGmxBool(True))
+		gmxCreateTag(Options, option+"variableerrors", boolToGmxBool(False))
+		gmxCreateTag(Options, option+"version", str(self.getMember("version")))
+		gmxCreateTag(Options, option+"version_build", str(self.getMember("version_build")))
+		gmxCreateTag(Options, option+"version_company", self.getMember("version_company"))
+		gmxCreateTag(Options, option+"version_copyright", self.getMember("version_copyright"))
+		gmxCreateTag(Options, option+"version_description", self.getMember("version_description"))
+		gmxCreateTag(Options, option+"version_major", str(self.getMember("version_major")))
+		gmxCreateTag(Options, option+"version_minor", str(self.getMember("version_minor")))
+		gmxCreateTag(Options, option+"version_product", self.getMember("version_product"))
+		gmxCreateTag(Options, option+"version_release", str(self.getMember("version_release")))
+		gmxCreateTag(Options, option+"windowcolor", "clBlack")
+		gmxCreateTag(Options, option+"writeerrors", boolToGmxBool(self.getMember("writeerrors")))
 
 	def WriteGmk(self, stream):
 		settingsStream = BinaryStream()

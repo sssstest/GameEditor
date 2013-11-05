@@ -607,7 +607,7 @@ class GameRoom(GameResource):
 				#	print_error("no instances")
 			elif child.tag=="tiles":
 				for chil in child:
-					print_error("gmx tiles unsupported")
+					print_warning("gmx tiles unsupported")
 			elif child.tag=="PhysicsWorld":
 				self.setMember("PhysicsWorld",int(child.text))
 			elif child.tag=="PhysicsWorldTop":
@@ -683,6 +683,125 @@ class GameRoom(GameResource):
 		self.setMember("page",roomStream.ReadDword())
 		self.setMember("xoffset",roomStream.ReadDword())
 		self.setMember("yoffset",roomStream.ReadDword())
+
+	def WriteGmx(self, root):
+		gmxCreateTag(root, "caption", self.getMember("caption"))
+		gmxCreateTag(root, "width", str(self.getMember("width")))
+		gmxCreateTag(root, "height", str(self.getMember("height")))
+		gmxCreateTag(root, "vsnap", str(self.getMember("vsnap")))
+		gmxCreateTag(root, "hsnap", str(self.getMember("hsnap")))
+		gmxCreateTag(root, "isometric", str(boolToGmxIntbool(self.getMember("isometric"))))
+		gmxCreateTag(root, "speed", str(self.getMember("speed")))
+		gmxCreateTag(root, "persistent", str(boolToGmxIntbool(self.getMember("persistent"))))
+		gmxCreateTag(root, "colour", str(self.getMember("color")))
+		gmxCreateTag(root, "showcolour", str(boolToGmxIntbool(self.getMember("showcolor"))))
+		gmxCreateTag(root, "code", self.getMember("code"))
+		gmxCreateTag(root, "enableViews", str(boolToGmxIntbool(self.getMember("enableViews"))))
+		gmxCreateTag(root, "clearViewBackground", str(boolToGmxIntbool(self.getMember("clearViewBackground"))))
+		makerSettings=xml.etree.ElementTree.Element("makerSettings")
+		makerSettings.tail="\n"
+		root.append(makerSettings)
+		gmxCreateTag(makerSettings, "isSet", str(boolToGmxIntbool(self.getMember("rememberRoomEditorInfo"))))
+		gmxCreateTag(makerSettings, "w", str(self.getMember("roomEditorWidth")))
+		gmxCreateTag(makerSettings, "h", str(self.getMember("roomEditorHeight")))
+		gmxCreateTag(makerSettings, "showGrid", str(boolToGmxIntbool(self.getMember("showGrid"))))
+		gmxCreateTag(makerSettings, "showObjects", str(boolToGmxIntbool(self.getMember("showObjects"))))
+		gmxCreateTag(makerSettings, "showTiles", str(boolToGmxIntbool(self.getMember("showTiles"))))
+		gmxCreateTag(makerSettings, "showBackgrounds", str(boolToGmxIntbool(self.getMember("showBackgrounds"))))
+		gmxCreateTag(makerSettings, "showForegrounds", str(boolToGmxIntbool(self.getMember("showForegrounds"))))
+		gmxCreateTag(makerSettings, "showViews", str(boolToGmxIntbool(self.getMember("showViews"))))
+		gmxCreateTag(makerSettings, "deleteUnderlyingObj", str(boolToGmxIntbool(self.getMember("deleteUnderlyingObj"))))
+		gmxCreateTag(makerSettings, "deleteUnderlyingTiles", str(boolToGmxIntbool(self.getMember("deleteUnderlyingTiles"))))
+		gmxCreateTag(makerSettings, "page", str(self.getMember("page")))
+		gmxCreateTag(makerSettings, "xoffset", str(self.getMember("xoffset")))
+		gmxCreateTag(makerSettings, "yoffset", str(self.getMember("yoffset")))
+		backgrounds=xml.etree.ElementTree.Element("backgrounds")
+		backgrounds.tail="\n"
+		root.append(backgrounds)
+		for b in self.backgrounds:
+			background=xml.etree.ElementTree.Element("background")
+			background.tail="\n"
+			backgrounds.append(background)
+			background.set("visible", str(boolToGmxIntbool(b.getMember("visible"))))
+			background.set("foreground", str(boolToGmxIntbool(b.getMember("foreground"))))
+			if b.getMember("image"):
+				image=b.getMember("image").getMember("name")
+			else:
+				image=""
+			background.set("name", image)
+			background.set("x", str(b.getMember("x")))
+			background.set("y", str(b.getMember("y")))
+			background.set("htiled", str(boolToGmxIntbool(b.getMember("tileHorizontal"))))
+			background.set("vtiled", str(boolToGmxIntbool(b.getMember("tileVertical"))))
+			background.set("hspeed", str(b.getMember("speedHorizontal")))
+			background.set("vspeed", str(b.getMember("speedVertical")))
+			background.set("stretch", str(boolToGmxIntbool(b.getMember("stretch"))))
+			#<background visible="0" foreground="0" name="" x="0" y="0" htiled="-1" vtiled="-1" hspeed="0" vspeed="0" stretch="0"/>
+		views=xml.etree.ElementTree.Element("views")
+		views.tail="\n"
+		root.append(views)
+		for v in self.views:
+			view=xml.etree.ElementTree.Element("view")
+			view.tail="\n"
+			views.append(view)
+			view.set("visible", str(boolToGmxIntbool(v.getMember("visible"))))
+			if v.getMember("objectFollowing"):
+				objName=v.getMember("objectFollowing").getMember("name")
+			else:
+				objName="<undefined>"
+			view.set("objName", objName)
+			view.set("xview", str(v.getMember("viewX")))
+			view.set("yview", str(v.getMember("viewY")))
+			view.set("wview", str(v.getMember("viewW")))
+			view.set("hview", str(v.getMember("viewH")))
+			view.set("xport", str(v.getMember("portX")))
+			view.set("yport", str(v.getMember("portY")))
+			view.set("wport", str(v.getMember("portW")))
+			view.set("hport", str(v.getMember("portH")))
+			view.set("hborder", str(v.getMember("horizontalBorder")))
+			view.set("vborder", str(v.getMember("verticalBorder")))
+			view.set("hspeed", str(v.getMember("horizontalSpeed")))
+			view.set("vspeed", str(v.getMember("verticalSpeed")))
+			#<view visible="0" objName="&lt;undefined&gt;" xview="0" yview="0" wview="640" hview="480" xport="0" yport="0" wport="640" hport="480" hborder="32" vborder="32" hspeed="-1" vspeed="-1"/>
+		instances=xml.etree.ElementTree.Element("instances")
+		instances.tail="\n"
+		root.append(instances)
+		for v in self.instances:
+			instance=xml.etree.ElementTree.Element("instance")
+			instance.tail="\n"
+			instances.append(instance)
+			if v.getMember("object"):
+				objName=v.getMember("object").getMember("name")
+			else:
+				objName="<undefined>"
+			instance.set("objName", objName)
+			instance.set("x", str(v.getMember("x")))
+			instance.set("y", str(v.getMember("y")))
+			instance.set("name", "inst_"+str(v.getMember("id")))#clifix
+			instance.set("locked", str(boolToGmxIntbool(v.getMember("locked"))))
+			instance.set("code", str(v.getMember("creationCode")))
+			instance.set("scaleX", str(v.getMember("scaleX")))
+			instance.set("scaleY", str(v.getMember("scaleY")))
+			instance.set("colour", str(v.getMember("color")))
+			instance.set("rotation", str(v.getMember("rotation")))
+			#<instance objName="object4" x="64" y="32" name="inst_E2A72CD3" locked="0" code="" scaleX="1" scaleY="1" colour="4294967295" rotation="0"/>
+
+		tiles=xml.etree.ElementTree.Element("tiles")
+		tiles.tail="\n"
+		root.append(tiles)
+		for v in self.tiles:
+			tile=xml.etree.ElementTree.Element("tile")
+			tile.tail="\n"
+			tiles.append(tile)
+			print_error("gmx tiles")
+		gmxCreateTag(root, "PhysicsWorld", str(self.getMember("PhysicsWorld")))
+		gmxCreateTag(root, "PhysicsWorldTop", str(self.getMember("PhysicsWorldTop")))
+		gmxCreateTag(root, "PhysicsWorldLeft", str(self.getMember("PhysicsWorldLeft")))
+		gmxCreateTag(root, "PhysicsWorldRight", str(self.getMember("PhysicsWorldRight")))
+		gmxCreateTag(root, "PhysicsWorldBottom", str(self.getMember("PhysicsWorldBottom")))
+		gmxCreateTag(root, "PhysicsWorldGravityX", str(self.getMember("PhysicsWorldGravityX")))
+		gmxCreateTag(root, "PhysicsWorldGravityY", str(self.getMember("PhysicsWorldGravityY")))
+		gmxCreateTag(root, "PhysicsWorldPixToMeters", str(self.getMember("PhysicsWorldPixToMeters")))
 
 	def WriteGmk(self, stream):
 		roomStream = BinaryStream()

@@ -204,7 +204,7 @@ class FindDialog(QDialog):
 		self.setWindowTitle("Find")
 
 	def handleFind(self):
-		findText=self.findEdit.text()
+		findText=str(self.findEdit.text())
 		w=self.mainwindow.mainMdiArea.activeSubWindow()
 		findRe=self.reCheckBox.isChecked()
 		caseSensitive=self.caseCheckBox.isChecked()
@@ -240,12 +240,11 @@ class FindDialog(QDialog):
 					t=w.sciEditor.findFirst(findText, findRe, caseSensitive, wholeWord, False, findForward)
 
 		elif self.allScriptsAndObjectsRadio.isChecked():
-			1
+			CliClass.print_error("not supported")
 		elif self.allResourcesGGG.isChecked():
-			1
+			CliClass.print_error("not supported")
 		elif self.memberName.isChecked():
-			1
-		#CliClass.print_error("not supported")
+			CliClass.print_error("not supported")
 
 	def handleReplace(self):
 		CliClass.print_error("not supported")
@@ -1263,6 +1262,7 @@ class MainWindow(QtGui.QMainWindow):
 			#reply = QMessageBox::question(this, "save", MESSAGE, QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 			#if reply == QMessageBox::Yes:
 			#elif reply == QMessageBox::No:
+			self.gmk.Backup(self.projectPath)
 			CliClass.print_notice("saving file "+self.projectPath)
 			self.gmk.Save(os.path.splitext(self.projectPath)[1], self.projectPath)
 			self.projectSetModified(False)
@@ -1278,6 +1278,7 @@ class MainWindow(QtGui.QMainWindow):
 		projectPath = QFileDialog.getSaveFileName(self,"Save", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
 		if projectPath and projectPath!="":
 			self.projectPath=projectPath
+			self.gmk.Backup(self.projectPath)
 			CliClass.print_notice("saving file "+self.projectPath)
 			self.gmk.Save(os.path.splitext(self.projectPath)[1], self.projectPath)
 			self.projectSetModified(False)

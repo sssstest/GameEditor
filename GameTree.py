@@ -34,7 +34,7 @@ from GameTrigger import *
 RtUnknown=9
 
 class GameTreeNode(object):
-	def __init__(self,_status, _group, _index, _name):
+	def __init__(self, _status, _group, _index, _name):
 		self.index=_index
 		self.name=_name
 		self.status=_status
@@ -42,7 +42,7 @@ class GameTreeNode(object):
 		self.resource=None
 		self.contents=[]
 
-	def Finalize(self,parent):
+	def Finalize(self, parent):
 		groupKind = [
 			RtUnknown,
 			GameObject,
@@ -59,17 +59,18 @@ class GameTreeNode(object):
 			GameTimeline,
 			RtUnknown,
 			GameShader]
-		self.resource = parent.gameFile.GetResource(groupKind[self.group], self.index)
+		if not self.resource:
+			self.resource = parent.gameFile.GetResource(groupKind[self.group], self.index)
 		for i in range(len(self.contents)):
 			self.contents[i].Finalize(parent)
 
-	def AddResource(self,resource):
+	def AddResource(self, resource):
 		self.index = resource.GetId()
 		node = GameTreeNode(StatusSecondary, self.group, self.index, self.resource.name)
 		node.resource = self.resource
 		self.contents.append(node)
 
-	def AddFilter(self,value):
+	def AddFilter(self, value):
 		node = GameTreeNode(StatusGroup, self.group, -1, value)
 		self.contents.push_back(node)
 		return node
@@ -223,7 +224,10 @@ class GameTree(GameResource):
 
 	def PrintRecursiveNode(self, r, start):
 		for x in r.contents:
-			print_notice(start+x.name)
+			if x.resource:
+				print_notice(start+x.name+" "+str(x.resource.getMember("name")))
+			else:
+				print_notice(start+x.name)
 			self.PrintRecursiveNode(x,start+"-")
 
 	def FindNodeName(self, name):

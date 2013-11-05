@@ -27,6 +27,21 @@ import xml.etree.ElementTree
 
 Class=1
 
+def boolToGmxBool(b):
+	if b:
+		return "True"
+	else:
+		return "False"
+
+def boolToGmxIntbool(b):
+	if b:
+		return -1
+	else:
+		return 0
+
+def gmxBoolToBool(text):
+	return text.lower()=="true"
+
 def gmxFloat(string):
 	return float(string.replace(",","."))
 
@@ -41,6 +56,12 @@ def tabStringLines(stri,tab="\t"):
 
 def ARGBtoRGBA(color):
 	return ((color&0xff0000)<<8) | ((color&0xff00)<<8) | ((color&0xff)<<8) | ((color&0xff000000)>>24)
+
+def gmxCreateTag(root, name, text):
+	tag=xml.etree.ElementTree.Element(name)
+	tag.tail="\n"
+	tag.text=text
+	root.append(tag)
 
 class GameResource(object):
 	def __init__(self, gameFile, id=-1):

@@ -50,10 +50,12 @@ class GameBackground(GameResource):
 		images = ApngIO().apngToBufferedImages(data)
 		image=QtGui.QImage()
 		image.loadFromData(images[0].read())
-		width,height,data=GameSpriteSubimage.FromQImage(image)
-		self.setMember("data",data)
-		self.setMember("width",width)
-		self.setMember("height",height)
+		self.subimage=GameSpriteSubimage()
+		self.subimage.setQImage(image)
+		#width,height,data=GameSpriteSubimage.FromQImage(image)
+		self.setMember("data", self.subimage.getGmkData())
+		self.setMember("width", self.subimage.width)
+		self.setMember("height", self.subimage.height)
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
 		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir,name)+".background.gmx")
@@ -100,10 +102,12 @@ class GameBackground(GameResource):
 					data=data.read()
 					image=QtGui.QImage()
 					image.loadFromData(data)
-					width,height,data=GameSpriteSubimage.FromQImage(image)
-					self.setMember("data",data)
-					if width == 0 or height == 0:
-						print_error("background size is 0")
+					self.subimage=GameSpriteSubimage()
+					self.subimage.setQImage(image)
+					#width,height,data=GameSpriteSubimage.FromQImage(image)
+					self.setMember("data", self.subimage.getGmkData())
+					#if width == 0 or height == 0:
+					#	print_error("background size is 0")
 				else:
 					self.setMember("data",b"")
 			else:
@@ -131,9 +135,36 @@ class GameBackground(GameResource):
 		self.setMember("width",backgroundStream.ReadDword())
 		self.setMember("height",backgroundStream.ReadDword())
 		if (self.getMember("width") != 0 and self.getMember("height") != 0):
-			self.setMember("data",backgroundStream.Deserialize(False))
+			data=backgroundStream.Deserialize(False)
+			self.subimage=GameSpriteSubimage()
+			self.subimage.setGmkData(data)
+			self.setMember("data",data)
 		if not self.getMember("data"):
 			print_warning("background has no data")
+
+	def WriteGmx(self, root, gmxdir):
+		gmxCreateTag(root, "istileset", str(boolToGmxIntbool(self.getMember("useAsTileset"))))
+		gmxCreateTag(root, "tilewidth", str(self.getMember("tileWidth")))
+		gmxCreateTag(root, "tileheight", str(self.getMember("tileHeight")))
+		gmxCreateTag(root, "tilexoff", str(self.getMember("tileHorizontalOffset")))
+		gmxCreateTag(root, "tileyoff", str(self.getMember("tileVerticalOffset")))
+		gmxCreateTag(root, "tilehsep", str(self.getMember("tileHorizontalSeperation")))
+		gmxCreateTag(root, "tilevsep", str(self.getMember("tileVerticalSeperation")))
+		gmxCreateTag(root, "HTile", "-1")
+		gmxCreateTag(root, "VTile", "-1")
+		tag=xml.etree.ElementTree.Element("TextureGroups")
+		tag.tail="\n"
+		root.append(tag)
+		gmxCreateTag(root, "For3D", str(self.getMember("For3D")))
+		gmxCreateTag(root, "width", str(self.getMember("width")))
+		gmxCreateTag(root, "height", str(self.getMember("height")))
+		if not os.path.exists(os.path.join(gmxdir, "images")):
+			#print_notice("creating directory ",os.path.join(gmxdir, "images"))
+			os.mkdir(os.path.join(gmxdir, "images"))
+		path=os.path.join(gmxdir, "images", self.getMember("name")+".png")
+		print_notice("writing image "+path)
+		self.subimage.getQImage().save(path)
+		gmxCreateTag(root, "data", "images\\"+self.getMember("name")+".png")
 
 	def WriteGmk(self, stream):
 		backgroundStream = BinaryStream()

@@ -18,7 +18,6 @@ class BinaryStream:
 
 	def readBytes(self, length):
 		l = self.base_stream.read(length)
-		print(len(l))
 		return l
 
 	def readChar(self):

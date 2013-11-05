@@ -44,6 +44,14 @@ class GameShader(GameResource):
 		self.setMember("vertex",vertex)
 		self.setMember("fragment",fragment)
 
+	def WriteGmxShader(self, gmxPath):
+		vertex=self.getMember("vertex")
+		fragment=self.getMember("fragment")
+		shader=vertex+"//######################_==_YOYO_SHADER_MARKER_==_######################@~//"+fragment
+		writeFile=open(gmxPath,"w")
+		writeFile.write(shader)#.decode())
+		writeFile.close()
+
 	def WriteGGG(self):
 		stri="@shader "+self.getMember("name")+" {\n"
 		for key in ["name","id","type","precompile"]:

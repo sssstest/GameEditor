@@ -391,6 +391,16 @@ class GameEvent(GameResource):
 				if value != GameObject.SpriteIndexNone:
 					self.eventCollisionObject = self.gameFile.GetResource(GameObject, value)
 
+	def eventCollisionObjectName(self):
+		if self.eventNumber == 4:
+			id = self.getMember("eventKind")
+			for o in self.gameFile.objects:
+				if o.getMember("id") == id:
+					return o.getMember("name")
+			return None
+		else:
+			print_error("not collision")
+
 	@staticmethod
 	def eventKindNumber(eventNumber,name,gameFile):
 		if eventNumber in [9,10]:
@@ -1002,6 +1012,65 @@ class GameAction(GameResource):
 			self.argumentValue[i]=stream.ReadString()
 		self.setMember("notFlag",stream.ReadBoolean())
 
+	def WriteGmx(self, root):
+		gmxCreateTag(root, "libid", str(self.getMember("libraryId")))
+		gmxCreateTag(root, "id", str(self.getMember("actionId")))
+		gmxCreateTag(root, "kind", str(self.getMember("kind")))
+		gmxCreateTag(root, "userelative", str(boolToGmxIntbool(self.getMember("mayBeRelative"))))
+		gmxCreateTag(root, "isquestion", str(boolToGmxIntbool(self.getMember("question"))))
+		gmxCreateTag(root, "useapplyto", str(boolToGmxIntbool(self.getMember("appliesToSomething"))))
+		gmxCreateTag(root, "exetype", str(self.getMember("type")))
+		gmxCreateTag(root, "functionname", self.getMember("functionName"))
+		gmxCreateTag(root, "codestring", self.getMember("functionCode"))
+		id=self.getMember("appliesToObject")
+		if id==-1:
+			whoName="self"
+		elif id==-2:
+			whoName="other"
+		else:
+			whoName=None
+			for o in self.gameFile.objects:
+				if o.getMember("id")==id:
+					whoName==o.getMember("name")
+					break
+			if not whoName:
+				raise 4
+		gmxCreateTag(root, "whoName", whoName)
+		gmxCreateTag(root, "relative", str(boolToGmxIntbool(self.getMember("relative"))))
+		gmxCreateTag(root, "isnot", str(boolToGmxIntbool(self.getMember("notFlag"))))
+		arguments=xml.etree.ElementTree.Element("arguments")
+		arguments.tail="\n"
+		root.append(arguments)
+		for c in range(self.getMember("argumentsUsed")):
+			kind=self.argumentKind[c]
+			value=self.argumentValue[c]
+			argument=xml.etree.ElementTree.Element("argument")
+			argument.tail="\n"
+			arguments.append(argument)
+			gmxCreateTag(root, "kind", str(kind))
+			if kind in [GameAction.ArgumentKindExpression,GameAction.ArgumentKindString,GameAction.ArgumentKindBoth,GameAction.ArgumentKindBoolean,GameAction.ArgumentKindMenu,GameAction.ArgumentKindColor,GameAction.ArgumentKindFontString]:
+				gmxCreateTag(root, "string", value)
+			elif kind == GameAction.ArgumentKindSprite:
+				gmxCreateTag(root, "sprite", value)
+			elif kind == GameAction.ArgumentKindSound:
+				gmxCreateTag(root, "sound", value)
+			elif kind == GameAction.ArgumentKindBackground:
+				gmxCreateTag(root, "background", value)
+			elif kind == GameAction.ArgumentKindPath:
+				gmxCreateTag(root, "path", value)
+			elif kind == GameAction.ArgumentKindScript:
+				gmxCreateTag(root, "script", value)
+			elif kind == GameAction.ArgumentKindObject:
+				gmxCreateTag(root, "object", value)
+			elif kind == GameAction.ArgumentKindRoom:
+				gmxCreateTag(root, "room", value)
+			elif kind == GameAction.ArgumentKindFont:
+				gmxCreateTag(root, "font", value)
+			elif kind == GameAction.ArgumentKindTimeline:
+				gmxCreateTag(root, "timeline", value)
+			else:
+				print_error("unsupported argument kind "+str(kind))
+
 	def WriteGmk(self, stream):
 		stream.WriteDword(440)
 		stream.WriteDword(self.getMember("libraryId"))
@@ -1259,6 +1328,8 @@ class GameObject(GameResource):
 									elif chila.tag=="whoName":
 										if chila.text=="self":
 											action.setMember("appliesToObject",GameObject.OBJECT_SELF)
+										elif chila.text=="other":
+											action.setMember("appliesToObject",GameObject.OBJECT_OTHER)
 										else:
 											print_error("gmx object applies to")
 										#action.appliesToObject=int(chila.text)
@@ -1506,8 +1577,54 @@ class GameObject(GameResource):
 					c=chil+i-1
 			i+=1
 
-	def WriteGmx(self, gmkfile, gmxdir, name):
-		print()
+	def WriteGmx(self, root):
+		if self.getMember("sprite"):
+			gmxCreateTag(root, "spriteName", self.getMember("sprite").getMember("name"))
+		else:
+			gmxCreateTag(root, "spriteName", "<undefined>")
+		gmxCreateTag(root, "solid", str(boolToGmxIntbool(self.getMember("solid"))))
+		gmxCreateTag(root, "visible", str(boolToGmxIntbool(self.getMember("visible"))))
+		gmxCreateTag(root, "depth", str(self.getMember("depth")))
+		gmxCreateTag(root, "persistent", str(boolToGmxIntbool(self.getMember("persistent"))))
+		if self.getMember("parent"):
+			gmxCreateTag(root, "parentName", self.getMember("parent").getMember("name"))
+		else:
+			gmxCreateTag(root, "parentName", "<undefined>")
+		if self.getMember("mask"):
+			gmxCreateTag(root, "maskName", self.getMember("mask").getMember("name"))
+		else:
+			gmxCreateTag(root, "maskName", "<undefined>")
+		events=xml.etree.ElementTree.Element("events")
+		events.tail="\n"
+		root.append(events)
+		for e in self.events:
+			event=xml.etree.ElementTree.Element("event")
+			event.tail="\n"
+			events.append(event)
+			event.set("eventtype", str(e.eventNumber))
+			if e.eventNumber==4:
+				event.set("ename", e.eventCollisionObjectName())
+			else:
+				event.set("enumb", str(e.getMember("eventKind")))
+			for a in e.actions:
+				action=xml.etree.ElementTree.Element("action")
+				action.tail="\n"
+				event.append(action)
+				a.WriteGmx(action)
+		gmxCreateTag(root, "PhysicsObject", str(self.getMember("PhysicsObject")))
+		gmxCreateTag(root, "PhysicsObjectSensor", str(self.getMember("PhysicsObjectSensor")))
+		gmxCreateTag(root, "PhysicsObjectShape", str(self.getMember("PhysicsObjectShape")))
+		gmxCreateTag(root, "PhysicsObjectDensity", str(self.getMember("PhysicsObjectDensity")))
+		gmxCreateTag(root, "PhysicsObjectRestitution", str(self.getMember("PhysicsObjectRestitution")))
+		gmxCreateTag(root, "PhysicsObjectGroup", str(self.getMember("PhysicsObjectGroup")))
+		gmxCreateTag(root, "PhysicsObjectLinearDamping", str(self.getMember("PhysicsObjectLinearDamping")))
+		gmxCreateTag(root, "PhysicsObjectAngularDamping", str(self.getMember("PhysicsObjectAngularDamping")))
+		gmxCreateTag(root, "PhysicsObjectFriction", str(self.getMember("PhysicsObjectFriction")))
+		gmxCreateTag(root, "PhysicsObjectAwake", str(self.getMember("PhysicsObjectAwake")))
+		gmxCreateTag(root, "PhysicsObjectKinematic", str(self.getMember("PhysicsObjectKinematic")))
+		tag=xml.etree.ElementTree.Element("PhysicsShapePoints")
+		tag.tail="\n"
+		root.append(tag)
 
 	def WriteGmk(self, stream):
 		objectStream = BinaryStream()

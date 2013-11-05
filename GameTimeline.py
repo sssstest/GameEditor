@@ -23,7 +23,7 @@ from GameResource import *
 class GameMoment(object):
 	def __init__(self):
 		self.position=0
-		actions=[]
+		self.actions=[]
 
 class GameTimeline(GameResource):
 	defaults={"id":-1,"name":"noname"}
@@ -38,7 +38,23 @@ class GameTimeline(GameResource):
 			callBack("subresource","moments",None,None)
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
-		print_warning("gmx timeline unsupported")
+		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir,name)+".timeline.gmx")
+		root=tree.getroot()
+		if root.tag!="timeline":
+			print_error("tag isn't timeline "+root.tag)
+		for child in root:
+			if child.tag=="entry":
+				m=GameMoment()
+				self.moments.append(m)
+				for chil in child:
+					if chil.tag=="step":
+						m.position=int(chil.text)
+					elif chil.tag=="event":
+						print_warning("timeline event unsupported")
+					else:
+						print_error("unsupported tag "+chil.tag)
+			else:
+				print_error("unsupported tag "+child.tag)
 
 	def ReadGmk(self, stream):
 		timelineStream = stream.Deserialize()
@@ -59,6 +75,21 @@ class GameTimeline(GameResource):
 				action.Read(timelineStream)
 				moment.actions.append(action)
 			self.addMoment(moment)
+
+	def WriteGmx(self, root):
+		for m in self.moments:
+			tag=xml.etree.ElementTree.Element("entry")
+			tag.tail="\n"
+			root.append(tag)
+			gmxCreateTag(tag, "step", str(m.position))
+			event=xml.etree.ElementTree.Element("event")
+			event.tail="\n"
+			root.append(event)
+			for a in m.actions:
+				action=xml.etree.ElementTree.Element("action")
+				action.tail="\n"
+				event.append(action)
+				a.WriteGmx(action)
 
 	def WriteGmk(self, stream):
 		timelineStream = BinaryStream()
@@ -89,5 +120,5 @@ class GameTimeline(GameResource):
 
 	def Finalize(self):
 		for i in range(len(self.moments)):
-			for j in len(self.moments[i].actions):
+			for j in range(len(self.moments[i].actions)):
 				self.moments[i].actions[j].Finalize()

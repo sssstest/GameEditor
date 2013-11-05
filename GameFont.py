@@ -101,8 +101,10 @@ class GameFont(GameResource):
 			elif child.tag=="texgroup":
 				pass
 			elif child.tag=="ranges":#<range0>32,127</range0>
-				pass#self.characterRangeBegin=int(child.text)
-				#characterRangeEnd
+				child=child[0]
+				b,e=child.text.split(",")
+				self.setMember("characterRangeBegin",int(b))
+				self.setMember("characterRangeEnd",int(e))
 			elif child.tag=="glyphs":#<glyph character="113" x="11" y="54" w="7" h="17" shift="9" offset="1"/>
 				pass
 			elif child.tag=="kerningPairs":
@@ -129,6 +131,28 @@ class GameFont(GameResource):
 		self.setMember("antiAliasing",(value >> 24) & 0xFF)
 		self.setMember("characterRangeBegin",value & 0xFFFF)
 		self.setMember("characterRangeEnd",fontStream.ReadDword())
+
+	def WriteGmx(self, root):
+		gmxCreateTag(root, "name", self.getMember("fontName"))
+		gmxCreateTag(root, "size", str(self.getMember("size")))
+		gmxCreateTag(root, "bold", str(boolToGmxIntbool(self.getMember("bold"))))
+		gmxCreateTag(root, "italic", str(boolToGmxIntbool(self.getMember("italic"))))
+		gmxCreateTag(root, "charset", str(self.getMember("characterSet")))
+		gmxCreateTag(root, "aa", str(self.getMember("antiAliasing")))
+		tag=xml.etree.ElementTree.Element("texgroups")
+		tag.tail="\n"
+		root.append(tag)
+		tag=xml.etree.ElementTree.Element("ranges")
+		tag.tail="\n"
+		root.append(tag)
+		gmxCreateTag(tag, "range0", str(self.getMember("characterRangeBegin"))+","+str(self.getMember("characterRangeEnd")))
+		tag=xml.etree.ElementTree.Element("glyphs")
+		tag.tail="\n"
+		root.append(tag)
+		tag=xml.etree.ElementTree.Element("kerningPairs")
+		tag.tail="\n"
+		root.append(tag)
+		gmxCreateTag(root, "image", "")
 
 	def WriteGmk(self, stream):
 		fontStream = BinaryStream()

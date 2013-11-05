@@ -19,6 +19,7 @@
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from GameResource import *
+from GameRoom import *
 
 class GamePath(GameResource):
 	if Class:
@@ -48,7 +49,33 @@ class GamePath(GameResource):
 			callBack("subresource","points",None,None)
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
-		print_warning("gmx path unsupported")
+		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir,name)+".path.gmx")
+		root=tree.getroot()
+		if root.tag!="path":
+			print_error("tag isn't path "+root.tag)
+		seen={}
+		for child in root:
+			if seen.get(child.tag,0)>0:
+				print_error("duplicated tag "+child.tag)
+			seen[child.tag]=seen.get(child.tag,0)+1
+			if child.tag=="kind":
+				self.setMember("connectionKind",int(child.text))
+			elif child.tag=="closed":
+				self.setMember("closed",bool(int(child.text)))
+			elif child.tag=="precision":
+				self.setMember("precision",int(child.text))
+			elif child.tag=="backroom":
+				self.setMember("roomIndex",int(child.text))
+			elif child.tag=="hsnap":
+				self.setMember("snapX",int(child.text))
+			elif child.tag=="vsnap":
+				self.setMember("snapY",int(child.text))
+			elif child.tag=="points":
+				for p in child:
+					x,y,speed=p.text.split(",")
+					self.addPoint((x,y,speed))
+			else:
+				print_error("unsupported tag "+child.tag)
 
 	def ReadGmk(self, stream):
 		pathStream = stream.Deserialize()
@@ -69,8 +96,20 @@ class GamePath(GameResource):
 			x = pathStream.readDouble()
 			y = pathStream.readDouble()
 			speed = pathStream.readDouble()
-
 			self.addPoint((x,y,speed))
+
+	def WriteGmx(self, root):
+		gmxCreateTag(root, "kind", str(self.getMember("connectionKind")))
+		gmxCreateTag(root, "closed", str(boolToGmxIntbool(self.getMember("closed"))))
+		gmxCreateTag(root, "precision", str(self.getMember("precision")))
+		gmxCreateTag(root, "backroom", str(self.getMember("roomIndex")))
+		gmxCreateTag(root, "hsnap", str(self.getMember("snapX")))
+		gmxCreateTag(root, "vsnap", str(self.getMember("snapY")))
+		tag=xml.etree.ElementTree.Element("points")
+		tag.tail="\n"
+		root.append(tag)
+		for p in self.points:
+			gmxCreateTag(tag, "point", str(p[0])+","+str(p[1])+","+str(p[2]))
 
 	def WriteGmk(self, stream):
 		pathStream = BinaryStream()
