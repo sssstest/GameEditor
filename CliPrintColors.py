@@ -93,8 +93,14 @@ def clearconsole():
 def print_error(msg):
 	printcolor("ERROR ", BRIGHT, RED)
 	printfcln(msg, RESET, WHITE)
-	traceback.print_stack(file=sys.stdout)
-	sys.exit(1)
+	#if sys.version_info[0]<3:
+	#	s=io.BytesIO()
+	#else:
+	#	s=io.StringIO()
+	traceback.print_stack(file=realStdout)
+	#s.seek(0)
+	
+	#raise NotImplementedError
 
 def print_warning(msg):
 	printcolor("WARNING ", BRIGHT, YELLOW)

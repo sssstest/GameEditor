@@ -130,6 +130,7 @@ class GameSettings(GameResource):
 		self.setMember("version_description",r.getMstr('DESCRIPTION'))
 
 	def ReadGmk(self, stream):
+		#print(repr(stream.base_stream.read()[100:200]))
 		settingsStream = stream.Deserialize()
 		self.setMember("fullscreen",settingsStream.ReadBoolean())
 		self.setMember("interpolate",settingsStream.ReadBoolean())

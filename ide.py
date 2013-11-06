@@ -1216,6 +1216,7 @@ class MainWindow(QtGui.QMainWindow):
 	def openProject(self, fileName):
 		self.closeResourceWindows()
 		self.recentFiles.append(fileName)
+		self.projectPath=fileName
 		self.savePreferences()
 		fileName=str(fileName)
 		self.gmk = CliClass.GameFile()
@@ -1241,7 +1242,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.updateHierarchyTree()
 
 	def handleOpenAction(self):
-		projectPath = QFileDialog.getOpenFileName(self,"Open", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
+		projectPath = QFileDialog.getOpenFileName(self,"Open", "", "Game Files (*.gmk *.gm81 *.gb? *.gm6 *.egm *.gmx)")
 		if projectPath and projectPath!="":
 			self.projectPath=projectPath
 			CliClass.print_notice("opening file "+self.projectPath)
@@ -1275,7 +1276,7 @@ class MainWindow(QtGui.QMainWindow):
 			CliClass.print_error("saving not enabled")
 			self.actionPreferences()
 			return
-		projectPath = QFileDialog.getSaveFileName(self,"Save", "", "Game Files (*.gmk *.gm81 *.gm6 *.egm *.gmx)")
+		projectPath = QFileDialog.getSaveFileName(self,"Save", "", "Game Files (*.gmk *.gm81 *.gb? *.gm6 *.egm *.gmx)")
 		if projectPath and projectPath!="":
 			self.projectPath=projectPath
 			self.gmk.Backup(self.projectPath)
@@ -1342,14 +1343,18 @@ if __name__ == '__main__':
 	app.setStyleSheet(" QTabBar::tab { height: 16; icon-size: 18px; } QStatusBar::item { border: 0px solid black; }");
 	errorMessageDialog=QErrorMessage()
 	def my_excepthook(type, value, tback):
-		s=io.StringIO()
+		if sys.version_info[0]<3:
+			s=io.BytesIO()
+		else:
+			s=io.StringIO()
 		traceback.print_last(file=s)
 		s.seek(0)
 		errorMessageDialog.setMinimumSize(600,400)
 		errorMessageDialog.showMessage("exception\n"+s.read())
-
+		
 		# then call the default handler
-		sys.__excepthook__(type, value, tback) 
+		sys.__excepthook__(type, value, tback)
+		#raise NotImplementedError
 
 	sys.excepthook = my_excepthook
 	window = MainWindow(app)

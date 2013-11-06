@@ -1566,7 +1566,7 @@ class GameObject(GameResource):
 					print_error("code outside of code block")
 					print_notice("line "+str(i)+" code")
 				else:
-					print_error("line "+str(i)+" new code")
+					#print_error("line "+str(i)+" new "+a[0])
 					i,level,plevel,type=GMLLexer(value[chil:],"")
 					codel=value[chil:chil+i-1]
 					code=""

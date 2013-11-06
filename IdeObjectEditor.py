@@ -159,6 +159,7 @@ class ObjectWindow(EditorWindow):
 		if self.sciEditor.isModified():
 			self.mainwindow.projectSetModified(True)
 			try:
+				closeEvent.ignore()
 				self.res.ReadGGG(str(self.sciEditor.text()))
 			except NotImplementedError:
 				CliClass.print_warning("unsupported")

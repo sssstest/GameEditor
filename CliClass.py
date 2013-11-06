@@ -853,7 +853,7 @@ class GameFile(GameResource):
 		self.readingFile=True
 		self.readPath=filename
 		ext=os.path.splitext(filename)[1]
-		if ext in [".gmk",".gm81",".gm6"]:
+		if ext in [".gmk",".gm81",".gm6",".gb1"]:
 			data = open(filename, "rb")
 			stream = BinaryStream(data)
 			self.ReadGmk(stream)
@@ -1182,7 +1182,7 @@ class GameFile(GameResource):
 		return type+"\t"+path
 
 	def Save(self, ext, filename, wfile=None):
-		if ext in [".gmk",".gm81"]:
+		if ext in [".gmk",".gm81",".gb1"]:
 			stream=open(filename,"wb")
 			self.SaveGmk(stream)
 		elif ext == ".egm":
@@ -1200,14 +1200,18 @@ class GameFile(GameResource):
 			print_error("unsupported save format")
 
 	def Backup(self, filename):
-		x=1
-		while 1:
-			path=filename+".backup"+str(x)
-			x=x+1
-			if not os.path.exists(path):
-				print_notice("backed up to "+path)
-				shutil.copy(filename, path)
-				return
+		if os.path.exists(filename):
+			x=1
+			while 1:
+				path=filename+".backup"+str(x)
+				x=x+1
+				if not os.path.exists(path):
+					print_notice("backed up to "+path)
+					if os.path.isdir(filename):
+						print_warning("cant backup dir")
+					else:
+						shutil.copy(filename, path)
+					return
 
 	def Finalize(self):
 		# Finalize paths
