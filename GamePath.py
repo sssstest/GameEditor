@@ -38,7 +38,7 @@ class GamePath(GameResource):
 
 	def setMember(self, member, value):
 		GameResource.setMember(self, member, value)
-		if not self.gameFile.readingFile:
+		if not self.gameFile.ifReadingFile:
 			if member=="roomIndex":
 				if value != GameObject.SpriteIndexNone:
 					self.setMember("room", self.gameFile.GetResource(GameRoom, value))

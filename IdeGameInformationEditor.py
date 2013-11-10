@@ -29,4 +29,4 @@ class GameInformationWindow(EditorWindow):
 		"showInSeperateWindow","caption",
 		"backgroundcolor"]
 		self.propertiesType={"backgroundcolor":"color"}
-		self.sciEditor.setText(self.res.getMember("information"))
+		self.sciEditor.setText(self.res.getMember("information").decode())

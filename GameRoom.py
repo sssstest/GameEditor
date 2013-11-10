@@ -37,7 +37,7 @@ class GameRoomBackground(GameResource):
 
 	def setMember(self, member, value):
 		GameResource.setMember(self, member, value)
-		if not self.gameFile.readingFile:
+		if not self.gameFile.ifReadingFile:
 			if member=="imageIndex":
 				if value != -1:
 					self.setMember("image", self.gameFile.GetResource(GameBackground, value))
@@ -104,7 +104,7 @@ class GameRoomView(GameResource):
 
 	def setMember(self, member, value):
 		GameResource.setMember(self, member, value)
-		if not self.gameFile.readingFile:
+		if not self.gameFile.ifReadingFile:
 			if member=="objectFollowingIndex":
 				if value != -1:
 					self.setMember("objectFollowing", self.gameFile.GetResource("GameObject", value))
@@ -183,7 +183,7 @@ class GameRoomInstance(GameResource):
 
 	def setMember(self, member, value):
 		GameResource.setMember(self, member, value)
-		if not self.gameFile.readingFile:
+		if not self.gameFile.ifReadingFile:
 			if member=="objectIndex":
 				if value != -1:
 					self.setMember("object", self.gameFile.GetResource("GameObject", value))
@@ -237,7 +237,7 @@ class GameRoomTile(GameResource):
 
 	def setMember(self, member, value):
 		GameResource.setMember(self, member, value)
-		if not self.gameFile.readingFile:
+		if not self.gameFile.ifReadingFile:
 			if member=="backgroundIndex":
 				if value != -1:
 					self.setMember("background", self.gameFile.GetResource("GameObject", value))

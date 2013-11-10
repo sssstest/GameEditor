@@ -386,7 +386,7 @@ class GameEvent(GameResource):
 
 	def setMember(self, member, value):
 		GameResource.setMember(self, member, value)
-		if not self.gameFile.readingFile:
+		if not self.gameFile.ifReadingFile:
 			if self.eventNumber == 4 and member=="eventKind":
 				if value != GameObject.SpriteIndexNone:
 					self.eventCollisionObject = self.gameFile.GetResource(GameObject, value)
@@ -1179,7 +1179,7 @@ class GameObject(GameResource):
 
 	def setMember(self, member, value):
 		GameResource.setMember(self, member, value)
-		if not self.gameFile.readingFile:
+		if not self.gameFile.ifReadingFile:
 			if member=="spriteIndex":
 				if value != GameObject.SpriteIndexNone:
 					self.setMember("sprite", self.gameFile.GetResource(GameSprite, value))

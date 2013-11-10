@@ -930,9 +930,9 @@ class MainWindow(QtGui.QMainWindow):
 		if treeNode.status==CliClass.GameTree.StatusSecondary:
 			treeItem = QTreeWidgetItem(treeItemRoot,[treeNode.name])
 			if root:
-				if treeNode.name=="Game Information":
+				if treeNode.name in ["Help", "Game Information"]:
 					q=QIcon(resourcePath+"resources/info.png")
-				elif treeNode.name=="Global Game Settings":
+				elif treeNode.name in ["Settings", "Global Game Settings"]:
 					q=QIcon(resourcePath+"resources/gm.png")
 				elif treeNode.name=="Extensions":
 					q=QIcon(resourcePath+"resources/extension.png")
@@ -940,9 +940,9 @@ class MainWindow(QtGui.QMainWindow):
 					q=QIcon(resourcePath+"resources/script.png")
 			else:
 				q=resIcon
-			if treeNode.group==CliClass.GameTree.GroupSprites:
+			if treeNode.group=="Sprites":
 				q=treeNode.resource.getQIcon()
-			if treeNode.group==CliClass.GameTree.GroupObjects:
+			if treeNode.group=="Objects":
 				sprite=treeNode.resource.getMember("sprite")
 				if sprite:
 					q=sprite.getQIcon()
@@ -954,7 +954,7 @@ class MainWindow(QtGui.QMainWindow):
 				if treeNode.name=="Game Information":
 					treeItem.res=self.gmk.gameInformation
 				elif treeNode.name=="Global Game Settings":
-					treeItem.res=self.gmk.settings
+					treeItem.res=self.gmk.configs[0]
 				#elif treeNode.name=="Extensions":
 				#	treeItem.res=
 				#else:
@@ -1265,7 +1265,7 @@ class MainWindow(QtGui.QMainWindow):
 			#elif reply == QMessageBox::No:
 			self.gmk.Backup(self.projectPath)
 			CliClass.print_notice("saving file "+self.projectPath)
-			self.gmk.Save(os.path.splitext(self.projectPath)[1], self.projectPath)
+			self.gmk.Save(self.projectPath)
 			self.projectSetModified(False)
 		else:
 			self.handleSaveAsAction()
@@ -1281,7 +1281,7 @@ class MainWindow(QtGui.QMainWindow):
 			self.projectPath=projectPath
 			self.gmk.Backup(self.projectPath)
 			CliClass.print_notice("saving file "+self.projectPath)
-			self.gmk.Save(os.path.splitext(self.projectPath)[1], self.projectPath)
+			self.gmk.Save(self.projectPath)
 			self.projectSetModified(False)
 
 	def handleCloseApplication(self):

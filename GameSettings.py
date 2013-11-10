@@ -68,6 +68,7 @@ class GameSettings(GameResource):
 
 	def __init__(self, gameFile):
 		GameResource.__init__(self, gameFile, -1)
+		self.name="Default"
 
 	def ReadEgm(self, gmkfile, entry, z):
 		stream=z.open(entry+".ey",'r')

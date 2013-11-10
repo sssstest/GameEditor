@@ -33,6 +33,41 @@ from GameTrigger import *
 
 RtUnknown=9
 
+def groupKind(group):
+	if group=="Sprites":
+		return GameSprite
+	elif group=="Sounds":
+		return GameSound
+	elif group=="Backgrounds":
+		return GameBackground
+	elif group=="Paths":
+		return GamePath
+	elif group=="Scripts":
+		return GameScript
+	elif group=="Shaders":
+		return GameShader
+	elif group=="Fonts":
+		return GameFont
+	elif group=="Timelines":
+		return GameTimeline
+	elif group=="Objects":
+		return GameObject
+	elif group=="Rooms":
+		return GameRoom
+	#elif group=="Included Files":
+	#	return "GameIncludedFile"
+	#elif group=="Constants":
+	#	return "GameConstant"
+	#elif group=="Help" or group=="GameInformation":
+	#	return "GameInformation"
+	#elif group=="Settings" or group=="GameOptions":
+	#	return "GameSettings"
+	#elif group=="Extensions":
+	#	return "GameExtension"
+	else:
+		print_notice("unsupported group "+group)
+		return None
+
 class GameTreeNode(object):
 	def __init__(self, _status, _group, _index, _name):
 		self.index=_index
@@ -43,24 +78,9 @@ class GameTreeNode(object):
 		self.contents=[]
 
 	def Finalize(self, parent):
-		groupKind = [
-			RtUnknown,
-			GameObject,
-			GameSprite,
-			GameSound,
-			GameRoom,
-			RtUnknown,
-			GameBackground,
-			GameScript,
-			GamePath,
-			GameFont,
-			RtUnknown,
-			RtUnknown,
-			GameTimeline,
-			RtUnknown,
-			GameShader]
 		if not self.resource:
-			self.resource = parent.gameFile.GetResource(groupKind[self.group], self.index)
+			if groupKind(self.group):
+				self.resource = parent.gameFile.GetResource(groupKind(self.group), self.index)
 		for i in range(len(self.contents)):
 			self.contents[i].Finalize(parent)
 
@@ -81,23 +101,6 @@ class GameTree(GameResource):
 		StatusGroup = 2
 		StatusSecondary = 3
 
-		GroupObjects = 1
-		GroupSprites = 2
-		GroupSounds = 3
-		GroupRooms = 4
-		GroupBackgrounds = 6
-		GroupScripts = 7
-		GroupShaders=14
-		GroupPaths = 8
-		GroupDataFiles = 9
-		GroupFonts = GroupDataFiles
-		GroupGameInformation = 10
-		GroupGameOptions = 11
-		GroupGlobalGameOptions = GroupGameOptions
-		GroupTimelines = 12
-		GroupExtensionPackages = 13
-		GroupCount = 15
-
 	def __init__(self, gameFile):
 		GameResource.__init__(self, gameFile, -1)
 		self.contents=[]
@@ -113,9 +116,13 @@ class GameTree(GameResource):
 		self.AddGroupName("Timelines")
 		self.AddGroupName("Objects")
 		self.AddGroupName("Rooms")
-		self.AddGroupName("Game Information")
-		self.AddGroupName("Global Game Settings")
+		self.AddGroupName("Included Files")
+		self.AddGroupName("Constants")
+		self.AddGroupName("Help")
+		self.AddGroupName("Settings")
 		self.AddGroupName("Extensions")
+		#self.AddGroupName("Game Information")
+		#self.AddGroupName("Global Game Settings")
 
 	def ReadGmk(self, stream):
 		for i in range(12):
@@ -180,34 +187,38 @@ class GameTree(GameResource):
 	def PrimaryGroupName(self, name):
 		status=GameTree.StatusPrimary
 		name=name.lower()
-		if name=="objects":
-			group=GameTree.GroupObjects
-		elif name=="sprites":
-			group=GameTree.GroupSprites
+		if name=="sprites":
+			group="Sprites"
 		elif name=="sounds" or name=="sound":
-			group=GameTree.GroupSounds
-		elif name=="rooms":
-			group=GameTree.GroupRooms
+			group="Sounds"
 		elif name=="backgrounds" or name=="background":
-			group=GameTree.GroupBackgrounds
-		elif name=="scripts":
-			group=GameTree.GroupScripts
-		elif name=="shaders":
-			group=GameTree.GroupShaders
+			group="Backgrounds"
 		elif name=="paths":
-			group=GameTree.GroupPaths
+			group="Paths"
+		elif name=="scripts":
+			group="Scripts"
+		elif name=="shaders":
+			group="Shaders"
 		elif name=="fonts":
-			group=GameTree.GroupFonts
-		elif name=="game information":
-			group=GameTree.GroupGameInformation
-			status=GameTree.StatusSecondary
-		elif name=="global game settings":
-			group=GameTree.GroupGameOptions
-			status=GameTree.StatusSecondary
+			group="Fonts"
 		elif name=="timelines":
-			group=GameTree.GroupTimelines
+			group="Timelines"
+		elif name=="objects":
+			group="Objects"
+		elif name=="rooms":
+			group="Rooms"
+		elif name=="included files":
+			group="DataFiles"
+		elif name=="constants":
+			group="Constants"
+		elif name=="game information" or name=="help":
+			group="GameInformation"
+			status=GameTree.StatusSecondary
+		elif name=="global game settings" or name=="settings":
+			group="GameOptions"
+			status=GameTree.StatusSecondary
 		elif name=="extensions":
-			group=GameTree.GroupExtensionPackages
+			group="Extensions"
 			status=GameTree.StatusSecondary
 		else:
 			print_error("unsupported group name "+name)
@@ -246,7 +257,7 @@ class GameTree(GameResource):
 		p=path.split("/")
 		r=self
 		status=GameTree.StatusPrimary
-		group=0
+		group=None
 		for name in p:
 			node=None
 			for x in r.contents:

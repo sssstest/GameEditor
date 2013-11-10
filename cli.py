@@ -123,13 +123,13 @@ def cli():
 	if args.writefile:
 		if args.writefile=="-":
 			ext=".ggg"
-			gameFile.Save(ext,tmpDir+"crap",wfile=sys.stdout)
+			gameFile.SaveExt(ext,tmpDir+"crap",wfile=sys.stdout)
 		else:
 			ext=os.path.splitext(os.path.split(args.writefile)[1])[1]
 			if ext not in [".gmk",".gm81",".egm",".gmx",".ggg"]:
 				print_error("unsupported output type "+ext)
 			print_notice("saving "+args.writefile)
-			gameFile.Save(ext,args.writefile)
+			gameFile.SaveExt(ext,args.writefile)
 		sys.exit(0)
 	gameFile.app=app
 	if args.test:

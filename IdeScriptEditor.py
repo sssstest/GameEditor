@@ -25,7 +25,7 @@ class ScriptWindow(EditorWindow):
 		EditorWindow.__init__(self, mainwindow, res)
 		self.setWindowIcon(QIcon(resourcePath+"resources/script.png"))
 		self.propertiesList=["name","id"]
-		self.sciEditor.setText(res.getMember("value"))
+		self.sciEditor.setText(res.getMember("value").decode())
 
 	def saveResource(self):
 		if self.sciEditor.isModified():
