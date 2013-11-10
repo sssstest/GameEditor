@@ -75,6 +75,7 @@ def cli():
 	parser.add_argument("-r", dest="run", action="store_true", help="run game emode")
 	parser.add_argument("-t", dest="test", action="store_true", help="test")
 	parser.add_argument("-s", dest="stats", action="store_true", help="stats")
+	parser.add_argument("-p", dest="python", help="run python code")
 	parser.add_argument("-i", dest="interactive", action="store_true", help="interactive")
 	parser.add_argument("-j", dest="dejavu", action="store_true", help="print dejavu AST for scripts")
 	if len(sys.argv)==1:
@@ -98,6 +99,10 @@ def cli():
 	if args.stats:
 		gameFile.printBasicStats()
 		sys.exit(0)
+	if args.python:
+		import code
+		t=code.InteractiveConsole(locals())
+		t.runsource(args.python)
 	if args.interactive:
 		gameFile.resourceTree.PrintRecursive()
 		import code

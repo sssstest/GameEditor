@@ -72,6 +72,15 @@ class GameResource(object):
 		if id!=-1:
 			self.members["id"]=id
 
+	def name(self):
+		return self.getMember("name")
+
+	def rename(self, name):
+		self.setMember("name",name)
+
+	def id(self):
+		return self.getMember("id")
+
 	def ifDefault(self, member):
 		if not member in self.defaults:
 			print_error("no defalt for "+member)
