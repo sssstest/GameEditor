@@ -27,22 +27,22 @@ class GameShader(GameResource):
 		GameResource.__init__(self, gameFile, id)
 		self.setMember("name","shader_"+str(id))
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
-		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("vertex",z.open(os.path.split(entry)[0]+"/"+r.getMstr('vertex'),'r').read().decode())
-		self.setMember("fragment",z.open(os.path.split(entry)[0]+"/"+r.getMstr('fragment'),'r').read().decode())
-		self.setMember("type",r.getMstr('type'))
-		self.setMember("precompile",r.getMbool('precompile'))
+		self.setMember("name", os.path.split(entry)[1])
+		self.setMember("vertex", z.open(os.path.split(entry)[0]+"/"+r.getMstr("vertex"), "r").read().decode())
+		self.setMember("fragment", z.open(os.path.split(entry)[0]+"/"+r.getMstr("fragment"), "r").read().decode())
+		self.setMember("type", r.getMstr("type"))
+		self.setMember("precompile", r.getMbool("precompile"))
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
-		self.setMember("name",os.path.splitext(name)[0])
-		shader=open(os.path.join(gmxdir,name),"r").read()
+		self.setMember("name", os.path.splitext(name)[0])
+		shader=open(os.path.join(gmxdir, name),"r").read()
 		vertex,fragment=shader.split("//######################_==_YOYO_SHADER_MARKER_==_######################@~//")
-		self.setMember("vertex",vertex)
-		self.setMember("fragment",fragment)
+		self.setMember("vertex", vertex)
+		self.setMember("fragment", fragment)
 
 	def WriteGmxShader(self, gmxPath):
 		vertex=self.getMember("vertex")

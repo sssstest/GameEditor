@@ -45,7 +45,7 @@ from IdeGameInformationEditor import *
 from IdeGameSettingsEditor import *
 
 class SpriteQIconUpdateThread(QtCore.QThread):
-			outputSignal = pyqtSignal(object, name = 'stepIncreased')
+			outputSignal = pyqtSignal(object, name = "stepIncreased")
 			def run(self):
 				for s in self.mainwindow.gmk.sprites:
 					self.outputSignal.emit(s)
@@ -434,7 +434,6 @@ class MainWindow(QtGui.QMainWindow):
 		buildToolbar.addWidget(self.buildTypeList)
 		#buildToolbar.addWidget(QLabel("Platform:"))
 		self.buildPlatformList=QComboBox(buildToolbar)
-		#if sys.platform.startswith('linux'):
 		if os.name=="nt":
 			self.buildPlatformList.addItem("Windows")
 		else:
@@ -594,15 +593,14 @@ class MainWindow(QtGui.QMainWindow):
 
 	def loadPreferences(self):
 		config = ConfigParser()
-		#config.readfp(open('GameEditor.cfg'))
 		config.read([os.path.join(CliClass.module_path(),"GameEditor.cfg"), os.path.expanduser("~/.GameEditor.cfg")])
-		self.editorFontName = config.get('Editor', 'fontName')
-		self.editorSize = int(config.get('Editor', 'size'))
+		self.editorFontName = config.get("Editor", "fontName")
+		self.editorSize = int(config.get("Editor", "size"))
 		#self.editorFont=QFont("DejaVu Sans Mono", 8)#Courier 10 Pitch
 		self.editorFont=QFont(self.editorFontName, self.editorSize)
-		self.ideTheme=not int(config.get('Editor', 'theme'))
-		self.enigmaPath = config.get('Editor', 'enigmadev')
-		self.projectSavingEnabled = config.get('Editor', 'savingenabled') in ["True","2"]
+		self.ideTheme=not int(config.get("Editor", "theme"))
+		self.enigmaPath = config.get("Editor", "enigmadev")
+		self.projectSavingEnabled = config.get("Editor", "savingenabled") in ["True","2"]
 		#CliClass.print_notice("changing directory to enigma-dev: "+self.enigmaPath)
 		try:
 			os.chdir(self.enigmaPath)
@@ -618,33 +616,33 @@ class MainWindow(QtGui.QMainWindow):
 
 	def savePreferences(self):
 		config = ConfigParser()
-		config.add_section('Recent')
+		config.add_section("Recent")
 		for x in self.recentFiles:
 			config.set("Recent", str(x), str(x))
-		config.add_section('Editor')
-		config.set('Editor', 'savingenabled', str(self.projectSavingEnabled))
-		config.set('Editor', 'enigmadev', str(self.enigmaPath))
+		config.add_section("Editor")
+		config.set("Editor", "savingenabled", str(self.projectSavingEnabled))
+		config.set("Editor", "enigmadev", str(self.enigmaPath))
 		try:
 			os.chdir(self.enigmaPath)
 		except:
 			CliClass.print_notice("error changing directory to enigma-dev: "+self.enigmaPath)
-		config.set('Editor', 'theme', str(self.ideTheme))
-		config.set('Editor', 'fontName', self.editorFontName)
-		config.set('Editor', 'size', str(self.editorSize))
-		#config.set('Editor', 'showLineNumbers', True)
-		#config.set('Editor', '', '')
-		config.add_section('Colors')
+		config.set("Editor", "theme", str(self.ideTheme))
+		config.set("Editor", "fontName", self.editorFontName)
+		config.set("Editor", "size", str(self.editorSize))
+		#config.set("Editor", "showLineNumbers", True)
+		#config.set("Editor", "", "")
+		config.add_section("Colors")
 		for key in self.colors:
 			hexcolor=__builtins__.hex(int(self.colors[key]))
 			if hexcolor[-1]=="L":
 				hexcolor=hexcolor[:-1]
-			config.set('Colors', str(key), hexcolor)
-		config.add_section('ThemeColors')
+			config.set("Colors", str(key), hexcolor)
+		config.add_section("ThemeColors")
 		for key in self.themeColors:
 			hexcolor=__builtins__.hex(int(self.themeColors[key]))
 			if hexcolor[-1]=="L":
 				hexcolor=hexcolor[:-1]
-			config.set('ThemeColors', str(key), hexcolor)
+			config.set("ThemeColors", str(key), hexcolor)
 		config.write(open(os.path.expanduser("~/.GameEditor.cfg"),"w"))
 
 	def handleGameStats(self, event):
@@ -1057,8 +1055,8 @@ class MainWindow(QtGui.QMainWindow):
 			self.projectLoadPluginLib=True
 
 		class AThread(QtCore.QThread):
-			outputSignal = pyqtSignal(str, name = 'stepIncreased')
-			progressSignal = pyqtSignal(int, name = 'progressSignal')
+			outputSignal = pyqtSignal(str, name = "stepIncreased")
+			progressSignal = pyqtSignal(int, name = "progressSignal")
 
 			def run(self):
 				CliClass.print_error=self.outputLine
@@ -1338,7 +1336,7 @@ class MainWindow(QtGui.QMainWindow):
 import traceback
 import io
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 	app = QtGui.QApplication(sys.argv)
 	app.setStyleSheet(" QTabBar::tab { height: 16; icon-size: 18px; } QStatusBar::item { border: 0px solid black; }");
 	errorMessageDialog=QErrorMessage()

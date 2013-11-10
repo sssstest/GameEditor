@@ -56,22 +56,22 @@ class GameFont(GameResource):
 		GameResource.__init__(self, gameFile, id)
 		self.setMember("name","font_"+str(id))
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
 		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("fontName",r.getMstr('font_name'))
-		self.setMember("bold",r.getMbool('bold'))
-		self.setMember("italic",r.getMbool('italic'))
-		self.setMember("size",r.getMint('size'))
-		self.setMember("characterRangeBegin",r.getMint('range_min'))
-		self.setMember("characterRangeEnd",r.getMint('range_max'))
-		self.setMember("characterSet",r.getMint('charset'))
-		self.setMember("antiAliasing",r.getMint('antialias'))
+		self.setMember("fontName",r.getMstr("font_name"))
+		self.setMember("bold",r.getMbool("bold"))
+		self.setMember("italic",r.getMbool("italic"))
+		self.setMember("size",r.getMint("size"))
+		self.setMember("characterRangeBegin",r.getMint("range_min"))
+		self.setMember("characterRangeEnd",r.getMint("range_max"))
+		self.setMember("characterSet",r.getMint("charset"))
+		self.setMember("antiAliasing",r.getMint("antialias"))
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
-		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir,name)+".font.gmx")
+		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir, name)+".font.gmx")
 		root=tree.getroot()
 		if root.tag!="font":
 			print_error("tag isn't font "+root.tag)
@@ -79,33 +79,36 @@ class GameFont(GameResource):
 		for child in root:
 			if seen.get(child.tag,0)>0:
 				print_error("duplicated tag "+child.tag)
-			seen[child.tag]=seen.get(child.tag,0)+1
+			seen[child.tag]=seen.get(child.tag, 0)+1
 			if child.tag=="name":
-				self.setMember("fontName",emptyTextToString(child.text))
+				self.setMember("fontName", emptyTextToString(child.text))
 			elif child.tag=="size":
-				self.setMember("size",int(child.text))
+				self.setMember("size", int(child.text))
 			elif child.tag=="bold":
-				self.setMember("bold",bool(int(child.text)))
+				self.setMember("bold", bool(int(child.text)))
 			elif child.tag=="italic":
-				self.setMember("italic",bool(int(child.text)))
+				self.setMember("italic", bool(int(child.text)))
 			elif child.tag=="charset":
-				self.setMember("characterSet",int(child.text))
+				self.setMember("characterSet", int(child.text))
 			elif child.tag=="aa":
-				self.setMember("antiAliasing",int(child.text))
-			elif child.tag=="texgroups":#<texgroup0>0</texgroup0>
+				self.setMember("antiAliasing", int(child.text))
+			elif child.tag=="texgroups":
+				#<texgroup0>0</texgroup0>
 				pass
 			elif child.tag=="first":
-				self.setMember("characterRangeBegin",int(child.text))
+				self.setMember("characterRangeBegin", int(child.text))
 			elif child.tag=="last":
-				self.setMember("characterRangeEnd",int(child.text))
+				self.setMember("characterRangeEnd", int(child.text))
 			elif child.tag=="texgroup":
 				pass
-			elif child.tag=="ranges":#<range0>32,127</range0>
+			elif child.tag=="ranges":
+				#<range0>32,127</range0>
 				child=child[0]
 				b,e=child.text.split(",")
-				self.setMember("characterRangeBegin",int(b))
-				self.setMember("characterRangeEnd",int(e))
-			elif child.tag=="glyphs":#<glyph character="113" x="11" y="54" w="7" h="17" shift="9" offset="1"/>
+				self.setMember("characterRangeBegin", int(b))
+				self.setMember("characterRangeEnd", int(e))
+			elif child.tag=="glyphs":
+				#<glyph character="113" x="11" y="54" w="7" h="17" shift="9" offset="1"/>
 				pass
 			elif child.tag=="kerningPairs":
 				pass

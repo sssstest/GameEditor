@@ -50,7 +50,6 @@ from CliEefReader import *
 from CliPrintColors import *
 from CliBinaryStream import *
 from CliEnigmaStruct import *
-
 from GameResource import *
 from GameSprite import *
 from GameSound import *
@@ -102,7 +101,6 @@ def restoreStdout():
 	os.dup2(realStdout.fileno(), sys.stdout.fileno())
 	os.dup2(realStderr.fileno(), sys.stderr.fileno())
 
-#redirectStdout()
 realStdout=sys.stdout
 realStderr=sys.stderr
 setRealStdout(realStdout)
@@ -285,7 +283,7 @@ class GameFile(GameResource):
 	def AddResourceTree(self):
 		self.resourceTree=GameTree(self)
 		self.resourceTree.NewTree()
-		
+
 		for s in self.sounds:
 			self.resourceTree.AddResourcePath("Sounds/"+s.getMember("name"),s)
 		for s in self.sprites:
@@ -457,12 +455,12 @@ class GameFile(GameResource):
 		for callBack in self.listeners:
 			callBack("delete")
 
-	def ReadEgm(self, f):
-		z=zipfile.ZipFile(f,'r')
-		f=z.open("Enigma Settings.eef",'rU')
+	def ReadEgm(self, filename):
+		z=zipfile.ZipFile(filename, "r")
+		f=z.open("Enigma Settings.eef", "rU")
 		global tempeef
 		tempeef=tempfile.NamedTemporaryFile()
-		tempeef=open(tempeef.name+".eef","wb")
+		tempeef=open(tempeef.name+".eef", "wb")
 		self.EnigmaSettingsEefData=f.read()
 		tempeef.write(self.EnigmaSettingsEefData)
 		f.close()
@@ -496,13 +494,13 @@ class GameFile(GameResource):
 
 	def egmReadNodeChildren(self, z, parent, kind, dir):
 		if dir=="":
-			f=z.open("toc.txt",'rU')
+			f=z.open("toc.txt", "rU")
 		else:
-			f=z.open(dir+"/toc.txt",'rU')
+			f=z.open(dir+"/toc.txt", "rU")
 		toc=[]
 		for t in f.readlines():
 			entry = t.decode().strip()
-			if len(entry) > 4 and entry[3] == ' ' and entry[:3].isupper():
+			if len(entry) > 4 and entry[3] == " " and entry[:3].isupper():
 				#oldKind=kind
 				kind,entry = entry[0:3],entry[4:]
 				#if oldKind!=kind:
@@ -513,7 +511,7 @@ class GameFile(GameResource):
 	def egmProcessEntries(self, z, parent, entries, dir):
 		for kind,entry in entries:
 			if dir!="":
-				entry = dir + '/' + entry
+				entry = dir + "/" + entry
 			if entry+"/toc.txt" in self.egmNames:
 				parent[entry]={}
 				self.egmReadNodeChildren(z,parent[entry],kind,entry);
@@ -534,65 +532,65 @@ class GameFile(GameResource):
 		elif kind=="GMS":
 			self.configs=[]
 			self.configs.append(GameSettings(self))
-			self.configs[0].ReadEgm(self,entry,z)
+			self.configs[0].ReadEgm(entry, z)
 		# Load triggers
 		# Load constants
 		elif kind=="SND":
-			s = GameSound(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameSound(self, id)
+			s.ReadEgm(entry, z)
 			self.sounds.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="SPR":
-			s = GameSprite(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameSprite(self, id)
+			s.ReadEgm(entry, z)
 			self.sprites.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="BKG":
-			s = GameBackground(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameBackground(self, id)
+			s.ReadEgm(entry, z)
 			self.backgrounds.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="PTH":
-			s = GamePath(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GamePath(self, id)
+			s.ReadEgm(entry, z)
 			self.paths.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="SCR":
-			s = GameScript(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameScript(self, id)
+			s.ReadEgm(entry, z)
 			self.scripts.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="SHR":
-			s = GameShader(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameShader(self, id)
+			s.ReadEgm(entry, z)
 			self.shaders.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="FNT":
-			s = GameFont(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameFont(self, id)
+			s.ReadEgm(entry, z)
 			self.fonts.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="TML":
-			s = GameTimeline(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameTimeline(self, id)
+			s.ReadEgm(entry, z)
 			self.timelines.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="OBJ":
-			s = GameObject(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameObject(self, id)
+			s.ReadEgm(entry, z)
 			self.objects.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		elif kind=="RMM":
-			s = GameRoom(self,id)
-			s.ReadEgm(self,entry,z)
+			s = GameRoom(self, id)
+			s.ReadEgm(entry, z)
 			self.rooms.append(s)
-			self.resourceTree.AddResourcePath(entry,s)
+			self.resourceTree.AddResourcePath(entry, s)
 		# Load last ids
 		# Load include files
 		# Load packages
 		elif kind=="GMI":
 			self.gameInformation = GameInformation(self)
-			self.gameInformation.ReadEgm(self,entry,z)
+			self.gameInformation.ReadEgm(entry, z)
 		# Read library creation code -- we should be able to safely ignore this
 		# Read room execution order -- this too
 		# Read resource tree
@@ -613,10 +611,10 @@ class GameFile(GameResource):
 			print_error("error dir"+tempDir)
 
 	def ReadGmx(self, filename):
-		rootDir, gmxfile=self.GmxSplitPath(filename)
+		rootDir, gmxProjectFile=self.GmxSplitPath(filename)
 		self.resourceTree = GameTree(self)
 		self.resourceTree.NewTree()
-		gmxPath=os.path.join(rootDir, gmxfile)
+		gmxPath=os.path.join(rootDir, gmxProjectFile)
 		tree=xml.etree.ElementTree.parse(gmxPath)
 		root=tree.getroot()
 		self.gmxRoot=root
@@ -630,7 +628,7 @@ class GameFile(GameResource):
 		for child in root:
 			if seen.get(child.tag,0)>0:
 				print_error("duplicated tag "+child.tag)
-			seen[child.tag]=seen.get(child.tag,0)+1
+			seen[child.tag]=seen.get(child.tag, 0)+1
 			if child.tag=="Configs":
 				pass
 			elif child.tag=="datafiles":
@@ -642,25 +640,25 @@ class GameFile(GameResource):
 			elif child.tag=="NewExtensions":
 				pass
 			elif child.tag=="sounds":
-				self.ReadGmxResourceNames("sounds", "sound", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("sounds", "sound", child, self.egmNameId)
 			elif child.tag=="sprites":
-				self.ReadGmxResourceNames("sprites", "sprite", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("sprites", "sprite", child, self.egmNameId)
 			elif child.tag=="backgrounds":
-				self.ReadGmxResourceNames("backgrounds", "background", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("backgrounds", "background", child, self.egmNameId)
 			elif child.tag=="paths":
-				self.ReadGmxResourceNames("paths", "path", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("paths", "path", child, self.egmNameId)
 			elif child.tag=="scripts":
-				self.ReadGmxResourceNames("scripts", "script", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("scripts", "script", child, self.egmNameId)
 			elif child.tag=="shaders":
-				self.ReadGmxResourceNames("shaders", "shader", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("shaders", "shader", child, self.egmNameId)
 			elif child.tag=="fonts":
-				self.ReadGmxResourceNames("fonts", "font", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("fonts", "font", child, self.egmNameId)
 			elif child.tag=="objects":
-				self.ReadGmxResourceNames("objects", "object", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("objects", "object", child, self.egmNameId)
 			elif child.tag=="timelines":
-				self.ReadGmxResourceNames("timelines", "timeline", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("timelines", "timeline", child, self.egmNameId)
 			elif child.tag=="rooms":
-				self.ReadGmxResourceNames("rooms", "room", child, child.attrib["name"], self.egmNameId)
+				self.ReadGmxResourceNames("rooms", "room", child, self.egmNameId)
 			elif child.tag=="TutorialState":
 				pass
 			elif child.tag=="constants":
@@ -745,26 +743,22 @@ class GameFile(GameResource):
 		settings.ReadGmx(root)
 		self.configs.append(settings)
 
-	def WriteGmxResource(self, gmkfile, gmxdir, name, res, gmxExtension, rootTag):
-		if not os.path.exists(gmxdir):
-			#print_notice("creating directory ",os.path.join(gmxdir))
-			os.mkdir(gmxdir)
-		gmxPath=os.path.join(gmxdir, name)+"."+gmxExtension+".gmx"
-		#if os.path.exists(gmxPath):
-		#	print_warning("gmx already exists "+gmxPath)
-			#return
-		writeFile=open(gmxPath,"w")
-		root=xml.etree.ElementTree.Element(rootTag)
+	def WriteGmxResource(self, gmxDir, name, res, gmxExtension, rootTagName):
+		if not os.path.exists(gmxDir):
+			os.mkdir(gmxDir)
+		gmxPath=os.path.join(gmxDir, name)+"."+gmxExtension+".gmx"
+		writeFile=open(gmxPath, "w")
+		root=xml.etree.ElementTree.Element(rootTagName)
 		root.tail="\n"
-		if rootTag in ["sprite","background"]:
-			res.WriteGmx(root, gmxdir)
+		if rootTagName in ["sprite","background"]:
+			res.WriteGmx(root, gmxDir)
 		else:
 			res.WriteGmx(root)
 		writeFile.write(xml.etree.ElementTree.tostring(root).decode())
 		writeFile.close()
 
-	def ReadGmxResourceNames(self, groupTagName, resourceTagName, groupTag, path, nameId):
-		c=0
+	def ReadGmxResourceNames(self, groupTagName, resourceTagName, groupTag, nameId, startId=0):
+		c=startId
 		for chil in groupTag:
 			if chil.tag==resourceTagName:
 				pathText=chil.text.replace("\\","/")
@@ -773,7 +767,7 @@ class GameFile(GameResource):
 				nameId[resourceName]=c
 				c+=1
 			elif chil.tag==groupTagName:
-				self.ReadGmxResourceNames(groupTagName, resourceTagName, chil, path+"/"+chil.attrib["name"], nameId)
+				self.ReadGmxResourceNames(groupTagName, resourceTagName, chil, nameId, c)
 			else:
 				print_error("tag is "+chil.tag+" "+resourceTagName)
 
@@ -839,13 +833,13 @@ class GameFile(GameResource):
 		if os.path.isdir(filename):
 			if filename[-1] in ["/","\\"]:
 				filename=filename[:-1]
-			gmxdir=filename
-			gmxdirname=os.path.split(gmxdir)[1]
-			gmxdirnamesp=os.path.splitext(gmxdirname)[0]
-			gmxfile=gmxdirnamesp+".project.gmx"
+			baseDir=filename
+			baseDirNameExt=os.path.split(baseDir)[1]
+			baseDirName=os.path.splitext(baseDirNameExt)[0]
+			gmxProjectFile=baseDirName+".project.gmx"
 		else:
-			gmxdir,gmxfile=os.path.split(filename)
-		return gmxdir,gmxfile
+			baseDir, gmxProjectFile=os.path.split(filename)
+		return baseDir, gmxProjectFile
 
 	def ReadGmk(self, stream):
 		if stream.ReadDword() != self.GMK_MAGIC:
@@ -855,41 +849,47 @@ class GameFile(GameResource):
 		#elif self.gmkVersion==600:
 		#elif self.gmkVersion==701:
 		if self.gmkVersion not in [800,810]:
-			print_error("Unknown or unsupported version "+str(self.gmkVersion))
+			print_warning("Unknown or unsupported version "+str(self.gmkVersion))
+		if self.gmkVersion>=700 and self.gmkVersion<800:
+			#Gmkrypt gmkrypt(Gmkrypt::ReadSeedFromJunkyard(stream));
+			stream = stream.Decrypt()
 		self.gameId = stream.ReadDword()
 		self.guid=[]
 		for i in range(self.GMK_GUID_LENGTH):
 			self.guid.append(stream.readUChar())
 		gmVersionGameSettings=stream.ReadDword()
-		if gmVersionGameSettings not in [800,820]:print_error("unsupported gmk version "+str(gmVersionGameSettings))
+		if gmVersionGameSettings not in [800,820]:
+			print_warning("unsupported gmk version "+str(gmVersionGameSettings))
 		self.configs = []
 		self.configs.append(GameSettings(self))
 		self.configs[0].ReadGmk(stream)
-		gmVersionTriggers=stream.ReadDword()
-		if gmVersionTriggers != 800:print_error("unsupported gmk version "+str(gmVersionTriggers))
-		count = stream.ReadDword()
-		for c in range(count):
-			trigger = GameTrigger(self,c)
-			trigger.ReadGmk(stream)
-			self.triggers.append(trigger)
-		#Last time Triggers were changed'
-		stream.ReadTimestamp()
-		# Load constants
-		#GM version needed for Resource
-		stream.ReadDword()
-		count = stream.ReadDword()
-		for c in range(count):
-			name = stream.ReadString()
-			value = stream.ReadString()
-			self.constants.append((name, value))
-		#Last time Constants were changed
-		stream.ReadTimestamp()
+		if self.gmkVersion>=800:
+			gmVersionTriggers=stream.ReadDword()
+			if gmVersionTriggers != 800:
+				print_error("unsupported gmk version "+str(gmVersionTriggers))
+			count = stream.ReadDword()
+			for c in range(count):
+				trigger = GameTrigger(self,c)
+				trigger.ReadGmk(stream)
+				self.triggers.append(trigger)
+			#Last time Triggers were changed
+			stream.ReadTimestamp()
+			# Load constants
+			#GM version needed for Resource
+			stream.ReadDword()
+			count = stream.ReadDword()
+			for c in range(count):
+				name = stream.ReadString()
+				value = stream.ReadString()
+				self.constants.append((name, value))
+			#Last time Constants were changed
+			stream.ReadTimestamp()
 		# Load sounds
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			sound = GameSound(self,c)
+			sound = GameSound(self, c)
 			sound.ReadGmk(stream)
 			if sound.exists:
 				self.sounds.append(sound)
@@ -898,7 +898,7 @@ class GameFile(GameResource):
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			sprite = GameSprite(self,c)
+			sprite = GameSprite(self, c)
 			sprite.ReadGmk(stream)
 			if sprite.exists:
 				self.sprites.append(sprite)
@@ -907,7 +907,7 @@ class GameFile(GameResource):
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			background = GameBackground(self,c)
+			background = GameBackground(self, c)
 			background.ReadGmk(stream)
 			if background.exists:
 				self.backgrounds.append(background)
@@ -916,7 +916,7 @@ class GameFile(GameResource):
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			path = GamePath(self,c)
+			path = GamePath(self, c)
 			path.ReadGmk(stream)
 			self.paths.append(path)
 		# Load scripts
@@ -924,7 +924,7 @@ class GameFile(GameResource):
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			script = GameScript(self,c)
+			script = GameScript(self, c)
 			script.ReadGmk(stream)
 			self.scripts.append(script)
 		# Load fonts
@@ -932,7 +932,7 @@ class GameFile(GameResource):
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			font = GameFont(self,c)
+			font = GameFont(self, c)
 			font.ReadGmk(stream)
 			self.fonts.append(font)
 		# Load timelines
@@ -940,7 +940,7 @@ class GameFile(GameResource):
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			timeline = GameTimeline(self,c)
+			timeline = GameTimeline(self, c)
 			timeline.ReadGmk(stream)
 			if timeline.exists:
 				print_error("timeline unsupported")
@@ -950,7 +950,7 @@ class GameFile(GameResource):
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			gmObject = GameObject(self,c)
+			gmObject = GameObject(self, c)
 			gmObject.ReadGmk(stream)
 			if gmObject.exists:
 				self.objects.append(gmObject)
@@ -959,27 +959,30 @@ class GameFile(GameResource):
 		stream.ReadDword()
 		count = stream.ReadDword()
 		for c in range(count):
-			room = GameRoom(self,c)
+			room = GameRoom(self, c)
 			room.ReadGmk(stream)
 			if room.exists:
 				self.rooms.append(room)
 		# Load last ids
 		self.lastInstancePlacedId = stream.ReadDword()
 		self.lastTilePlacedId = stream.ReadDword()
-		# Load include files
-		#GM version needed for Resource
-		stream.ReadDword()
-		count = stream.ReadDword()
-		for c in range(count):
-			includeFile = GameIncludeFile(self,c)
-			includeFile.ReadGmk(stream)
-			self.includeFiles.append(includeFile)
-		# Load packages
-		#GM version needed for Resource
-		stream.ReadDword()
-		count = stream.ReadDword()
-		for c in range(count):
-			self.packages.append(stream.ReadString())
+		if self.gmkVersion>=700:
+			# Load include files
+			#GM version needed for Resource
+			stream.ReadDword()
+		if self.gmkVersion>=620:
+			count = stream.ReadDword()
+			for c in range(count):
+				includeFile = GameIncludeFile(self, c)
+				includeFile.ReadGmk(stream)
+				self.includeFiles.append(includeFile)
+		if self.gmkVersion>=700:
+			# Load packages
+			#GM version needed for Resource
+			stream.ReadDword()
+			count = stream.ReadDword()
+			for c in range(count):
+				self.packages.append(stream.ReadString())
 		# Read game information
 		#GM version needed for Resource
 		stream.ReadDword()
@@ -1045,35 +1048,35 @@ class GameFile(GameResource):
 			if not os.path.splitext(filename)[1]==".egp":
 				print_error("egp has to be a directory ending in .egp")
 				return
-		egpDir=filename
-		constantsFile=open(os.path.join(egpDir,"constants.ini"),"w")
+		baseDir=filename
+		constantsFile=open(os.path.join(baseDir, "constants.ini"), "w")
 		constantsFile.write("")
 		constantsFile.close()
-		egpFile=open(os.path.join(egpDir,"game.egp"),"w")
+		egpFile=open(os.path.join(baseDir, "game.egp"), "w")
 		egpFile.close()
-		#constantsFile=open(os.path.join(egpDir,"information.rtf"),"w")
-		#constantsFile=open(os.path.join(egpDir,"enigma.ey"),"w")
+		#constantsFile=open(os.path.join(baseDir, "information.rtf"), "w")
+		#constantsFile=open(os.path.join(baseDir, "enigma.ey"), "w")
 		for s in self.resourceTree.contents:
 			if s.group=="Sounds":
-				self.SaveRecursiveEgpTree(egpDir, s, "sound", et, "sound", "sounds")
+				self.SaveRecursiveEgpTree(baseDir, s, "sound", et, "sound", "sounds")
 			elif s.group=="Sprites":
-				self.SaveRecursiveEgpTree(egpDir, s, "sprites", et, "sprite", "sprites")
+				self.SaveRecursiveEgpTree(baseDir, s, "sprites", et, "sprite", "sprites")
 			elif s.group=="Backgrounds":
-				self.SaveRecursiveEgpTree(egpDir, s, "background", et, "background", "backgrounds")
+				self.SaveRecursiveEgpTree(baseDir, s, "background", et, "background", "backgrounds")
 			elif s.group=="Paths":
-				self.SaveRecursiveEgpTree(egpDir, s, "paths", et, "path", "paths")
+				self.SaveRecursiveEgpTree(baseDir, s, "paths", et, "path", "paths")
 			elif s.group=="Scripts":
-				self.SaveRecursiveEgpTree(egpDir, s, "scripts", et, "script", "scripts")
+				self.SaveRecursiveEgpTree(baseDir, s, "scripts", et, "script", "scripts")
 			elif s.group=="Shaders":
-				self.SaveRecursiveEgpTree(egpDir, s, "shaders", et, "shader", "shaders")
+				self.SaveRecursiveEgpTree(baseDir, s, "shaders", et, "shader", "shaders")
 			elif s.group=="Fonts":
-				self.SaveRecursiveEgpTree(egpDir, s, "fonts", et, "font", "fonts")
+				self.SaveRecursiveEgpTree(baseDir, s, "fonts", et, "font", "fonts")
 			elif s.group=="Objects":
-				self.SaveRecursiveEgpTree(egpDir, s, "objects", et, "object", "objects")
+				self.SaveRecursiveEgpTree(baseDir, s, "objects", et, "object", "objects")
 			elif s.group=="Timelines":
-				self.SaveRecursiveEgpTree(egpDir, s, "timelines", et, "timeline", "timelines")
+				self.SaveRecursiveEgpTree(baseDir, s, "timelines", et, "timeline", "timelines")
 			elif s.group=="Rooms":
-				self.SaveRecursiveEgpTree(egpDir, s, "rooms", et, "room", "rooms")
+				self.SaveRecursiveEgpTree(baseDir, s, "rooms", et, "room", "rooms")
 			else:
 				print_warning("unsupported group type "+s.group)
 
@@ -1086,12 +1089,9 @@ class GameFile(GameResource):
 				print_error("unsupported save to .project.gmx file")
 			else:
 				os.mkdir(filename)
-		gmxdir,gmxfile=self.GmxSplitPath(filename)
-		gmxPath=os.path.join(gmxdir,gmxfile)
-		#if os.path.exists(gmxPath):
-		#	print_warning("gmx already exists "+gmxPath)
-			#return
-		writeFile=open(gmxPath,"w")
+		baseDir, gmxProjectFile=self.GmxSplitPath(filename)
+		gmxPath=os.path.join(baseDir, gmxProjectFile)
+		writeFile=open(gmxPath, "w")
 		#writeFile.write("<!--This Document is generated by GameMaker, if you edit it by hand then you do so at your own risk!-->\n")
 		self.gmxRoot=None
 		if not self.gmxRoot:
@@ -1106,7 +1106,7 @@ class GameFile(GameResource):
 				Config.tail="\n"
 				Configs.append(Config)
 				Config.text="Configs\\"+config.name
-				self.WriteGmxResource(self, os.path.join(gmxdir,"Configs"), config.name, config, "config", "Config")
+				self.WriteGmxResource(os.path.join(baseDir,"Configs"), config.name, config, "config", "Config")
 			NewExtensions=xml.etree.ElementTree.Element("NewExtensions")
 			NewExtensions.tail="\n"
 			self.gmxRoot.append(NewExtensions)
@@ -1115,52 +1115,52 @@ class GameFile(GameResource):
 					et=xml.etree.ElementTree.Element("sounds")
 					et.set("name","sound")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "sound", et, "sound", "sounds")
+					self.SaveRecursiveGmxTree(baseDir, s, "sound", et, "sound", "sounds")
 				elif s.group=="Sprites":
 					et=xml.etree.ElementTree.Element("sprites")
 					et.set("name","sprites")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "sprites", et, "sprite", "sprites")
+					self.SaveRecursiveGmxTree(baseDir, s, "sprites", et, "sprite", "sprites")
 				elif s.group=="Backgrounds":
 					et=xml.etree.ElementTree.Element("backgrounds")
 					et.set("name","background")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "background", et, "background", "backgrounds")
+					self.SaveRecursiveGmxTree(baseDir, s, "background", et, "background", "backgrounds")
 				elif s.group=="Paths":
 					et=xml.etree.ElementTree.Element("paths")
 					et.set("name","paths")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "paths", et, "path", "paths")
+					self.SaveRecursiveGmxTree(baseDir, s, "paths", et, "path", "paths")
 				elif s.group=="Scripts":
 					et=xml.etree.ElementTree.Element("scripts")
 					et.set("name","scripts")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "scripts", et, "script", "scripts")
+					self.SaveRecursiveGmxTree(baseDir, s, "scripts", et, "script", "scripts")
 				elif s.group=="Shaders":
 					et=xml.etree.ElementTree.Element("shaders")
 					et.set("name","shaders")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "shaders", et, "shader", "shaders")
+					self.SaveRecursiveGmxTree(baseDir, s, "shaders", et, "shader", "shaders")
 				elif s.group=="Fonts":
 					et=xml.etree.ElementTree.Element("fonts")
 					et.set("name","fonts")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "fonts", et, "font", "fonts")
+					self.SaveRecursiveGmxTree(baseDir, s, "fonts", et, "font", "fonts")
 				elif s.group=="Objects":
 					et=xml.etree.ElementTree.Element("objects")
 					et.set("name","objects")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "objects", et, "object", "objects")
+					self.SaveRecursiveGmxTree(baseDir, s, "objects", et, "object", "objects")
 				elif s.group=="Timelines":
 					et=xml.etree.ElementTree.Element("timelines")
 					et.set("name","timelines")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "timelines", et, "timeline", "timelines")
+					self.SaveRecursiveGmxTree(baseDir, s, "timelines", et, "timeline", "timelines")
 				elif s.group=="Rooms":
 					et=xml.etree.ElementTree.Element("rooms")
 					et.set("name","rooms")
 					self.gmxRoot.append(et)
-					self.SaveRecursiveGmxTree(gmxdir, s, "rooms", et, "room", "rooms")
+					self.SaveRecursiveGmxTree(baseDir, s, "rooms", et, "room", "rooms")
 				else:
 					print_warning("unsupported group type "+s.group)
 			help=xml.etree.ElementTree.Element("help")
@@ -1189,40 +1189,36 @@ class GameFile(GameResource):
 		writeFile.write(xml.etree.ElementTree.tostring(self.gmxRoot).decode())
 		writeFile.close()
 
-	def SaveRecursiveGmxTree(self, gmxdir, node, path, et, tagname, tagnameplural):
-		for sc in node.contents:
+	def SaveRecursiveGmxTree(self, baseDir, resourceTreeNode, path, et, resourceTagName, groupTagName):
+		for sc in resourceTreeNode.contents:
 			if sc.status==GameTree.StatusPrimary:
-				sounds=xml.etree.ElementTree.Element(tagnameplural)
+				sounds=xml.etree.ElementTree.Element(groupTagName)
 				sounds.tail="\n"
 				sounds.set("name",sc.name)
 				et.append(sounds)
-				self.SaveRecursiveGmxTree(gmxdir, sc, path, sounds, tagname, tagnameplural)
+				self.SaveRecursiveGmxTree(baseDir, sc, path, sounds, resourceTagName, groupTagName)
 			else:
-				#print(sc.name,sc.resource.getMember("name"))
-				sound=xml.etree.ElementTree.Element(tagname)
+				sound=xml.etree.ElementTree.Element(resourceTagName)
 				sound.text=path+"\\"+sc.resource.getMember("name")
 				sound.tail="\n"
-				if tagname in ["sound", "sprite", "background", "path", "font", "object", "timeline", "room"]:
-					self.WriteGmxResource(self, os.path.join(gmxdir, path), sc.resource.getMember("name"), sc.resource, tagname, tagname)
-				elif tagname=="script":
-					if not os.path.exists(os.path.join(gmxdir, path)):
-						#print_notice("creating directory ",os.path.join(gmxdir, path))
-						os.mkdir(os.path.join(gmxdir, path))
-					gmxPath=os.path.join(gmxdir, path, sc.resource.getMember("name"))+".gml"
-					#print_notice("saving gml "+gmxPath)
+				if resourceTagName in ["sound", "sprite", "background", "path", "font", "object", "timeline", "room"]:
+					self.WriteGmxResource(os.path.join(baseDir, path), sc.resource.getMember("name"), sc.resource, resourceTagName, resourceTagName)
+				elif resourceTagName=="script":
+					if not os.path.exists(os.path.join(baseDir, path)):
+						os.mkdir(os.path.join(baseDir, path))
+					gmxPath=os.path.join(baseDir, path, sc.resource.getMember("name"))+".gml"
 					writeFile=open(gmxPath,"w")
 					writeFile.write(sc.resource.getMember("value"))#.decode())
 					writeFile.close()
 					sound.text=path+"\\"+sc.resource.getMember("name")+".gml"
-				elif tagname=="shader":
-					if not os.path.exists(os.path.join(gmxdir, path)):
-						#print_notice("creating directory ",os.path.join(gmxdir, path))
-						os.mkdir(os.path.join(gmxdir, path))
-					gmxPath=os.path.join(gmxdir, path, sc.resource.getMember("name"))+".shader"
+				elif resourceTagName=="shader":
+					if not os.path.exists(os.path.join(baseDir, path)):
+						os.mkdir(os.path.join(baseDir, path))
+					gmxPath=os.path.join(baseDir, path, sc.resource.getMember("name"))+".shader"
 					sc.resource.WriteGmxShader(gmxPath)
 					sound.text=path+"\\"+sc.resource.getMember("name")+".shader"
 				else:
-					print_error("what tag "+tagname)
+					print_error("what tag "+resourceTagName)
 				et.append(sound)
 
 	def SaveGmk(self, stream):
@@ -1330,8 +1326,8 @@ class GameFile(GameResource):
 			self.AddResourceTree()
 		self.resourceTree.WriteGmk(stream)
 
-	def SaveEgm(self, f):
-		z=zipfile.ZipFile(f,'w')
+	def SaveEgm(self, filename):
+		z=zipfile.ZipFile(filename, "w")
 		toc=""
 		for s in self.resourceTree.contents:
 			if s.group=="Sprites":
@@ -1378,14 +1374,14 @@ class GameFile(GameResource):
 
 	def SaveExt(self, ext, filename, wfile=None):
 		if ext in [".gmk",".gm81"]:
-			stream=open(filename,"wb")
+			stream=open(filename, "wb")
 			self.SaveGmk(stream)
 		elif ext == ".egm":
 			self.SaveEgm(filename)
 		elif ext == ".gmx":
 			self.SaveGmx(filename)
 		elif ext == ".gmz":
-			self.SaveGmz(stream)
+			self.SaveGmz(filename)
 		elif ext == ".egp":
 			self.SaveEGP(filename)
 		elif ext == ".ggg":

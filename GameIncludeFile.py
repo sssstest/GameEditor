@@ -54,7 +54,7 @@ class GameIncludeFile(GameResource):
 		includeFileStream.WriteString(self.getMember("filepath"))
 		includeFileStream.WriteBoolean(self.getMember("originalFile"))
 		includeFileStream.WriteDword(self.getMember("originalFileSize"))
-		if self.getMember("data"):
+		if self.getMember("data") and self.getMember("data").Size()>0:
 			includeFileStream.WriteBoolean(True)
 			includeFileStream.Serialize(self.getMember("data"), False)
 		else:

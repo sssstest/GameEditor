@@ -64,114 +64,146 @@ class GameSettings(GameResource):
 	"displayerrors":True,"writeerrors":False,"aborterrors":False,"treatUninitializedVariablesAsZero":False,"argumenterrors":True,
 	"author":"","version":"100","version_information":"","version_major":1,"version_minor":0,"version_release":0,"version_build":0,
 	"version_company":"","version_product":"","version_copyright":"","version_description":"",
-	"errorFlags":0, "OVERWRITE_EXISTING":False, "REMOVE_AT_GAME_END":False}
+	"OVERWRITE_EXISTING":False, "REMOVE_AT_GAME_END":False}
 
 	def __init__(self, gameFile):
 		GameResource.__init__(self, gameFile, -1)
 		self.name="Default"
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
-		#gmkfile.guid=r.getMint('DPLAY_GUID')
-		gmkfile.gameId=r.getMint('GAME_ID')
-		self.setMember("fullscreen",r.getMbool('START_FULLSCREEN'))
-		self.setMember("interpolate",r.getMbool('INTERPOLATE'))
-		self.setMember("noborder",r.getMbool('DONT_DRAW_BORDER'))
-		self.setMember("showcursor",r.getMbool('DISPLAY_CURSOR'))
-		self.setMember("scale",r.getMint('SCALING'))
-		self.setMember("sizeable",r.getMbool('ALLOW_WINDOW_RESIZE'))
-		self.setMember("stayontop",r.getMbool('ALWAYS_ON_TOP'))
-		self.setMember("windowcolor",r.getMhex('COLOR_OUTSIDE_ROOM'))
-		self.setMember("changeresolution",r.getMbool('SET_RESOLUTION'))
-		self.setMember("colordepth",r.getMchange('COLOR_DEPTH'))
-		self.setMember("resolution",r.getMchange('RESOLUTION'))
-		self.setMember("frequency",r.getMchange('FREQUENCY'))
-		self.setMember("nobuttons",r.getMbool('DONT_SHOW_BUTTONS'))
-		self.setMember("vsync",r.getMbool('USE_SYNCHRONIZATION'))
-		self.setMember("noscreensaver",r.getMbool('DISABLE_SCREENSAVERS'))
-		self.setMember("fullscreenkey",r.getMbool('LET_F4_SWITCH_FULLSCREEN'))
-		self.setMember("helpkey",r.getMbool('LET_F1_SHOW_GAME_INFO'))
-		self.setMember("quitkey",r.getMbool('LET_ESC_END_GAME'))
-		self.setMember("savekey",r.getMbool('LET_F5_SAVE_F6_LOAD'))
-		self.setMember("screenshotkey",r.getMbool('LET_F9_SCREENSHOT'))
-		self.setMember("closesecondary",r.getMbool('TREAT_CLOSE_AS_ESCAPE'))#clifix
-		self.setMember("priority",r.getMpriority('GAME_PRIORITY'))
-		self.setMember("freeze",r.getMbool('FREEZE_ON_LOSE_FOCUS'))
-		self.setMember("showprogress",r.getMmode('LOAD_BAR_MODE'))
+		#self.gameFile.guid=r.getMint("DPLAY_GUID")
+		self.gameFile.gameId=r.getMint("GAME_ID")
+		self.setMember("fullscreen",r.getMbool("START_FULLSCREEN"))
+		self.setMember("interpolate",r.getMbool("INTERPOLATE"))
+		self.setMember("noborder",r.getMbool("DONT_DRAW_BORDER"))
+		self.setMember("showcursor",r.getMbool("DISPLAY_CURSOR"))
+		self.setMember("scale",r.getMint("SCALING"))
+		self.setMember("sizeable",r.getMbool("ALLOW_WINDOW_RESIZE"))
+		self.setMember("stayontop",r.getMbool("ALWAYS_ON_TOP"))
+		self.setMember("windowcolor",r.getMhex("COLOR_OUTSIDE_ROOM"))
+		self.setMember("changeresolution",r.getMbool("SET_RESOLUTION"))
+		self.setMember("colordepth",r.getMchange("COLOR_DEPTH"))
+		self.setMember("resolution",r.getMchange("RESOLUTION"))
+		self.setMember("frequency",r.getMchange("FREQUENCY"))
+		self.setMember("nobuttons",r.getMbool("DONT_SHOW_BUTTONS"))
+		self.setMember("vsync",r.getMbool("USE_SYNCHRONIZATION"))
+		self.setMember("noscreensaver",r.getMbool("DISABLE_SCREENSAVERS"))
+		self.setMember("fullscreenkey",r.getMbool("LET_F4_SWITCH_FULLSCREEN"))
+		self.setMember("helpkey",r.getMbool("LET_F1_SHOW_GAME_INFO"))
+		self.setMember("quitkey",r.getMbool("LET_ESC_END_GAME"))
+		self.setMember("savekey",r.getMbool("LET_F5_SAVE_F6_LOAD"))
+		self.setMember("screenshotkey",r.getMbool("LET_F9_SCREENSHOT"))
+		self.setMember("closesecondary",r.getMbool("TREAT_CLOSE_AS_ESCAPE"))#clifix
+		self.setMember("priority",r.getMpriority("GAME_PRIORITY"))
+		self.setMember("freeze",r.getMbool("FREEZE_ON_LOSE_FOCUS"))
+		self.setMember("showprogress",r.getMmode("LOAD_BAR_MODE"))
 		#SHOW_CUSTOM_LOAD_IMAGE
-		self.setMember("loadtransparent",r.getMbool('IMAGE_PARTIALLY_TRANSPARENTY'))
-		self.setMember("loadalpha",r.getMint('LOAD_IMAGE_ALPHA'))
-		self.setMember("scaleprogress",r.getMbool('SCALE_PROGRESS_BAR'))
-		icon=r.getMstr('Icon')
-		iconStream=z.open(icon,"r")
+		self.setMember("loadtransparent",r.getMbool("IMAGE_PARTIALLY_TRANSPARENTY"))
+		self.setMember("loadalpha",r.getMint("LOAD_IMAGE_ALPHA"))
+		self.setMember("scaleprogress",r.getMbool("SCALE_PROGRESS_BAR"))
+		icon=r.getMstr("Icon")
+		iconStream=z.open(icon, "r")
 		icon=iconStream.read()
 		self.iconImage = BinaryStream(io.BytesIO(icon))
-		self.setMember("displayerrors",r.getMbool('DISPLAY_ERRORS'))
-		self.setMember("writeerrors",r.getMbool('WRITE_TO_LOG'))
-		self.setMember("aborterrors",r.getMbool('ABORT_ON_ERROR'))
-		#self.setMember("errorFlags"
-		self.setMember("treatUninitializedVariablesAsZero",r.getMbool('TREAT_UNINIT_AS_0'))
-		self.setMember("argumenterrors",r.getMbool('ERROR_ON_ARGS'))
+		self.setMember("displayerrors",r.getMbool("DISPLAY_ERRORS"))
+		self.setMember("writeerrors",r.getMbool("WRITE_TO_LOG"))
+		self.setMember("aborterrors",r.getMbool("ABORT_ON_ERROR"))
+		self.setMember("treatUninitializedVariablesAsZero",r.getMbool("TREAT_UNINIT_AS_0"))
+		self.setMember("argumenterrors",r.getMbool("ERROR_ON_ARGS"))
 		#LAST_CHANGED
-		self.setMember("author",r.getMstr('AUTHOR'))
-		self.setMember("version",r.getMstr('VERSION'))
-		self.setMember("version_information",r.getMstr('INFORMATION'))
+		self.setMember("author",r.getMstr("AUTHOR"))
+		self.setMember("version",r.getMstr("VERSION"))
+		self.setMember("version_information",r.getMstr("INFORMATION"))
 		#INCLUDE_FOLDER
-		self.setMember("OVERWRITE_EXISTING",r.getMbool('OVERWRITE_EXISTING'))
-		self.setMember("REMOVE_AT_GAME_END",r.getMbool('REMOVE_AT_GAME_END'))
-		self.setMember("version_major",r.getMint('VERSION_MAJOR'))
-		self.setMember("version_minor",r.getMint('VERSION_MINOR'))
-		self.setMember("version_release",r.getMint('VERSION_RELEASE'))
-		self.setMember("version_build",r.getMint('VERSION_BUILD'))
-		self.setMember("version_company",r.getMstr('COMPANY'))
-		self.setMember("version_product",r.getMstr('PRODUCT'))
-		self.setMember("version_copyright",r.getMstr('COPYRIGHT'))
-		self.setMember("version_description",r.getMstr('DESCRIPTION'))
+		self.setMember("OVERWRITE_EXISTING",r.getMbool("OVERWRITE_EXISTING"))
+		self.setMember("REMOVE_AT_GAME_END",r.getMbool("REMOVE_AT_GAME_END"))
+		self.setMember("version_major",r.getMint("VERSION_MAJOR"))
+		self.setMember("version_minor",r.getMint("VERSION_MINOR"))
+		self.setMember("version_release",r.getMint("VERSION_RELEASE"))
+		self.setMember("version_build",r.getMint("VERSION_BUILD"))
+		self.setMember("version_company",r.getMstr("COMPANY"))
+		self.setMember("version_product",r.getMstr("PRODUCT"))
+		self.setMember("version_copyright",r.getMstr("COPYRIGHT"))
+		self.setMember("version_description",r.getMstr("DESCRIPTION"))
 
 	def ReadGmk(self, stream):
 		#print(repr(stream.base_stream.read()[100:200]))
-		settingsStream = stream.Deserialize()
+		if self.gameFile.gmkVersion>=800:
+			settingsStream = stream.Deserialize()
+		else:
+			settingsStream = stream
 		self.setMember("fullscreen",settingsStream.ReadBoolean())
-		self.setMember("interpolate",settingsStream.ReadBoolean())
+		if self.gameFile.gmkVersion>=600:
+			self.setMember("interpolate",settingsStream.ReadBoolean())
 		self.setMember("noborder",settingsStream.ReadBoolean())
 		self.setMember("showcursor",settingsStream.ReadBoolean())
-		self.setMember("scale",settingsStream.readInt32())
-		self.setMember("sizeable",settingsStream.ReadBoolean())
-		self.setMember("stayontop",settingsStream.ReadBoolean())
-		self.setMember("windowcolor",settingsStream.ReadDword())
+		if self.gameFile.gmkVersion==530:
+			self.setMember("scale",settingsStream.readInt32())#Scale percentage in windowed mode (1-999, 100*)
+			settingsStream.readInt32()#Scale percentage in fullscreen mode (0=max) (0-999, 100*)
+			settingsStream.ReadBoolean()#Only scale when there is hardware support (1)
+		if self.gameFile.gmkVersion>=542:
+			self.setMember("scale",settingsStream.readInt32())
+			self.setMember("sizeable",settingsStream.ReadBoolean())
+			self.setMember("stayontop",settingsStream.ReadBoolean())
+			self.setMember("windowcolor",settingsStream.ReadDword())
 		self.setMember("changeresolution",settingsStream.ReadBoolean())
-		self.setMember("colordepth",settingsStream.ReadDword())
-		self.setMember("resolution",settingsStream.ReadDword())
-		self.setMember("frequency",settingsStream.ReadDword())
+		if self.gameFile.gmkVersion==530:
+			self.setMember("colordepth",settingsStream.ReadDword())#Color Depth (0* = 16-bit, 1 = 32-bit)
+			settingsStream.ReadBoolean()#Use exclusive graphics mode (0)
+			self.setMember("resolution",settingsStream.ReadDword())#Resolution (0-6, 0=640x480, 1*=800x600, ..., 5=320x240, 6=No Change)
+			self.setMember("frequency",settingsStream.ReadDword())#Frequency (0-4, 4)
+			self.setMember("vsync",settingsStream.ReadBoolean())#Wait for a vertical blank before drawing (0)
+			settingsStream.ReadBoolean()#Display the caption in full-screen mode (1)
+		if self.gameFile.gmkVersion>=542:
+			self.setMember("colordepth",settingsStream.ReadDword())
+			self.setMember("resolution",settingsStream.ReadDword())
+			self.setMember("frequency",settingsStream.ReadDword())
 		self.setMember("nobuttons",settingsStream.ReadBoolean())
-		self.setMember("vsync",settingsStream.ReadBoolean())
-		self.setMember("noscreensaver",settingsStream.ReadBoolean())
+		if self.gameFile.gmkVersion>=542:
+			self.setMember("vsync",settingsStream.ReadBoolean())
+		if self.gameFile.gmkVersion>=800:
+			self.setMember("noscreensaver",settingsStream.ReadBoolean())
 		self.setMember("fullscreenkey",settingsStream.ReadBoolean())
 		self.setMember("helpkey",settingsStream.ReadBoolean())
 		self.setMember("quitkey",settingsStream.ReadBoolean())
 		self.setMember("savekey",settingsStream.ReadBoolean())
-		self.setMember("screenshotkey",settingsStream.ReadBoolean())
-		self.setMember("closesecondary",settingsStream.ReadBoolean())
+		if self.gameFile.gmkVersion>=702:
+			self.setMember("screenshotkey",settingsStream.ReadBoolean())
+			self.setMember("closesecondary",settingsStream.ReadBoolean())#clifix
 		self.setMember("priority",settingsStream.ReadDword())
+		if self.gameFile.gmkVersion==530:
+			settingsStream.ReadDword()#Reserved (1)
+			settingsStream.ReadDword()#Reserved (1)
 		self.setMember("freeze",settingsStream.ReadBoolean())
 		self.setMember("showprogress",settingsStream.ReadDword())
 		if self.getMember("showprogress") == GameSettings.LpbtCustom:
+			if self.gameFile.gmkVersion>=530 and self.gameFile.gmkVersion<=702:
+				print_error("progress 2")
+				#<530-702> 10 or -1
+				#<530-702 and if not -1> Size of Back Image data { Back Image data (Zlib bitmap) }
+				#<530-702> 10 or -1
+				#<530-702 and if not -1> Size of Front Image data { Front Image data (Zlib bitmap) }
 			self.backImage = 1#settingsStream.ReadBitmap();
 			#frontImage = settingsStream.ReadBitmap();
-			exists=settingsStream.ReadDword()
-			if exists:
-				print_warning("settings Back Image")
-				data = settingsStream.Deserialize()
-			exists=settingsStream.ReadDword()
-			if exists:
-				print_warning("settings Front Image")
-				data = settingsStream.Deserialize()
+			if self.gameFile.gmkVersion>=800:
+				exists=settingsStream.ReadDword()
+				if exists:
+					print_warning("settings Back Image")
+					data = settingsStream.Deserialize()
+				exists=settingsStream.ReadDword()
+				if exists:
+					print_warning("settings Front Image")
+					data = settingsStream.Deserialize()
 		if settingsStream.ReadBoolean():
-			exists = settingsStream.ReadDword()
-			settingsStream.Deserialize()
-			#loadImage = settingsStream.ReadBitmap();
+			#<530-702> 10 or -1
+			#<530-702 and if not -1> Size of Image data { Image Data (Zlib bitmap) }
+			if self.gameFile.gmkVersion>=800:
+				exists = settingsStream.ReadDword()
+				settingsStream.Deserialize()
+				#loadImage = settingsStream.ReadBitmap();
 		self.setMember("loadtransparent",settingsStream.ReadBoolean())
 		self.setMember("loadalpha",settingsStream.ReadDword())
 		self.setMember("scaleprogress",settingsStream.ReadBoolean())
@@ -179,24 +211,41 @@ class GameSettings(GameResource):
 		self.setMember("displayerrors",settingsStream.ReadBoolean())
 		self.setMember("writeerrors",settingsStream.ReadBoolean())
 		self.setMember("aborterrors",settingsStream.ReadBoolean())
-		self.setMember("errorFlags",settingsStream.ReadDword())
-		self.setMember("treatUninitializedVariablesAsZero",(self.getMember("errorFlags") & 0x01) == 0x01)
-		self.setMember("argumenterrors",(self.getMember("errorFlags") & 0x02) == 0x02)
+		errorFlags = settingsStream.ReadDword()
+		self.setMember("treatUninitializedVariablesAsZero",(errorFlags & 0x01) == 0x01)
+		self.setMember("argumenterrors",(errorFlags & 0x02) == 0x02)
 		self.setMember("author",settingsStream.ReadString())
-		self.setMember("version",settingsStream.ReadString())
+		if self.gameFile.gmkVersion>=530 and self.gameFile.gmkVersion<=600:
+			self.setMember("version",str(settingsStream.ReadDword()))
+		if self.gameFile.gmkVersion>=702:
+			self.setMember("version",settingsStream.ReadString())
 		#Last Changed date and time
 		settingsStream.ReadTimestamp()
 		self.setMember("version_information",settingsStream.ReadString())
-		self.setMember("version_major",settingsStream.ReadDword())
-		self.setMember("version_minor",settingsStream.ReadDword())
-		self.setMember("version_release",settingsStream.ReadDword())
-		self.setMember("version_build",settingsStream.ReadDword())
-		self.setMember("version_company",settingsStream.ReadString())
-		self.setMember("version_product",settingsStream.ReadString())
-		self.setMember("version_copyright",settingsStream.ReadString())
-		self.setMember("version_description",settingsStream.ReadString())
-		#Last time Global Game Settings were changed
-		settingsStream.ReadTimestamp()
+		if self.gameFile.gmkVersion>=530 and self.gameFile.gmkVersion<=702:
+			constants=settingsStream.ReadDword()#How many Constants there are (0)
+			for c in range(constants):
+				name=settingsStream.ReadString()#Length of Name { Name }
+				value=settingsStream.ReadString()#Length of Value { Value }
+		if self.gameFile.gmkVersion==542 or self.gameFile.gmkVersion==600:
+			includeFiles=settingsStream.ReadDword()#How many Include files there are (0)
+			for c in range(includeFiles):
+				value=settingsStream.ReadString()#Length of Filename { Filename }
+			settingsStream.ReadDword()#Folder to save Include files to (0* = main, 1 = temp)
+			settingsStream.ReadBoolean()#Overwrite existing Include files (0)
+			settingsStream.ReadBoolean()#Remove Include files at game end (0)
+		if self.gameFile.gmkVersion>=702:
+			self.setMember("version_major",settingsStream.ReadDword())
+			self.setMember("version_minor",settingsStream.ReadDword())
+			self.setMember("version_release",settingsStream.ReadDword())
+			self.setMember("version_build",settingsStream.ReadDword())
+			self.setMember("version_company",settingsStream.ReadString())
+			self.setMember("version_product",settingsStream.ReadString())
+			self.setMember("version_copyright",settingsStream.ReadString())
+			self.setMember("version_description",settingsStream.ReadString())
+		if self.gameFile.gmkVersion>=800:
+			#Last time Global Game Settings were changed
+			settingsStream.ReadTimestamp()
 
 	def ReadGmx(self, root):
 		seen={}
@@ -352,7 +401,7 @@ class GameSettings(GameResource):
 		ey += "Splash: null\n"
 		ey += "Filler: null\n"
 		ey += "Progress: null\n"
-		guid=''.join(map(lambda x:hex(x+0x100)[3:],gmkfile.guid))
+		guid="".join(map(lambda x:hex(x+0x100)[3:],gmkfile.guid))
 		ey += "DPLAY_GUID: 0x"+guid+"\n"
 		ey += "GAME_ID: "+str(gmkfile.gameId)+"\n"
 		ey += "START_FULLSCREEN: "+boolToEgmBool(self.getMember("fullscreen"))+"\n"

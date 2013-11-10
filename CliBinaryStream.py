@@ -4,6 +4,7 @@ from struct import *
 import io
 import zlib
 import time
+import codecs
 from CliPrintColors import *
 
 class BinaryStream:
@@ -123,7 +124,7 @@ class BinaryStream:
 		length = self.base_stream.tell()
 		self.base_stream.seek(pos)
 		return length
-	
+
 	def EncodeBase64(self):
 		import base64
 		self.Rewind()
@@ -205,8 +206,9 @@ class BinaryStream:
 		self.writeInt32(value)
 
 	def WriteByte(self, value):
-		if type(value)==str:
-			value=value.encode("iso8859-1")
+		if not sys.version_info[0]<3:
+			if type(value)==str:
+				value=value.encode("iso8859-1")
 		self.writeChar(value)
 
 	def WriteDouble(self, value):
@@ -220,8 +222,12 @@ class BinaryStream:
 		self.WriteDword(int(bool(value)))
 
 	def WriteString(self, value):
-		if type(value)==str:
-			value=value.encode("iso8859-1")
+		if sys.version_info[0]<3:
+			if type(value)!=str:
+				value=value.encode("iso8859-1")
+		else:
+			if type(value)==str:
+				value=value.encode("iso8859-1")
 		length = len(value)
 		self.WriteDword(length)
 		self.pack(str(length) + 's', value)

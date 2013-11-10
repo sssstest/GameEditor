@@ -33,8 +33,68 @@ from GameTrigger import *
 
 RtUnknown=9
 
+def gmkKindName(kind):
+	groupKind = [
+			"Unknown",
+			"Objects",
+			"Sprites",
+			"Sounds",
+			"Rooms",
+			"RtUnknown5",
+			"Backgrounds",
+			"Scripts",
+			"Paths",
+			"Fonts",
+			"GameInformation",
+			"GameOptions",
+			"Timelines",
+			"Extensions",
+			"Shaders"]
+	if kind in [5]:
+		print_error("unsupported group "+str(kind))
+	return groupKind[kind]
+
+def nameGmkKind(group):
+	if group=="Unknown":
+		return 0
+	elif group=="Sprites":
+		return 2
+	elif group=="Sounds":
+		return 3
+	elif group=="Backgrounds":
+		return 6
+	elif group=="Paths":
+		return 8
+	elif group=="Scripts":
+		return 7
+	elif group=="Shaders":
+		return 14
+	elif group=="Fonts":
+		return 9
+	elif group=="Timelines":
+		return 12
+	elif group=="Objects":
+		return 1
+	elif group=="Rooms":
+		return 4
+	elif group=="Included Files":
+		return 9
+	#elif group=="Constants":
+	#	return "GameConstant"
+	elif group=="Help" or group=="GameInformation":
+		return 10
+	elif group=="Settings" or group=="GameOptions":
+		return 11
+	elif group=="Extensions":
+		return 13
+	else:
+		print_notice("unsupported group "+group)
+		return 0
+
 def groupKind(group):
-	if group=="Sprites":
+	if group=="Unknown":
+		return None
+	elif group=="Sprites":
 		return GameSprite
 	elif group=="Sounds":
 		return GameSound
@@ -58,14 +118,17 @@ def groupKind(group):
 	#	return "GameIncludedFile"
 	#elif group=="Constants":
 	#	return "GameConstant"
-	#elif group=="Help" or group=="GameInformation":
+	elif group=="Help" or group=="GameInformation":
+		return None
 	#	return "GameInformation"
-	#elif group=="Settings" or group=="GameOptions":
+	elif group=="Settings" or group=="GameOptions":
+		return None
 	#	return "GameSettings"
-	#elif group=="Extensions":
+	elif group=="Extensions":
+		return None
 	#	return "GameExtension"
 	else:
-		print_notice("unsupported group "+group)
+		print_error("unsupported group "+str(group))
 		return None
 
 class GameTreeNode(object):
@@ -76,6 +139,9 @@ class GameTreeNode(object):
 		self.group=_group
 		self.resource=None
 		self.contents=[]
+		if type(_group)!=str:
+			print(_group)
+			raise 5
 
 	def Finalize(self, parent):
 		if not self.resource:
@@ -101,6 +167,23 @@ class GameTree(GameResource):
 		StatusGroup = 2
 		StatusSecondary = 3
 
+		GroupObjects = 1
+		GroupSprites = 2
+		GroupSounds = 3
+		GroupRooms = 4
+		GroupBackgrounds = 6
+		GroupScripts = 7
+		GroupPaths = 8
+		GroupDataFiles = 9
+		GroupFonts = GroupDataFiles
+		GroupGameInformation = 10
+		GroupGameOptions = 11
+		GroupGlobalGameOptions = GroupGameOptions
+		GroupTimelines = 12
+		GroupExtensionPackages = 13
+		GroupShaders=14
+		GroupCount = 15
+
 	def __init__(self, gameFile):
 		GameResource.__init__(self, gameFile, -1)
 		self.contents=[]
@@ -125,9 +208,13 @@ class GameTree(GameResource):
 		#self.AddGroupName("Global Game Settings")
 
 	def ReadGmk(self, stream):
-		for i in range(12):
+		if self.gameFile.gmkVersion>=700:
+			count=12
+		else:#<500 and 540>
+			count=11
+		for i in range(count):
 			status = stream.ReadDword()
-			group = stream.ReadDword()
+			group = gmkKindName(stream.ReadDword())
 			stream.ReadDword()
 			name = stream.ReadString()
 			node = GameTreeNode(status, group, -1, name)
@@ -137,7 +224,7 @@ class GameTree(GameResource):
 	def ReadRecursiveTree(self, stream, parent, count):
 		for c in range(count):
 			status = stream.ReadDword()
-			group = stream.ReadDword()
+			group = gmkKindName(stream.ReadDword())
 			index = stream.ReadDword()
 			name = stream.ReadString()
 			node = GameTreeNode(status, group, index, name)
@@ -147,7 +234,7 @@ class GameTree(GameResource):
 	def WriteGmk(self, stream):
 		for i in range(12):
 			stream.WriteDword(self.contents[i].status)
-			stream.WriteDword(self.contents[i].group)
+			stream.WriteDword(nameGmkKind(self.contents[i].group))
 			stream.WriteDword(0)
 			stream.WriteString(self.contents[i].name)
 			stream.WriteDword(len(self.contents[i].contents))
@@ -161,7 +248,7 @@ class GameTree(GameResource):
 				else:
 					print_error("NULL resource \"" + parent.contents[i].name + "\" in resource tree")
 			stream.WriteDword(parent.contents[i].status)
-			stream.WriteDword(parent.contents[i].group)
+			stream.WriteDword(nameGmkKind(parent.contents[i].group))
 			if parent.contents[i].status == GameTree.StatusGroup or parent.contents[i].status == GameTree.StatusPrimary:#fucking StatusPrimary
 				stream.WriteDword(0)
 				stream.WriteString(parent.contents[i].name)

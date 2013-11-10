@@ -43,25 +43,25 @@ class GameSound(GameResource):
 		GameResource.__init__(self, gameFile, id)
 		self.setMember("name","sound_"+str(id))
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
 		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("kind",r.getMkind('KIND'))
-		self.setMember("extension",r.getMstr('FILE_TYPE'))
-		self.setMember("origname",r.getMstr('FILE_NAME'))
+		self.setMember("kind",r.getMkind("KIND"))
+		self.setMember("extension",r.getMstr("FILE_TYPE"))
+		self.setMember("origname",r.getMstr("FILE_NAME"))
 		#CHORUS: false
 		#ECHO: false
 		#FLANGER: false
 		#GARGLE: false
 		#REVERB: false
-		#self.effects			= r.getMbool('START_FULLSCREEN')
-		self.setMember("volume",r.getMreal('VOLUME'))
-		self.setMember("pan",r.getMreal('PAN'))
-		self.setMember("preload",r.getMbool('PRELOAD'))
-		data=r.getMstr('Data')
-		data=z.open(os.path.split(entry)[0]+"/"+data,'r')#.read()
+		#self.effects			= r.getMbool("START_FULLSCREEN")
+		self.setMember("volume",r.getMreal("VOLUME"))
+		self.setMember("pan",r.getMreal("PAN"))
+		self.setMember("preload",r.getMbool("PRELOAD"))
+		data=r.getMstr("Data")
+		data=z.open(os.path.split(entry)[0]+"/"+data, "r")#.read()
 		data=data.read()
 		self.setMember("data",BinaryStream(io.BytesIO(data)))
 
@@ -187,7 +187,7 @@ class GameSound(GameResource):
 			soundStream.WriteDword(self.getMember("kind"))
 			soundStream.WriteString(self.getMember("extension"))
 			soundStream.WriteString(self.getMember("origname"))
-			if self.getMember("data") and len(self.getMember("data"))>0:
+			if self.getMember("data") and self.getMember("data").Size()>0:
 				soundStream.WriteBoolean(True)
 				soundStream.Serialize(self.getMember("data"), False)
 			else:

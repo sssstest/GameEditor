@@ -30,23 +30,23 @@ class GameBackground(GameResource):
 		GameResource.__init__(self, gameFile, id)
 		self.setMember("name","background_"+str(id))
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
 		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("preload",r.getMbool('preload'))
-		self.setMember("smoothEdges",r.getMbool('smooth_edges'))
-		self.setMember("tileHorizontalOffset",r.getMint('h_offset'))
-		self.setMember("tileHeight",r.getMint('tile_height'))
-		self.setMember("tileVerticalSeperation",r.getMint('v_sep'))
-		self.setMember("tileHorizontalSeperation",r.getMint('h_sep'))
-		self.setMember("tileVerticalOffset",r.getMint('v_offset'))
-		self.setMember("tileWidth",r.getMint('tile_width'))
-		self.setMember("useAsTileset",r.getMbool('use_as_tileset'))
-		self.setMember("transparent",r.getMbool('transparent'))
-		data=r.getMstr('Data')
-		data=z.open(os.path.split(entry)[0]+"/"+data,'r')
+		self.setMember("preload",r.getMbool("preload"))
+		self.setMember("smoothEdges",r.getMbool("smooth_edges"))
+		self.setMember("tileHorizontalOffset",r.getMint("h_offset"))
+		self.setMember("tileHeight",r.getMint("tile_height"))
+		self.setMember("tileVerticalSeperation",r.getMint("v_sep"))
+		self.setMember("tileHorizontalSeperation",r.getMint("h_sep"))
+		self.setMember("tileVerticalOffset",r.getMint("v_offset"))
+		self.setMember("tileWidth",r.getMint("tile_width"))
+		self.setMember("useAsTileset",r.getMbool("use_as_tileset"))
+		self.setMember("transparent",r.getMbool("transparent"))
+		data=r.getMstr("Data")
+		data=z.open(os.path.split(entry)[0]+"/"+data, "r")
 		images = ApngIO().apngToBufferedImages(data)
 		image=QtGui.QImage()
 		image.loadFromData(images[0].read())
@@ -58,7 +58,7 @@ class GameBackground(GameResource):
 		self.setMember("height", self.subimage.height)
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
-		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir,name)+".background.gmx")
+		tree=xml.etree.ElementTree.parse(os.path.join(gmxdir, name)+".background.gmx")
 		root=tree.getroot()
 		if root.tag!="background":
 			print_error("tag isn't background "+root.tag)
@@ -114,7 +114,10 @@ class GameBackground(GameResource):
 				print_error("unsupported tag "+child.tag)
 
 	def ReadGmk(self, stream):
-		backgroundStream = stream.Deserialize()
+		if self.gameFile.gmkVersion>=800:
+			backgroundStream = stream.Deserialize()
+		else:
+			backgroundStream = stream
 		if not backgroundStream:
 			return
 		self.exists = backgroundStream.ReadBoolean()
@@ -122,23 +125,42 @@ class GameBackground(GameResource):
 			self.exists = False
 			return
 		self.setMember("name",backgroundStream.ReadString())
-		backgroundStream.ReadTimestamp()
+		if self.gameFile.gmkVersion>=800:
+			backgroundStream.ReadTimestamp()
+		#GM version needed for the following info (400/543/710)
 		backgroundStream.ReadDword()
-		self.setMember("useAsTileset",backgroundStream.ReadBoolean())
-		self.setMember("tileWidth",backgroundStream.ReadDword())
-		self.setMember("tileHeight",backgroundStream.ReadDword())
-		self.setMember("tileHorizontalOffset",backgroundStream.ReadDword())
-		self.setMember("tileVerticalOffset",backgroundStream.ReadDword())
-		self.setMember("tileHorizontalSeperation",backgroundStream.ReadDword())
-		self.setMember("tileVerticalSeperation",backgroundStream.ReadDword())
-		backgroundStream.ReadDword()
-		self.setMember("width",backgroundStream.ReadDword())
-		self.setMember("height",backgroundStream.ReadDword())
-		if (self.getMember("width") != 0 and self.getMember("height") != 0):
-			data=backgroundStream.Deserialize(False)
-			self.subimage=GameSpriteSubimage()
-			self.subimage.setGmkData(data)
-			self.setMember("data",data)
+		if self.gameFile.gmkVersion<543:
+			self.setMember("width",backgroundStream.ReadDword())
+			self.setMember("height",backgroundStream.ReadDword())
+			self.setMember("transparent",backgroundStream.ReadBoolean())
+		if self.gameFile.gmkVersion==400:
+			self.setMember("useVideoMemory",backgroundStream.ReadBoolean())#1
+			self.setMember("loadOnlyOnUse",backgroundStream.ReadBoolean())#1
+		if self.gameFile.gmkVersion==543:
+			self.setMember("smoothEdges",backgroundStream.ReadBoolean())
+			self.setMember("preload",backgroundStream.ReadBoolean())
+		if self.gameFile.gmkVersion>=543:
+			self.setMember("useAsTileset",backgroundStream.ReadBoolean())
+			self.setMember("tileWidth",backgroundStream.ReadDword())
+			self.setMember("tileHeight",backgroundStream.ReadDword())
+			self.setMember("tileHorizontalOffset",backgroundStream.ReadDword())
+			self.setMember("tileVerticalOffset",backgroundStream.ReadDword())
+			self.setMember("tileHorizontalSeperation",backgroundStream.ReadDword())
+			self.setMember("tileVerticalSeperation",backgroundStream.ReadDword())
+		if self.gameFile.gmkVersion<543:
+			if stream.ReadBoolean():
+				data = stream.ReadBitmapOld()
+		if self.gameFile.gmkVersion>=710:
+			#GM version needed for the following info (800)
+			backgroundStream.ReadDword()
+		if self.gameFile.gmkVersion>=800:
+			self.setMember("width",backgroundStream.ReadDword())
+			self.setMember("height",backgroundStream.ReadDword())
+			if (self.getMember("width") != 0 and self.getMember("height") != 0):
+				data=backgroundStream.Deserialize(False)
+				self.subimage=GameSpriteSubimage()
+				self.subimage.setGmkData(data)
+				self.setMember("data",data)
 		if not self.getMember("data"):
 			print_warning("background has no data")
 

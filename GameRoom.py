@@ -111,14 +111,22 @@ class GameRoomView(GameResource):
 
 	def ReadGmk(self, stream):
 		self.setMember("visible",stream.ReadBoolean())
-		self.setMember("viewX",stream.ReadDword())
-		self.setMember("viewY",stream.ReadDword())
-		self.setMember("viewW",stream.ReadDword())
-		self.setMember("viewH",stream.ReadDword())
-		self.setMember("portX",stream.ReadDword())
-		self.setMember("portY",stream.ReadDword())
-		self.setMember("portW",stream.ReadDword())
-		self.setMember("portH",stream.ReadDword())
+		if self.gameFile.gmkVersion==520:
+			self.setMember("portX",stream.ReadDword())#Left
+			self.setMember("portY",stream.ReadDword())#Top
+			self.setMember("viewW",stream.ReadDword())
+			self.setMember("viewH",stream.ReadDword())
+			self.setMember("viewX",stream.ReadDword())
+			self.setMember("viewY",stream.ReadDword())
+		if self.gameFile.gmkVersion>=541:
+			self.setMember("viewX",stream.ReadDword())
+			self.setMember("viewY",stream.ReadDword())
+			self.setMember("viewW",stream.ReadDword())
+			self.setMember("viewH",stream.ReadDword())
+			self.setMember("portX",stream.ReadDword())
+			self.setMember("portY",stream.ReadDword())
+			self.setMember("portW",stream.ReadDword())
+			self.setMember("portH",stream.ReadDword())
 		self.setMember("horizontalBorder",stream.ReadDword())
 		self.setMember("verticalBorder",stream.ReadDword())
 		self.setMember("horizontalSpeed",stream.ReadDword())
@@ -140,7 +148,7 @@ class GameRoomView(GameResource):
 		stream.WriteDword(self.getMember("horizontalSpeed"))
 		stream.WriteDword(self.getMember("verticalSpeed"))
 		if self.getMember("objectFollowing"):
-			stream.WriteDword(self.self.getMember("objectFollowing").getMember("id"))
+			stream.WriteDword(self.getMember("objectFollowing").getMember("id"))
 		else:
 			stream.WriteDword(-1)
 
@@ -266,6 +274,21 @@ class GameRoomTile(GameResource):
 		stri+="}\n"
 		return stri
 
+	def WriteGmk(self, stream):
+		stream.WriteDword(self.getMember("x"))
+		stream.WriteDword(self.getMember("y"))
+		if self.getMember("background"):
+			stream.WriteDword(self.getMember("background").getMember("id"))
+		else:
+			stream.WriteDword(-1)
+		stream.WriteDword(self.getMember("tileX"))
+		stream.WriteDword(self.getMember("tileY"))
+		stream.WriteDword(self.getMember("width"))
+		stream.WriteDword(self.getMember("height"))
+		stream.WriteDword(self.getMember("layer"))
+		stream.WriteDword(self.getMember("id"))
+		stream.WriteBoolean(self.getMember("locked"))
+
 	def WriteESRoomTile(self):
 		obj=ESRoomTile()
 		obj.bgX=self.getMember("tileX")
@@ -355,40 +378,40 @@ class GameRoom(GameResource):
 		self.addBackground(instance)
 		return instance
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
 		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("caption",r.getMstr('CAPTION'))
-		self.setMember("width",r.getMint('WIDTH'))
-		self.setMember("height",r.getMint('HEIGHT'))
-		self.setMember("vsnap",r.getMint('SNAP_X'))
-		self.setMember("hsnap",r.getMint('SNAP_Y'))
-		self.setMember("isometric",r.getMbool('ISOMETRIC'))
-		self.setMember("speed",r.getMint('SPEED'))
-		self.setMember("persistent",r.getMbool('PERSISTENT'))
-		self.setMember("color",r.getMhex('BACKGROUND_COLOR'))
-		self.setMember("showcolor",r.getMbool('DRAW_BACKGROUND_COLOR'))
+		self.setMember("caption",r.getMstr("CAPTION"))
+		self.setMember("width",r.getMint("WIDTH"))
+		self.setMember("height",r.getMint("HEIGHT"))
+		self.setMember("vsnap",r.getMint("SNAP_X"))
+		self.setMember("hsnap",r.getMint("SNAP_Y"))
+		self.setMember("isometric",r.getMbool("ISOMETRIC"))
+		self.setMember("speed",r.getMint("SPEED"))
+		self.setMember("persistent",r.getMbool("PERSISTENT"))
+		self.setMember("color",r.getMhex("BACKGROUND_COLOR"))
+		self.setMember("showcolor",r.getMbool("DRAW_BACKGROUND_COLOR"))
 		#self.setMember("clearViewBackground
 		#self.setMember("code
-		self.setMember("enableViews",r.getMbool('ENABLE_VIEWS'))
-		self.setMember("rememberRoomEditorInfo",r.getMbool('REMEMBER_WINDOW_SIZE'))#clifix
-		self.setMember("roomEditorWidth",r.getMint('EDITOR_WIDTH'))
-		self.setMember("roomEditorHeight",r.getMint('EDITOR_HEIGHT'))
-		self.setMember("showGrid",r.getMbool('SHOW_GRID'))
-		self.setMember("showObjects",r.getMbool('SHOW_OBJECTS'))
-		self.setMember("showTiles",r.getMbool('SHOW_TILES'))
-		self.setMember("showBackgrounds",r.getMbool('SHOW_BACKGROUNDS'))
-		self.setMember("showForegrounds",r.getMbool('SHOW_FOREGROUNDS'))
-		self.setMember("showViews",r.getMbool('SHOW_VIEWS'))
-		self.setMember("deleteUnderlyingObj",r.getMbool('DELETE_UNDERLYING_OBJECTS'))
-		self.setMember("deleteUnderlyingTiles",r.getMbool('DELETE_UNDERLYING_TILES'))
-		self.setMember("page",r.getMint('CURRENT_TAB'))
-		self.setMember("xoffset",r.getMint('SCROLL_BAR_X'))
-		self.setMember("yoffset",r.getMint('SCROLL_BAR_Y'))
-		data=r.getMstr('Data')
-		data=z.open(os.path.split(entry)[0]+"/"+data,'r')
+		self.setMember("enableViews",r.getMbool("ENABLE_VIEWS"))
+		self.setMember("rememberRoomEditorInfo",r.getMbool("REMEMBER_WINDOW_SIZE"))#clifix
+		self.setMember("roomEditorWidth",r.getMint("EDITOR_WIDTH"))
+		self.setMember("roomEditorHeight",r.getMint("EDITOR_HEIGHT"))
+		self.setMember("showGrid",r.getMbool("SHOW_GRID"))
+		self.setMember("showObjects",r.getMbool("SHOW_OBJECTS"))
+		self.setMember("showTiles",r.getMbool("SHOW_TILES"))
+		self.setMember("showBackgrounds",r.getMbool("SHOW_BACKGROUNDS"))
+		self.setMember("showForegrounds",r.getMbool("SHOW_FOREGROUNDS"))
+		self.setMember("showViews",r.getMbool("SHOW_VIEWS"))
+		self.setMember("deleteUnderlyingObj",r.getMbool("DELETE_UNDERLYING_OBJECTS"))
+		self.setMember("deleteUnderlyingTiles",r.getMbool("DELETE_UNDERLYING_TILES"))
+		self.setMember("page",r.getMint("CURRENT_TAB"))
+		self.setMember("xoffset",r.getMint("SCROLL_BAR_X"))
+		self.setMember("yoffset",r.getMint("SCROLL_BAR_Y"))
+		data=r.getMstr("Data")
+		data=z.open(os.path.split(entry)[0]+"/"+data, "r")
 		data=data.read()
 		stream = BinaryStream(io.BytesIO(data))
 		code = stream.ReadString()
@@ -401,7 +424,7 @@ class GameRoom(GameResource):
 			background.setMember("foreground",stream.ReadBoolean())
 			imageName=stream.ReadString()
 			if len(imageName)>0:
-				background.setMember("imageIndex",gmkfile.egmNameId[imageName])
+				background.setMember("imageIndex",self.gameFile.egmNameId[imageName])
 			background.setMember("x",stream.ReadDword())
 			background.setMember("y",stream.ReadDword())
 			background.setMember("tileHorizontal",stream.ReadBoolean())
@@ -441,7 +464,7 @@ class GameRoom(GameResource):
 			if instanceObject=="":
 				instance.setMember("objectIndex",-1)
 			else:
-				instance.setMember("objectIndex",gmkfile.egmNameId[instanceObject])
+				instance.setMember("objectIndex",self.gameFile.egmNameId[instanceObject])
 			instance.setMember("id",stream.ReadDword())
 			instance.setMember("creationCode",stream.ReadString())
 			instance.setMember("locked",stream.ReadBoolean())
@@ -455,7 +478,7 @@ class GameRoom(GameResource):
 			if backgroundName=="":
 				tile.setMember("backgroundIndex",-1)
 			else:
-				tile.setMember("backgroundIndex",gmkfile.egmNameId[backgroundName])
+				tile.setMember("backgroundIndex",self.gameFile.egmNameId[backgroundName])
 			tile.setMember("tileX",stream.ReadDword())
 			tile.setMember("tileY",stream.ReadDword())
 			tile.setMember("width",stream.ReadDword())
@@ -628,12 +651,16 @@ class GameRoom(GameResource):
 				print_error("unsupported tag "+child.tag)
 
 	def ReadGmk(self, stream):
-		roomStream = stream.Deserialize()
+		if self.gameFile.gmkVersion>=800:
+			roomStream = stream.Deserialize()
+		else:
+			roomStream = stream
 		if not roomStream.ReadBoolean():
 			self.exists = False
 			return
 		self.setMember("name",roomStream.ReadString())
-		roomStream.ReadTimestamp()
+		if self.gameFile.gmkVersion>=800:
+			roomStream.ReadTimestamp()
 		roomStream.ReadDword()
 		self.setMember("caption",roomStream.ReadString())
 		self.setMember("width",roomStream.ReadDword())
@@ -680,6 +707,13 @@ class GameRoom(GameResource):
 		self.setMember("showViews",roomStream.ReadBoolean())
 		self.setMember("deleteUnderlyingObj",roomStream.ReadBoolean())
 		self.setMember("deleteUnderlyingTiles",roomStream.ReadBoolean())
+		if self.gameFile.gmkVersion==520:
+			roomStream.ReadDword()#Tile Width (16)
+			roomStream.ReadDword()#Tile Height (16)
+			roomStream.ReadDword()#Tile Hsep (1)
+			roomStream.ReadDword()#Tile Vsep (1)
+			roomStream.ReadDword()#Tile Horizontal Offset (0)
+			roomStream.ReadDword()#Tile Vertical Offset (0)
 		self.setMember("page",roomStream.ReadDword())
 		self.setMember("xoffset",roomStream.ReadDword())
 		self.setMember("yoffset",roomStream.ReadDword())

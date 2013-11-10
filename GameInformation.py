@@ -31,39 +31,47 @@ class GameInformation(GameResource):
 	def __init__(self, gameFile):
 		GameResource.__init__(self, gameFile, -1)
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
-		self.setMember("backgroundcolor",r.getMhex('BACKGROUND_COLOR'))
-		self.setMember("showInSeperateWindow",r.getMbool('MIMIC_GAME_WINDOW'))#clifix
-		self.setMember("caption",r.getMstr('FORM_CAPTION'))
-		self.setMember("left",r.getMint('LEFT'))
-		self.setMember("top",r.getMint('TOP'))
-		self.setMember("width",r.getMint('WIDTH'))
-		self.setMember("height",r.getMint('HEIGHT'))
-		self.setMember("showborder",r.getMbool('SHOW_BORDER'))
-		self.setMember("sizeable",r.getMbool('ALLOW_RESIZE'))
-		self.setMember("alwaysontop",r.getMbool('STAY_ON_TOP'))
-		self.setMember("freeze",r.getMbool('PAUSE_GAME'))
+		self.setMember("backgroundcolor",r.getMhex("BACKGROUND_COLOR"))
+		self.setMember("showInSeperateWindow",r.getMbool("MIMIC_GAME_WINDOW"))#clifix
+		self.setMember("caption",r.getMstr("FORM_CAPTION"))
+		self.setMember("left",r.getMint("LEFT"))
+		self.setMember("top",r.getMint("TOP"))
+		self.setMember("width",r.getMint("WIDTH"))
+		self.setMember("height",r.getMint("HEIGHT"))
+		self.setMember("showborder",r.getMbool("SHOW_BORDER"))
+		self.setMember("sizeable",r.getMbool("ALLOW_RESIZE"))
+		self.setMember("alwaysontop",r.getMbool("STAY_ON_TOP"))
+		self.setMember("freeze",r.getMbool("PAUSE_GAME"))
 		data=r.getMstr("Data")
 		information=z.open(data, "rU").read()
 		self.setMember("information", information)
 
 	def ReadGmk(self, stream):
-		gameInfoStream = stream.Deserialize()
+		if self.gameFile.gmkVersion>=800:
+			gameInfoStream = stream.Deserialize()
+		else:
+			gameInfoStream = stream
 		self.setMember("backgroundcolor",gameInfoStream.ReadDword())
-		self.setMember("showInSeperateWindow",gameInfoStream.ReadBoolean())
-		self.setMember("caption",gameInfoStream.ReadString())
-		self.setMember("left",gameInfoStream.readInt32())
-		self.setMember("top",gameInfoStream.readInt32())
-		self.setMember("width",gameInfoStream.ReadDword())
-		self.setMember("height",gameInfoStream.ReadDword())
-		self.setMember("showborder",gameInfoStream.ReadBoolean())
-		self.setMember("sizeable",gameInfoStream.ReadBoolean())
-		self.setMember("alwaysontop",gameInfoStream.ReadBoolean())
-		self.setMember("freeze",gameInfoStream.ReadBoolean())
-		gameInfoStream.ReadTimestamp()
+		if self.gameFile.gmkVersion>=430 and self.gameFile.gmkVersion<=620:
+			gameInfoStream.readInt32()#Mimic the main game window/main form (0)
+		if self.gameFile.gmkVersion>=800:
+			self.setMember("showInSeperateWindow",gameInfoStream.ReadBoolean())
+		if self.gameFile.gmkVersion>=600:
+			self.setMember("caption",gameInfoStream.ReadString())
+			self.setMember("left",gameInfoStream.readInt32())
+			self.setMember("top",gameInfoStream.readInt32())
+			self.setMember("width",gameInfoStream.ReadDword())
+			self.setMember("height",gameInfoStream.ReadDword())
+			self.setMember("showborder",gameInfoStream.ReadBoolean())
+			self.setMember("sizeable",gameInfoStream.ReadBoolean())
+			self.setMember("alwaysontop",gameInfoStream.ReadBoolean())
+			self.setMember("freeze",gameInfoStream.ReadBoolean())
+		if self.gameFile.gmkVersion>=800:
+			gameInfoStream.ReadTimestamp()
 		self.setMember("information",gameInfoStream.ReadString())
 		#Background Color of Game Information
 		if len(self.getMember("information"))>4000:

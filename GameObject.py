@@ -1195,20 +1195,20 @@ class GameObject(GameResource):
 		for callBack in self.listeners:
 			callBack("subresource","events",None,None)
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
 		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("spriteIndex",r.getMid('SPRITE',gmkfile.egmNameId))
-		self.setMember("solid",r.getMbool('SOLID'))
-		self.setMember("visible",r.getMbool('VISIBLE'))
-		self.setMember("depth",r.getMint('DEPTH'))
-		self.setMember("persistent",r.getMbool('PERSISTENT'))
-		self.setMember("parentIndex",r.getMid('PARENT',gmkfile.egmNameId))
-		self.setMember("maskIndex",r.getMid('MASK',gmkfile.egmNameId))
-		data=r.getMstr('Data')
-		eef = z.open(os.path.split(entry)[0]+"/"+data,'r')
+		self.setMember("spriteIndex",r.getMid("SPRITE",self.gameFile.egmNameId))
+		self.setMember("solid",r.getMbool("SOLID"))
+		self.setMember("visible",r.getMbool("VISIBLE"))
+		self.setMember("depth",r.getMint("DEPTH"))
+		self.setMember("persistent",r.getMbool("PERSISTENT"))
+		self.setMember("parentIndex",r.getMid("PARENT",self.gameFile.egmNameId))
+		self.setMember("maskIndex",r.getMid("MASK",self.gameFile.egmNameId))
+		data=r.getMstr("Data")
+		eef = z.open(os.path.split(entry)[0]+"/"+data, "r")
 		e=EEFReader()
 		r = e.parseStream(eef)
 		r=r.children[0]
@@ -1219,7 +1219,7 @@ class GameObject(GameResource):
 			event.eventNumber = int(mevent.id[1])
 			eventKind = mevent.id[0]
 			if event.eventNumber==4:
-				event.setMember("eventKind", gmkfile.egmNameId[eventKind])
+				event.setMember("eventKind", self.gameFile.egmNameId[eventKind])
 			else:
 				if not eventKind.isdigit():
 					print_error("eventKind isn't a number "+eventKind)
@@ -1392,15 +1392,18 @@ class GameObject(GameResource):
 				print_error("unsupported tag "+child.tag)
 
 	def ReadGmk(self, stream):
-		objectStream = stream.Deserialize()
-
+		if self.gameFile.gmkVersion>=800:
+			objectStream = stream.Deserialize()
+		else:
+			objectStream = stream
 		if not objectStream.ReadBoolean():
 			self.exists = False
 			return
 
 		self.setMember("name",objectStream.ReadString())
-		#last changed
-		objectStream.ReadTimestamp()
+		if self.gameFile.gmkVersion>=800:
+			#last changed
+			objectStream.ReadTimestamp()
 		#GM version needed for the following info
 		objectStream.ReadDword()
 		self.setMember("spriteIndex",objectStream.readInt32())

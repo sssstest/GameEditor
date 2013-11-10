@@ -83,26 +83,26 @@ class GameSprite(GameResource):
 		subimage = self.newSubimage()
 		subimage.setQImage(qImage)
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
 		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("xorigin",r.getMint('ORIGIN_X'))
-		self.setMember("yorigin",r.getMint('ORIGIN_Y'))
+		self.setMember("xorigin",r.getMint("ORIGIN_X"))
+		self.setMember("yorigin",r.getMint("ORIGIN_Y"))
 		#TRANSPARENT
-		self.setMember("maskshape",r.getMbbshape('SHAPE'))
-		self.setMember("alphatolerance",r.getMint('ALPHA_TOLERANCE'))
-		self.setMember("seperatemasks",r.getMbool('SEPARATE_MASK'))
+		self.setMember("maskshape",r.getMbbshape("SHAPE"))
+		self.setMember("alphatolerance",r.getMint("ALPHA_TOLERANCE"))
+		self.setMember("seperatemasks",r.getMbool("SEPARATE_MASK"))
 		#SMOOTH_EDGES
 		#PRELOAD
-		self.setMember("bboxmode",r.getMbbshape('BB_MODE'))
-		self.setMember("bbox_left",r.getMint('BB_LEFT'))
-		self.setMember("bbox_right",r.getMint('BB_RIGHT'))
-		self.setMember("bbox_top",r.getMint('BB_TOP'))
-		self.setMember("bbox_bottom",r.getMint('BB_BOTTOM'))
-		data=r.getMstr('Data')
-		data=z.open(os.path.split(entry)[0]+"/"+data,'r')
+		self.setMember("bboxmode",r.getMbbshape("BB_MODE"))
+		self.setMember("bbox_left",r.getMint("BB_LEFT"))
+		self.setMember("bbox_right",r.getMint("BB_RIGHT"))
+		self.setMember("bbox_top",r.getMint("BB_TOP"))
+		self.setMember("bbox_bottom",r.getMint("BB_BOTTOM"))
+		data=r.getMstr("Data")
+		data=z.open(os.path.split(entry)[0]+"/"+data, "r")
 		a=ApngIO()
 		images = a.apngToBufferedImages(data)
 		for i in range(len(images)):
@@ -180,17 +180,43 @@ class GameSprite(GameResource):
 				print_error("unsupported tag "+child.tag)
 
 	def ReadGmk(self, stream):
-		spriteStream = stream.Deserialize()
+		if self.gameFile.gmkVersion>=800:
+			spriteStream = stream.Deserialize()
+		else:
+			spriteStream = stream
 		if not spriteStream.ReadBoolean():
 			self.exists = False
 			return
 		self.setMember("name",spriteStream.ReadString())
-		spriteStream.ReadTimestamp()
+		if self.gameFile.gmkVersion>=800:
+			spriteStream.ReadTimestamp()
 		spriteStream.ReadDword()
+		if self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
+			spriteStream.ReadInt32()#Width
+			spriteStream.ReadInt32()#Height
+			spriteStream.ReadInt32()#Left Bounding Box (can be negative)
+			spriteStream.ReadInt32()#Right Bounding Box (can be negative)
+			spriteStream.ReadInt32()#Bottom Bounding Box (can be negative)
+			spriteStream.ReadInt32()#Top Bounding Box (can be negative)
+			spriteStream.ReadBoolean()#Transparent (1)
+		if self.gameFile.gmkVersion==542:
+			spriteStream.ReadBoolean()#Smooth Edges (0)
+			spriteStream.ReadBoolean()#Preload Texture (1)
+		if self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
+			spriteStream.ReadDword()#Bounding Box (0*=Automatic, 1=Full image, 2=Manual)
+			spriteStream.ReadBoolean()#Precise collision checking (1)
+		if self.gameFile.gmkVersion==400:
+			spriteStream.ReadBoolean()#Use video memory (1)
+			spriteStream.ReadBoolean()#Load only on use (0)
 		self.setMember("xorigin",spriteStream.ReadDword())
 		self.setMember("yorigin",spriteStream.ReadDword())
 		count = spriteStream.ReadDword()
 		for c in range(count):
+			if self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
+				spriteStream.ReadDword()
+				#10 or -1
+				#<if not -1> Size of Image Data { Image Data (Zlib Bitmap) }
+			#if self.gameFile.gmkVersion>=800:
 			subimage = GameSpriteSubimage()
 			#GM version needed for the following info
 			spriteStream.ReadDword()
@@ -203,14 +229,15 @@ class GameSprite(GameResource):
 			self.subimages.append(subimage)
 			self.setMember("width",subimage.width)
 			self.setMember("height",subimage.height)
-		self.setMember("maskshape",spriteStream.ReadDword())
-		self.setMember("alphatolerance",spriteStream.ReadDword())
-		self.setMember("seperatemasks",spriteStream.ReadBoolean())
-		self.setMember("bboxmode",spriteStream.ReadDword())
-		self.setMember("bbox_left",spriteStream.ReadDword())
-		self.setMember("bbox_right",spriteStream.ReadDword())
-		self.setMember("bbox_bottom",spriteStream.ReadDword())
-		self.setMember("bbox_top",spriteStream.ReadDword())
+		if self.gameFile.gmkVersion>=800:
+			self.setMember("maskshape",spriteStream.ReadDword())
+			self.setMember("alphatolerance",spriteStream.ReadDword())
+			self.setMember("seperatemasks",spriteStream.ReadBoolean())
+			self.setMember("bboxmode",spriteStream.ReadDword())
+			self.setMember("bbox_left",spriteStream.ReadDword())
+			self.setMember("bbox_right",spriteStream.ReadDword())
+			self.setMember("bbox_bottom",spriteStream.ReadDword())
+			self.setMember("bbox_top",spriteStream.ReadDword())
 
 	def WriteGmx(self, root, gmxdir):
 		gmxCreateTag(root, "xorig", str(self.getMember("xorigin")))

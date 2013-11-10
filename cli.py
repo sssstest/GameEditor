@@ -53,10 +53,9 @@ def newGame(code):
 def loadPreferences():
 	print_notice("loading preferences: "+os.path.expanduser("~/.GameEditor.cfg"))
 	config = ConfigParser()
-	#config.readfp(open('GameEditor.cfg'))
-	config.read([os.path.join(module_path(),"GameEditor.cfg"), os.path.expanduser("~/.GameEditor.cfg")])
+	config.read([os.path.join(module_path(), "GameEditor.cfg"), os.path.expanduser("~/.GameEditor.cfg")])
 	global enigmaPath
-	enigmaPath = config.get('Editor', 'enigmadev')
+	enigmaPath = config.get("Editor", "enigmadev")
 	#print_notice("changing directory to enigma-dev: "+self.enigmaPath)
 	try:
 		os.chdir(enigmaPath)
@@ -70,14 +69,14 @@ def loadPreferences():
 def cli():
 	loadPreferences()
 	parser = argparse.ArgumentParser(description="input file with no options builds in debug mode and runs game")
-	parser.add_argument('filein', metavar='FILE.GMK', type=str, nargs="?",help='read file (gmk gm81 egm gmx gmz formats)')
-	parser.add_argument('-o', dest='writefile', help="convert to output file and exit (gmk ggg formats)")
-	parser.add_argument('-c', dest='code', help="empty game with object create event code")
-	parser.add_argument('-r', dest='run', action='store_true', help="run game emode")
-	parser.add_argument('-t', dest='test', action='store_true', help="test")
-	parser.add_argument('-s', dest='stats', action='store_true', help="stats")
-	parser.add_argument('-i', dest='interactive', action='store_true', help="interactive")
-	parser.add_argument('-j', dest='dejavu', action='store_true', help="print dejavu AST for scripts")
+	parser.add_argument("filein", metavar="FILE.GMK", type=str, nargs="?",help="read file (gmk gm81 egm gmx gmz formats)")
+	parser.add_argument("-o", dest="writefile", help="convert to output file and exit (gmk ggg formats)")
+	parser.add_argument("-c", dest="code", help="empty game with object create event code")
+	parser.add_argument("-r", dest="run", action="store_true", help="run game emode")
+	parser.add_argument("-t", dest="test", action="store_true", help="test")
+	parser.add_argument("-s", dest="stats", action="store_true", help="stats")
+	parser.add_argument("-i", dest="interactive", action="store_true", help="interactive")
+	parser.add_argument("-j", dest="dejavu", action="store_true", help="print dejavu AST for scripts")
 	if len(sys.argv)==1:
 		args = parser.parse_args(["--help"])
 	else:
@@ -149,5 +148,5 @@ def cli():
 		print_notice("run game")
 		print_notice(subprocess.check_output([testGameFile]))
 
-if __name__=='__main__':
+if __name__=="__main__":
 	cli()

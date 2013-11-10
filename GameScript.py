@@ -27,26 +27,30 @@ class GameScript(GameResource):
 		GameResource.__init__(self, gameFile, id)
 		self.setMember("name","script_"+str(id))
 
-	def ReadEgm(self, gmkfile, entry, z):
-		stream=z.open(entry+".ey",'r')
+	def ReadEgm(self, entry, z):
+		stream=z.open(entry+".ey", "r")
 		y=YamlParser()
 		r=y.parseStream(stream)
-		self.setMember("name",os.path.split(entry)[1])
-		self.setMember("value",z.open(os.path.split(entry)[0]+"/"+r.getMstr('Data'),'r').read())
+		self.setMember("name", os.path.split(entry)[1])
+		self.setMember("value", z.open(os.path.split(entry)[0]+"/"+r.getMstr("Data"), "r").read())
 
 	def ReadGmx(self, gmkfile, gmxdir, name):
-		self.setMember("name",os.path.splitext(name)[0])
-		self.setMember("value",open(os.path.join(gmxdir,name),"r").read())
+		self.setMember("name", os.path.splitext(name)[0])
+		self.setMember("value", open(os.path.join(gmxdir,name), "r").read())
 
 	def ReadGmk(self, stream):
-		scriptStream = stream.Deserialize()
+		if self.gameFile.gmkVersion>=800:
+			scriptStream = stream.Deserialize()
+		else:
+			scriptStream = stream
 		if not scriptStream.ReadBoolean():
 			self.exists = False
 			return
-		self.setMember("name",scriptStream.ReadString())
-		scriptStream.ReadTimestamp()
+		self.setMember("name", scriptStream.ReadString())
+		if self.gameFile.gmkVersion>=800:
+			scriptStream.ReadTimestamp()
 		scriptStream.ReadDword()
-		self.setMember("value",scriptStream.ReadString())
+		self.setMember("value", scriptStream.ReadString())
 		self.exists = True
 
 	def WriteGmk(self, stream):
