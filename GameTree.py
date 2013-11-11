@@ -147,6 +147,7 @@ class GameTreeNode(object):
 		if not self.resource:
 			if groupKind(self.group):
 				self.resource = parent.gameFile.GetResource(groupKind(self.group), self.index)
+				print("got",self.resource,self.index,self.name,self.group)
 		for i in range(len(self.contents)):
 			self.contents[i].Finalize(parent)
 
@@ -249,7 +250,7 @@ class GameTree(GameResource):
 					print_error("NULL resource \"" + parent.contents[i].name + "\" in resource tree")
 			stream.WriteDword(parent.contents[i].status)
 			stream.WriteDword(nameGmkKind(parent.contents[i].group))
-			if parent.contents[i].status == GameTree.StatusGroup or parent.contents[i].status == GameTree.StatusPrimary:#fucking StatusPrimary
+			if parent.contents[i].status == GameTree.StatusGroup or parent.contents[i].status == GameTree.StatusPrimary:#clifix StatusPrimary
 				stream.WriteDword(0)
 				stream.WriteString(parent.contents[i].name)
 			else:
@@ -323,9 +324,9 @@ class GameTree(GameResource):
 	def PrintRecursiveNode(self, r, start):
 		for x in r.contents:
 			if x.resource:
-				print_notice(start+x.name+" "+str(x.resource.getMember("name")))
+				print_notice(start+x.name+" "+str(x.resource.getMember("id"))+" "+str(x.resource.getMember("name")))
 			else:
-				print_notice(start+x.name)
+				print_notice(start+x.name+" status "+str(x.status))
 			self.PrintRecursiveNode(x,start+"-")
 
 	def FindNodeName(self, name):

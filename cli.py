@@ -72,10 +72,11 @@ def cli():
 	parser.add_argument("filein", metavar="FILE.GMK", type=str, nargs="?",help="read file (gmk gm81 egm gmx gmz formats)")
 	parser.add_argument("-o", dest="writefile", help="convert to output file and exit (gmk ggg formats)")
 	parser.add_argument("-c", dest="code", help="empty game with object create event code")
-	parser.add_argument("-r", dest="run", action="store_true", help="run game emode")
+	parser.add_argument("-r", dest="run", action="store_true", help="run game emode (debug is default)")
+	parser.add_argument("-d", dest="dontrun", action="store_true", help="compile but don't run game")
 	parser.add_argument("-t", dest="test", action="store_true", help="test")
 	parser.add_argument("-s", dest="stats", action="store_true", help="stats")
-	parser.add_argument("-p", dest="python", help="run python code")
+	parser.add_argument("-p", dest="python", help="run python line")
 	parser.add_argument("-i", dest="interactive", action="store_true", help="interactive")
 	parser.add_argument("-j", dest="dejavu", action="store_true", help="print dejavu AST for scripts")
 	if len(sys.argv)==1:
@@ -108,7 +109,6 @@ def cli():
 		import code
 		t=code.InteractiveConsole(locals())
 		t.interact()
-		sys.exit(0)
 	if args.dejavu:
 		import dejavu.parser
 		for s in gameFile.scripts:
@@ -150,8 +150,11 @@ def cli():
 	gameFile.compileRunEnigma(testGameFile,emode)
 	restoreStdout()
 	if emode==emode_compile:
-		print_notice("run game")
-		print_notice(subprocess.check_output([testGameFile]))
+		if args.dontrun:
+			print_notice("not running game")
+		else:
+			print_notice("run game")
+			print_notice(subprocess.check_output([testGameFile]))
 
 if __name__=="__main__":
 	cli()
