@@ -159,7 +159,7 @@ def cli():
 	if args.mingw:
 		gameFile.EnigmaTargetWindowing="Win32"
 		gameFile.EnigmaTargetCompiler="MinGW32"
-		gameFile.EnigmaTargetWidget="Win32"
+		#gameFile.EnigmaTargetWidget="Win32"
 	LoadPluginLib()
 	print_notice("ENIGMA compile")
 	error=gameFile.compileRunEnigma(testGameFile,emode)
