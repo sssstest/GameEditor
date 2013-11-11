@@ -79,6 +79,10 @@ def cli():
 	parser.add_argument("-p", dest="python", help="run python line")
 	parser.add_argument("-i", dest="interactive", action="store_true", help="interactive")
 	parser.add_argument("-j", dest="dejavu", action="store_true", help="print dejavu AST for scripts")
+	parser.add_argument("--mingw", dest="mingw", action="store_true", help="compile for Windows with mingw")
+	parser.add_argument("--audio", dest="audio", help="OpenAL, SFML, DirectSound, FMOD")
+	parser.add_argument("--collision", dest="collision", help="Precise, BBox")
+	parser.add_argument("--graphics", dest="graphics", help="OpenGL1, OpenGL3, Direct3D9")
 	if len(sys.argv)==1:
 		args = parser.parse_args(["--help"])
 	else:
@@ -146,6 +150,16 @@ def cli():
 	#	redirectStdout()
 		#realStdout=sys.stdout
 	#	setRealStdout(realStdout)
+	if args.audio:
+		gameFile.EnigmaTargetAudio=args.audio#"OpenAL"
+	if args.collision:
+		gameFile.EnigmaTargetCollision=args.collision
+	if args.graphics:
+		gameFile.EnigmaTargetGraphics=args.graphics#"OpenGL3"
+	if args.mingw:
+		gameFile.EnigmaTargetWindowing="Win32"
+		gameFile.EnigmaTargetCompiler="i686-w64-mingw32-gcc"#x86_64-w64-mingw32-gcc
+		gameFile.EnigmaTargetWidget="Win32"
 	LoadPluginLib()
 	print_notice("ENIGMA compile")
 	error=gameFile.compileRunEnigma(testGameFile,emode)
