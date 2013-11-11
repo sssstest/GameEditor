@@ -680,7 +680,7 @@ class MainWindow(QtGui.QMainWindow):
 		elif platform=="Windows mingw32":
 			self.gmk.EnigmaTargetAudio="OpenAL"
 			self.gmk.EnigmaTargetWindowing="Win32"
-			self.gmk.EnigmaTargetCompiler="i686-w64-mingw32-gcc"#x86_64-w64-mingw32-gcc
+			self.gmk.EnigmaTargetCompiler="MinGW32"#i686-w64-mingw32-gcc"#x86_64-w64-mingw32-gcc
 			self.gmk.EnigmaTargetWidget="Win32"
 			self.gmk.EnigmaTargetCollision="BBox"
 		elif platform=="Android":

@@ -74,7 +74,7 @@ def cli():
 	parser.add_argument("-c", dest="code", help="empty game with object create event code")
 	parser.add_argument("-r", dest="run", action="store_true", help="run game emode (debug is default)")
 	parser.add_argument("-d", dest="dontrun", action="store_true", help="compile but don't run game")
-	parser.add_argument("-t", dest="test", action="store_true", help="test")
+	parser.add_argument("-t", dest="test", action="store_true", help="don't compile with enigma")
 	parser.add_argument("-s", dest="stats", action="store_true", help="stats")
 	parser.add_argument("-p", dest="python", help="run python line")
 	parser.add_argument("-i", dest="interactive", action="store_true", help="interactive")
@@ -158,7 +158,7 @@ def cli():
 		gameFile.EnigmaTargetGraphics=args.graphics#"OpenGL3"
 	if args.mingw:
 		gameFile.EnigmaTargetWindowing="Win32"
-		gameFile.EnigmaTargetCompiler="i686-w64-mingw32-gcc"#x86_64-w64-mingw32-gcc
+		gameFile.EnigmaTargetCompiler="MinGW32"
 		gameFile.EnigmaTargetWidget="Win32"
 	LoadPluginLib()
 	print_notice("ENIGMA compile")
