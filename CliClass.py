@@ -1443,12 +1443,14 @@ class GameFile(GameResource):
 		cError = compileEGMf(es, exePath.encode(), emode)
 		if cError>0:
 			print_error("compileEGMf error "+str(cError))
+			return cError
 		else:
 			print_notice("compileEGMf done "+str(cError))
+			return 0
 
 	def compileRunEnigma(self, exePath, emode):
 		es=self.WriteES()
-		GameFile.compileRunES(es, exePath, emode, self.EnigmaSettingsEy())
+		return GameFile.compileRunES(es, exePath, emode, self.EnigmaSettingsEy())
 
 	def EnigmaSettingsEy(self):
 		ey="%e-yaml\n---\n"

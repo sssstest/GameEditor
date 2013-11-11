@@ -147,7 +147,10 @@ def cli():
 	#	setRealStdout(realStdout)
 	LoadPluginLib()
 	print_notice("ENIGMA compile")
-	gameFile.compileRunEnigma(testGameFile,emode)
+	error=gameFile.compileRunEnigma(testGameFile,emode)
+	if error:
+		print_notice("returned error")
+		sys.exit(1)
 	restoreStdout()
 	if emode==emode_compile:
 		if args.dontrun:
