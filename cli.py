@@ -87,6 +87,7 @@ def cli():
 		app = QtGui.QApplication(["python"])
 	except:
 		print_warning("pyqt4 is not installed")
+		app = None
 	if args.filein:
 		p=args.filein
 		if p[-1] in ["/","\\"]:

@@ -44,7 +44,7 @@ import subprocess
 import tempfile#gmz
 import shutil#gmz
 import tempfile
-from PyQt4 import QtGui, QtCore#font
+#from PyQt4 import QtGui, QtCore#font
 from CliApng import *
 from CliEefReader import *
 from CliPrintColors import *
@@ -1619,8 +1619,11 @@ class GameFile(GameResource):
 
 	def populateESGlyphs(self, fnt, rangeMin, rangeMax, aa):
 		glyphs = (ESGlyph*(rangeMax - rangeMin + 1))()
-		for c in range(rangeMin,rangeMax):
-			self.populateESGlyph(glyphs[c - rangeMin],fnt,chr(c),aa)
+		try:
+			for c in range(rangeMin,rangeMax):
+				self.populateESGlyph(glyphs[c - rangeMin],fnt,chr(c),aa)
+		except:
+			print_warning("no glyphs")
 		return glyphs
 
 	def populateESGlyph(self, og, fnt, c, aa):

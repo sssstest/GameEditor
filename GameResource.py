@@ -22,7 +22,7 @@ from CliEnigmaStruct import *
 from CliBinaryStream import *
 from CliEefReader import *
 from CliApng import *
-from PyQt4 import QtGui, QtCore#font
+#from PyQt4 import QtGui, QtCore#font
 import xml.etree.ElementTree
 
 Class=1
