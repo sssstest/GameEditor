@@ -36,6 +36,7 @@
 #You should have received a copy of the GNU General Public License
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
 import os.path
 import zlib
 import zipfile
@@ -104,6 +105,7 @@ def restoreStdout():
 realStdout=sys.stdout
 realStderr=sys.stderr
 setRealStdout(realStdout)
+redirfile=None
 
 def ede_dia_open():
 	pass
@@ -122,10 +124,15 @@ def ede_dia_progress_text(caption):
 	print_notice("ENIGMA "+str(caption))
 
 def ede_output_redirect_file(filepath):
+	global redirfile
+	redirfile=filepath
 	print_notice("ede_output_redirect_file "+str(filepath))
 
 def ede_output_redirect_reset():
 	print_notice("ede_output_redirect_reset")
+	if redirfile:
+		for l in open(redirfile,"r").readlines():
+			print(l,end="")
 
 def ede_ide_execute(command,a,b):
 	print_error("ide_execute")
