@@ -170,13 +170,13 @@ class GameSettings(GameResource):
 		self.setMember("helpkey",settingsStream.ReadBoolean())
 		self.setMember("quitkey",settingsStream.ReadBoolean())
 		self.setMember("savekey",settingsStream.ReadBoolean())
-		if self.gameFile.gmkVersion>=702:
-			self.setMember("screenshotkey",settingsStream.ReadBoolean())
-			self.setMember("closesecondary",settingsStream.ReadBoolean())#clifix
-		self.setMember("priority",settingsStream.ReadDword())
 		if self.gameFile.gmkVersion==530:
 			settingsStream.ReadDword()#Reserved (1)
 			settingsStream.ReadDword()#Reserved (1)
+		if self.gameFile.gmkVersion>=600:#702:
+			self.setMember("screenshotkey",settingsStream.ReadBoolean())
+			self.setMember("closesecondary",settingsStream.ReadBoolean())#clifix
+		self.setMember("priority",settingsStream.ReadDword())
 		self.setMember("freeze",settingsStream.ReadBoolean())
 		self.setMember("showprogress",settingsStream.ReadDword())
 		if self.getMember("showprogress") == GameSettings.LpbtCustom:
@@ -215,26 +215,26 @@ class GameSettings(GameResource):
 		self.setMember("treatUninitializedVariablesAsZero",(errorFlags & 0x01) == 0x01)
 		self.setMember("argumenterrors",(errorFlags & 0x02) == 0x02)
 		self.setMember("author",settingsStream.ReadString())
-		if self.gameFile.gmkVersion>=530 and self.gameFile.gmkVersion<=600:
+		if self.gameFile.gmkVersion<=600:#self.gameFile.gmkVersion>=530 and 
 			self.setMember("version",str(settingsStream.ReadDword()))
-		if self.gameFile.gmkVersion>=702:
+		if self.gameFile.gmkVersion>600:#=702:
 			self.setMember("version",settingsStream.ReadString())
 		#Last Changed date and time
 		settingsStream.ReadTimestamp()
 		self.setMember("version_information",settingsStream.ReadString())
-		if self.gameFile.gmkVersion>=530 and self.gameFile.gmkVersion<=702:
+		if self.gameFile.gmkVersion<800:#>=530 and self.gameFile.gmkVersion<=702:
 			constants=settingsStream.ReadDword()#How many Constants there are (0)
 			for c in range(constants):
 				name=settingsStream.ReadString()#Length of Name { Name }
 				value=settingsStream.ReadString()#Length of Value { Value }
-		if self.gameFile.gmkVersion==542 or self.gameFile.gmkVersion==600:
-			includeFiles=settingsStream.ReadDword()#How many Include files there are (0)
-			for c in range(includeFiles):
-				value=settingsStream.ReadString()#Length of Filename { Filename }
-			settingsStream.ReadDword()#Folder to save Include files to (0* = main, 1 = temp)
-			settingsStream.ReadBoolean()#Overwrite existing Include files (0)
-			settingsStream.ReadBoolean()#Remove Include files at game end (0)
-		if self.gameFile.gmkVersion>=702:
+		#if self.gameFile.gmkVersion==542 or self.gameFile.gmkVersion==600:
+		#	includeFiles=settingsStream.ReadDword()#How many Include files there are (0)
+		#	for c in range(includeFiles):
+		#		value=settingsStream.ReadString()#Length of Filename { Filename }
+		#	settingsStream.ReadDword()#Folder to save Include files to (0* = main, 1 = temp)
+		#	settingsStream.ReadBoolean()#Overwrite existing Include files (0)
+		#	settingsStream.ReadBoolean()#Remove Include files at game end (0)
+		if self.gameFile.gmkVersion>600:#702:
 			self.setMember("version_major",settingsStream.ReadDword())
 			self.setMember("version_minor",settingsStream.ReadDword())
 			self.setMember("version_release",settingsStream.ReadDword())
@@ -243,9 +243,11 @@ class GameSettings(GameResource):
 			self.setMember("version_product",settingsStream.ReadString())
 			self.setMember("version_copyright",settingsStream.ReadString())
 			self.setMember("version_description",settingsStream.ReadString())
-		if self.gameFile.gmkVersion>=800:
-			#Last time Global Game Settings were changed
-			settingsStream.ReadTimestamp()
+			if self.gameFile.gmkVersion>=800:
+				#Last time Global Game Settings were changed
+				settingsStream.ReadTimestamp()
+		elif self.gameFile.gmkVersion > 530:
+			self.readSettingsIncludes()
 
 	def ReadGmx(self, root):
 		seen={}

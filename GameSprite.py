@@ -190,45 +190,44 @@ class GameSprite(GameResource):
 		self.setMember("name",spriteStream.ReadString())
 		if self.gameFile.gmkVersion>=800:
 			spriteStream.ReadTimestamp()
-		spriteStream.ReadDword()
-		if self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
-			spriteStream.ReadInt32()#Width
-			spriteStream.ReadInt32()#Height
-			spriteStream.ReadInt32()#Left Bounding Box (can be negative)
-			spriteStream.ReadInt32()#Right Bounding Box (can be negative)
-			spriteStream.ReadInt32()#Bottom Bounding Box (can be negative)
-			spriteStream.ReadInt32()#Top Bounding Box (can be negative)
+		gmVersion=spriteStream.ReadDword()
+		if self.gameFile.gmkVersion<800:#>=400 and self.gameFile.gmkVersion<=542:
+			spriteStream.readInt32()#Width
+			spriteStream.readInt32()#Height
+			spriteStream.readInt32()#Left Bounding Box (can be negative)
+			spriteStream.readInt32()#Right Bounding Box (can be negative)
+			spriteStream.readInt32()#Bottom Bounding Box (can be negative)
+			spriteStream.readInt32()#Top Bounding Box (can be negative)
 			spriteStream.ReadBoolean()#Transparent (1)
-		if self.gameFile.gmkVersion==542:
-			spriteStream.ReadBoolean()#Smooth Edges (0)
-			spriteStream.ReadBoolean()#Preload Texture (1)
-		if self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
+			if self.gameFile.gmkVersion>400:#==542:
+				spriteStream.ReadBoolean()#Smooth Edges (0)
+				spriteStream.ReadBoolean()#Preload Texture (1)
 			spriteStream.ReadDword()#Bounding Box (0*=Automatic, 1=Full image, 2=Manual)
 			spriteStream.ReadBoolean()#Precise collision checking (1)
-		if self.gameFile.gmkVersion==400:
-			spriteStream.ReadBoolean()#Use video memory (1)
-			spriteStream.ReadBoolean()#Load only on use (0)
+			if self.gameFile.gmkVersion==400:
+				spriteStream.ReadBoolean()#Use video memory (1)
+				spriteStream.ReadBoolean()#Load only on use (0)
 		self.setMember("xorigin",spriteStream.ReadDword())
 		self.setMember("yorigin",spriteStream.ReadDword())
 		count = spriteStream.ReadDword()
 		for c in range(count):
-			if self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
+			if gameFile.gmkVersion<800:#self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
+				if spriteStream.ReadDword() == -1:
+					continue
+				self.subimages.append(self.readZlibImage())
+			if self.gameFile.gmkVersion>=800:
+				subimage = GameSpriteSubimage()
+				#GM version needed for the following info
 				spriteStream.ReadDword()
-				#10 or -1
-				#<if not -1> Size of Image Data { Image Data (Zlib Bitmap) }
-			#if self.gameFile.gmkVersion>=800:
-			subimage = GameSpriteSubimage()
-			#GM version needed for the following info
-			spriteStream.ReadDword()
-			subimage.width = spriteStream.ReadDword()
-			subimage.height = spriteStream.ReadDword()
-			if subimage.width != 0 and subimage.height != 0:
-				subimage.gmkData = spriteStream.Deserialize(False)
-			else:
-				subimage.gmkData = None
-			self.subimages.append(subimage)
-			self.setMember("width",subimage.width)
-			self.setMember("height",subimage.height)
+				subimage.width = spriteStream.ReadDword()
+				subimage.height = spriteStream.ReadDword()
+				if subimage.width != 0 and subimage.height != 0:
+					subimage.gmkData = spriteStream.Deserialize(False)
+				else:
+					subimage.gmkData = None
+				self.subimages.append(subimage)
+				self.setMember("width",subimage.width)
+				self.setMember("height",subimage.height)
 		if self.gameFile.gmkVersion>=800:
 			self.setMember("maskshape",spriteStream.ReadDword())
 			self.setMember("alphatolerance",spriteStream.ReadDword())
@@ -238,6 +237,9 @@ class GameSprite(GameResource):
 			self.setMember("bbox_right",spriteStream.ReadDword())
 			self.setMember("bbox_bottom",spriteStream.ReadDword())
 			self.setMember("bbox_top",spriteStream.ReadDword())
+
+	def readZlibImage(self):
+		x=spriteStream.Deserialize()
 
 	def WriteGmx(self, root, gmxdir):
 		gmxCreateTag(root, "xorig", str(self.getMember("xorigin")))

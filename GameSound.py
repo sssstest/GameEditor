@@ -126,22 +126,29 @@ class GameSound(GameResource):
 				print_error("unsupported tag "+child.tag)
 
 	def ReadGmk(self, stream):
-		soundStream = stream.Deserialize()
+		if self.gameFile.gmkVersion>=800:
+			soundStream = stream.Deserialize()
+		else:
+			soundStream = stream
 		if not soundStream.ReadBoolean():
 			self.exists = False
 			return
 		self.setMember("name",soundStream.ReadString())
-		soundStream.ReadTimestamp()
-		soundStream.ReadDword()
+		if self.gameFile.gmkVersion>=800:
+			soundStream.ReadTimestamp()
+		gmVersion=soundStream.ReadDword()
 		self.setMember("kind",soundStream.ReadDword())
 		self.setMember("extension",soundStream.ReadString())
-		self.setMember("origname",soundStream.ReadString())
-		if soundStream.ReadBoolean():
-			self.setMember("data",soundStream.Deserialize(False))
-		self.setMember("effects",soundStream.ReadDword())
-		self.setMember("volume",soundStream.readDouble())
-		self.setMember("pan",soundStream.readDouble())
-		self.setMember("preload",soundStream.ReadBoolean())
+		if self.gameFile.gmkVersion==440:
+			print_error("440")
+		else:
+			self.setMember("origname",soundStream.ReadString())
+			if soundStream.ReadBoolean():
+				self.setMember("data",soundStream.Deserialize(False))
+			self.setMember("effects",soundStream.ReadDword())
+			self.setMember("volume",soundStream.readDouble())
+			self.setMember("pan",soundStream.readDouble())
+			self.setMember("preload",soundStream.ReadBoolean())
 
 	def WriteGmx(self, root):
 		gmxCreateTag(root, "kind", str(self.getMember("kind")))

@@ -1399,7 +1399,7 @@ class GameObject(GameResource):
 		if not objectStream.ReadBoolean():
 			self.exists = False
 			return
-
+		print(objectStream.readBytes(100))
 		self.setMember("name",objectStream.ReadString())
 		if self.gameFile.gmkVersion>=800:
 			#last changed

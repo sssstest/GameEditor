@@ -118,6 +118,12 @@ class BinaryStream:
 	def Rewind(self):
 		self.base_stream.seek(0)
 
+	def GetPosition(self):
+		return self.base_stream.tell()
+
+	def SetPosition(self, pos):
+		self.base_stream.seek(pos)
+
 	def Size(self):
 		pos = self.base_stream.tell()
 		self.base_stream.seek(0,2)
@@ -232,5 +238,62 @@ class BinaryStream:
 		self.WriteDword(length)
 		self.pack(str(length) + 's', value)
 
+	def GenerateSwapTable(self):
+		self.table = [[0]*256]*2
+		seed = self.ReadSeedFromJunkyard()
+		a = (seed % 250) + 6
+		b = seed / 250
 
+		for i in range(256):
+			self.table[0][i] = i
 
+		i = 1
+		while i < 10001:
+			j = int(((i * a + b) % 254) + 1)
+			
+			t = self.table[0][j]
+			self.table[0][j] = self.table[0][j + 1]
+			self.table[0][j + 1] = t
+			i+=1
+
+		self.table[1][0] = 0
+
+		for i in range(1,256):
+			self.table[1][self.table[0][i]] = i
+
+	def Decrypt(self):
+		value = io.BytesIO()
+		value = BinaryStream(value)
+
+		c = self.GetPosition() + 1
+
+		value.WriteByte(self.readByte())
+		while self.GetPosition() < self.Size():
+			buffer=bytearray(self.readBytes(512))
+			if len(buffer)<512:
+				s=512-len(buffer)
+				buffer=buffer+bytearray([0]*s)
+
+			i = 0
+			while i < 512:
+				buffer[i] = (self.table[1][buffer[i]] - c) & 0xFF
+				c+=1
+				i+=1
+			#print(buffer)
+			value.writeBytes(buffer)
+
+		value.Rewind()
+		#print("decrypt",value.readBytes(100))
+		value.Rewind()
+
+		return value
+
+	def ReadSeedFromJunkyard(self):
+		s1 = self.ReadDword()
+		s2 = self.ReadDword()
+
+		self.SetPosition(self.GetPosition() + s1 * 4)
+		value = self.ReadDword()
+		self.SetPosition(self.GetPosition() + s2 * 4)
+
+		return value

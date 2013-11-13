@@ -56,11 +56,11 @@ class GameInformation(GameResource):
 		else:
 			gameInfoStream = stream
 		self.setMember("backgroundcolor",gameInfoStream.ReadDword())
-		if self.gameFile.gmkVersion>=430 and self.gameFile.gmkVersion<=620:
-			gameInfoStream.readInt32()#Mimic the main game window/main form (0)
+		if self.gameFile.gmkVersion<800:#>=430 and self.gameFile.gmkVersion<=620:
+			gameInfoStream.ReadBoolean()#Mimic the main game window/main form (0)
 		if self.gameFile.gmkVersion>=800:
 			self.setMember("showInSeperateWindow",gameInfoStream.ReadBoolean())
-		if self.gameFile.gmkVersion>=600:
+		if self.gameFile.gmkVersion>430:#=600:
 			self.setMember("caption",gameInfoStream.ReadString())
 			self.setMember("left",gameInfoStream.readInt32())
 			self.setMember("top",gameInfoStream.readInt32())
@@ -77,6 +77,8 @@ class GameInformation(GameResource):
 		if len(self.getMember("information"))>4000:
 			print_warning("game information too big "+str(len(self.getMember("information"))))
 			self.setMember("information","")
+		
+		print(self.WriteGGG())
 
 	def WriteGmk(self, stream):
 		gameInfoStream = BinaryStream()

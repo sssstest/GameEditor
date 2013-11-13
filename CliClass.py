@@ -855,17 +855,19 @@ class GameFile(GameResource):
 		#if self.gmkVersion==530:
 		#elif self.gmkVersion==600:
 		#elif self.gmkVersion==701:
-		if self.gmkVersion not in [800,810]:
+		if self.gmkVersion not in [430, 500, 510, 520, 530, 600, 620, 701, 702, 800, 810]:
 			print_warning("Unknown or unsupported version "+str(self.gmkVersion))
 		if self.gmkVersion>=700 and self.gmkVersion<800:
-			#Gmkrypt gmkrypt(Gmkrypt::ReadSeedFromJunkyard(stream));
+			stream.GenerateSwapTable()
 			stream = stream.Decrypt()
 		self.gameId = stream.ReadDword()
 		self.guid=[]
 		for i in range(self.GMK_GUID_LENGTH):
 			self.guid.append(stream.readUChar())
-		gmVersionGameSettings=stream.ReadDword()
-		if gmVersionGameSettings not in [800,820]:
+		#print(self.gameId,self.guid)
+		gmVersionGameSettings=stream.readUInt32()
+		print_notice("version "+str(gmVersionGameSettings))
+		if gmVersionGameSettings > 820:
 			print_warning("unsupported gmk version "+str(gmVersionGameSettings))
 		self.configs = []
 		self.configs.append(GameSettings(self))
@@ -895,6 +897,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("sounds",count)
 		for c in range(count):
 			sound = GameSound(self, c)
 			sound.ReadGmk(stream)
@@ -904,6 +907,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("sprites",count)
 		for c in range(count):
 			sprite = GameSprite(self, c)
 			sprite.ReadGmk(stream)
@@ -913,6 +917,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("backgrounds",count)
 		for c in range(count):
 			background = GameBackground(self, c)
 			background.ReadGmk(stream)
@@ -922,6 +927,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("paths",count)
 		for c in range(count):
 			path = GamePath(self, c)
 			path.ReadGmk(stream)
@@ -930,6 +936,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("scripts",count)
 		for c in range(count):
 			script = GameScript(self, c)
 			script.ReadGmk(stream)
@@ -938,6 +945,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("fonts",count)
 		for c in range(count):
 			font = GameFont(self, c)
 			font.ReadGmk(stream)
@@ -946,6 +954,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("timelines",count)
 		for c in range(count):
 			timeline = GameTimeline(self, c)
 			timeline.ReadGmk(stream)
@@ -956,6 +965,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("objects",count)
 		for c in range(count):
 			gmObject = GameObject(self, c)
 			gmObject.ReadGmk(stream)
@@ -965,6 +975,7 @@ class GameFile(GameResource):
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("room",count)
 		for c in range(count):
 			room = GameRoom(self, c)
 			room.ReadGmk(stream)
@@ -973,6 +984,7 @@ class GameFile(GameResource):
 		# Load last ids
 		self.lastInstancePlacedId = stream.ReadDword()
 		self.lastTilePlacedId = stream.ReadDword()
+		print("lastInstancePlacedId",self.lastInstancePlacedId,self.lastTilePlacedId)
 		if self.gmkVersion>=700:
 			# Load include files
 			#GM version needed for Resource
@@ -992,13 +1004,14 @@ class GameFile(GameResource):
 				self.packages.append(stream.ReadString())
 		# Read game information
 		#GM version needed for Resource
-		stream.ReadDword()
+		gmVersion=stream.ReadDword()
 		self.gameInformation = GameInformation(self)
 		self.gameInformation.ReadGmk(stream)
 		# Read library creation code -- we should be able to safely ignore this
 		#GM version needed for Resource
 		stream.ReadDword()
 		count = stream.ReadDword()
+		print("library creation",count)
 		for c in range(count):
 			print_warning("library creation code "+stream.ReadString())
 		# Read room execution order -- this too
