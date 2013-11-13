@@ -118,12 +118,16 @@ class GameFont(GameResource):
 				print_error("unsupported tag "+child.tag)
 
 	def ReadGmk(self, stream):
-		fontStream = stream.Deserialize()
+		if self.gameFile.gmkVersion>=800:
+			fontStream = stream.Deserialize()
+		else:
+			fontStream = stream
 		if not fontStream.ReadBoolean():
 			self.exists = False
 			return
 		self.setMember("name",fontStream.ReadString())
-		fontStream.ReadTimestamp()
+		if self.gameFile.gmkVersion>=800:
+			fontStream.ReadTimestamp()
 		fontStream.ReadDword()
 		self.setMember("fontName",fontStream.ReadString())
 		self.setMember("size",fontStream.ReadDword())

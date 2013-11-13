@@ -944,6 +944,8 @@ class GameFile(GameResource):
 		# Load fonts
 		#GM version needed for Resource
 		stream.ReadDword()
+		if self.gameFile.gmkVersion==440:#data files
+			print_error("data files")
 		count = stream.ReadDword()
 		print("fonts",count)
 		for c in range(count):

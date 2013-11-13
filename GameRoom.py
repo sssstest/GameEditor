@@ -111,20 +111,13 @@ class GameRoomView(GameResource):
 
 	def ReadGmk(self, stream):
 		self.setMember("visible",stream.ReadBoolean())
-		if self.gameFile.gmkVersion==520:
-			self.setMember("portX",stream.ReadDword())#Left
-			self.setMember("portY",stream.ReadDword())#Top
-			self.setMember("viewW",stream.ReadDword())
-			self.setMember("viewH",stream.ReadDword())
-			self.setMember("viewX",stream.ReadDword())
-			self.setMember("viewY",stream.ReadDword())
-		if self.gameFile.gmkVersion>=541:
-			self.setMember("viewX",stream.ReadDword())
-			self.setMember("viewY",stream.ReadDword())
-			self.setMember("viewW",stream.ReadDword())
-			self.setMember("viewH",stream.ReadDword())
-			self.setMember("portX",stream.ReadDword())
-			self.setMember("portY",stream.ReadDword())
+		self.setMember("viewX",stream.ReadDword())
+		self.setMember("viewY",stream.ReadDword())
+		self.setMember("viewW",stream.ReadDword())
+		self.setMember("viewH",stream.ReadDword())
+		self.setMember("portX",stream.ReadDword())
+		self.setMember("portY",stream.ReadDword())
+		if self.gameFile.gmkVersion>520:#>=541:
 			self.setMember("portW",stream.ReadDword())
 			self.setMember("portH",stream.ReadDword())
 		self.setMember("horizontalBorder",stream.ReadDword())
@@ -671,9 +664,9 @@ class GameRoom(GameResource):
 		self.setMember("speed",roomStream.ReadDword())
 		self.setMember("persistent",roomStream.ReadBoolean())
 		self.setMember("color",ABGRtoARGB(roomStream.ReadDword()))
-		self.setMember("bgFlags",roomStream.ReadDword())
-		self.setMember("showcolor",bool(self.getMember("bgFlags")&1))
-		self.setMember("clearViewBackground",not self.getMember("bgFlags")&2)
+		bgFlags=roomStream.ReadDword()
+		self.setMember("showcolor",bool(bgFlags&1))
+		self.setMember("clearViewBackground",not bgFlags&2)
 		self.setMember("code",roomStream.ReadString())
 		count = roomStream.ReadDword()
 		while count>0:

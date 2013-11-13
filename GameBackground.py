@@ -126,20 +126,32 @@ class GameBackground(GameResource):
 			return
 		self.setMember("name",backgroundStream.ReadString())
 		if self.gameFile.gmkVersion>=800:
-			backgroundStream.ReadTimestamp()
+			lastChanged=backgroundStream.ReadTimestamp()
 		#GM version needed for the following info (400/543/710)
-		backgroundStream.ReadDword()
-		if self.gameFile.gmkVersion<543:
+		gmVersion=backgroundStream.ReadDword()
+		if self.gameFile.gmkVersion<710:#543:
 			self.setMember("width",backgroundStream.ReadDword())
 			self.setMember("height",backgroundStream.ReadDword())
 			self.setMember("transparent",backgroundStream.ReadBoolean())
-		if self.gameFile.gmkVersion==400:
-			self.setMember("useVideoMemory",backgroundStream.ReadBoolean())#1
-			self.setMember("loadOnlyOnUse",backgroundStream.ReadBoolean())#1
-		if self.gameFile.gmkVersion==543:
-			self.setMember("smoothEdges",backgroundStream.ReadBoolean())
-			self.setMember("preload",backgroundStream.ReadBoolean())
-		if self.gameFile.gmkVersion>=543:
+			if self.gameFile.gmkVersion>400:#==543:
+				self.setMember("smoothEdges",backgroundStream.ReadBoolean())
+				self.setMember("preload",backgroundStream.ReadBoolean())
+				self.setMember("useAsTileset",backgroundStream.ReadBoolean())
+				self.setMember("tileWidth",backgroundStream.ReadDword())
+				self.setMember("tileHeight",backgroundStream.ReadDword())
+				self.setMember("tileHorizontalOffset",backgroundStream.ReadDword())
+				self.setMember("tileVerticalOffset",backgroundStream.ReadDword())
+				self.setMember("tileHorizontalSeperation",backgroundStream.ReadDword())
+				self.setMember("tileVerticalSeperation",backgroundStream.ReadDword())
+			else:
+				self.setMember("useVideoMemory",backgroundStream.ReadBoolean())#1
+				self.setMember("loadOnlyOnUse",backgroundStream.ReadBoolean())#1
+			#if self.gameFile.gmkVersion<543:
+			if stream.ReadBoolean():
+				if stream.ReadDword() == -1:
+					return
+				data = stream.ReadBitmapOld()
+		elif self.gameFile.gmkVersion>=710:
 			self.setMember("useAsTileset",backgroundStream.ReadBoolean())
 			self.setMember("tileWidth",backgroundStream.ReadDword())
 			self.setMember("tileHeight",backgroundStream.ReadDword())
@@ -147,10 +159,6 @@ class GameBackground(GameResource):
 			self.setMember("tileVerticalOffset",backgroundStream.ReadDword())
 			self.setMember("tileHorizontalSeperation",backgroundStream.ReadDword())
 			self.setMember("tileVerticalSeperation",backgroundStream.ReadDword())
-		if self.gameFile.gmkVersion<543:
-			if stream.ReadBoolean():
-				data = stream.ReadBitmapOld()
-		if self.gameFile.gmkVersion>=710:
 			#GM version needed for the following info (800)
 			backgroundStream.ReadDword()
 		if self.gameFile.gmkVersion>=800:
@@ -189,7 +197,6 @@ class GameBackground(GameResource):
 		gmxCreateTag(root, "data", "images\\"+self.getMember("name")+".png")
 
 	def WriteGmk(self, stream):
-		backgroundStream = BinaryStream()
 		backgroundStream.WriteBoolean(self.exists)
 		backgroundStream.WriteString(self.getMember("name"))
 		backgroundStream.WriteTimestamp()

@@ -147,7 +147,6 @@ class GameTreeNode(object):
 		if not self.resource:
 			if groupKind(self.group):
 				self.resource = parent.gameFile.GetResource(groupKind(self.group), self.index)
-				print("got",self.resource,self.index,self.name,self.group)
 		for i in range(len(self.contents)):
 			self.contents[i].Finalize(parent)
 
