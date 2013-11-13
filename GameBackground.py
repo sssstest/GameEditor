@@ -150,7 +150,10 @@ class GameBackground(GameResource):
 			if stream.ReadBoolean():
 				if stream.ReadDword() == -1:
 					return
-				data = stream.ReadBitmapOld()
+				data = backgroundStream.ReadBitmapOld()
+				self.subimage=GameSpriteSubimage()
+				self.subimage.setGmkData(data)
+				self.setMember("data",data)
 		elif self.gameFile.gmkVersion>=710:
 			self.setMember("useAsTileset",backgroundStream.ReadBoolean())
 			self.setMember("tileWidth",backgroundStream.ReadDword())

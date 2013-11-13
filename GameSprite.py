@@ -211,10 +211,13 @@ class GameSprite(GameResource):
 		self.setMember("yorigin",spriteStream.ReadDword())
 		count = spriteStream.ReadDword()
 		for c in range(count):
-			if gameFile.gmkVersion<800:#self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
+			if self.gameFile.gmkVersion<800:#self.gameFile.gmkVersion>=400 and self.gameFile.gmkVersion<=542:
 				if spriteStream.ReadDword() == -1:
 					continue
-				self.subimages.append(self.readZlibImage())
+				data = spriteStream.ReadBitmapOld()
+				subimage = GameSpriteSubimage()
+				subimage.setGmkData(data)
+				self.subimages.append(subimage)
 			if self.gameFile.gmkVersion>=800:
 				subimage = GameSpriteSubimage()
 				#GM version needed for the following info
@@ -237,9 +240,6 @@ class GameSprite(GameResource):
 			self.setMember("bbox_right",spriteStream.ReadDword())
 			self.setMember("bbox_bottom",spriteStream.ReadDword())
 			self.setMember("bbox_top",spriteStream.ReadDword())
-
-	def readZlibImage(self):
-		x=spriteStream.Deserialize()
 
 	def WriteGmx(self, root, gmxdir):
 		gmxCreateTag(root, "xorig", str(self.getMember("xorigin")))
@@ -399,12 +399,11 @@ class GameSpriteSubimage(object):
 			print_error("image size is 0")	
 
 	def convertGmkIntoEsData(self):
-		print_warning("slow image conversion")
 		self.gmkData.base_stream.seek(0)
 		size=self.gmkData.Size()
+		print_warning("slow image conversion gm8 "+str(size))
 		data=self.gmkData.base_stream.read()
 		cdata=bytearray(data)
-		#o.height - 1
 		transr = cdata[2]
 		transg = cdata[1]
 		transb = cdata[3]

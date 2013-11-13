@@ -238,6 +238,31 @@ class BinaryStream:
 		self.WriteDword(length)
 		self.pack(str(length) + 's', value)
 
+	def ReadBitmapOld(self):
+		rgbData=self.Deserialize()
+		rgbData.base_stream.seek(0)
+		size=rgbData.Size()
+		print_warning("slow image conversion old "+str(size))
+		data=rgbData.base_stream.read()
+		cdata=bytearray(int(len(data)/3)*4)
+		transr = cdata[2]
+		transg = cdata[1]
+		transb = cdata[3]
+		c=0
+		for p in range(0,len(data),3):#Gmk BGR
+			cdata[c] = data[p+2]#R
+			cdata[c+1] = data[p+1]#G
+			cdata[c+2] = data[p]#B
+			cdata[c+3] = 255
+			c+=4
+		#data = zlib.compress(bytes(cdata))
+		
+		value = io.BytesIO()
+		value = BinaryStream(value)
+		value.writeBytes(cdata)
+		value.Rewind()
+		return value
+
 	def GenerateSwapTable(self):
 		self.table = [[0]*256]*2
 		seed = self.ReadSeedFromJunkyard()
