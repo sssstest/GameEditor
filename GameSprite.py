@@ -465,5 +465,5 @@ class GameSpriteSubimage(object):
 		data=self.getEsData()
 		obj.data=data
 		obj.dataSize=len(data)
-		#print_notice("data size "+str(len(data)))
+		print_notice("data size "+str(len(data)))
 		return obj

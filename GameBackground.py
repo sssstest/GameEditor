@@ -199,7 +199,7 @@ class GameBackground(GameResource):
 		self.subimage.getQImage().save(path)
 		gmxCreateTag(root, "data", "images\\"+self.getMember("name")+".png")
 
-	def WriteGmk(self, stream):
+	def WriteGmk(self, backgroundStream):
 		backgroundStream.WriteBoolean(self.exists)
 		backgroundStream.WriteString(self.getMember("name"))
 		backgroundStream.WriteTimestamp()
@@ -216,7 +216,7 @@ class GameBackground(GameResource):
 		backgroundStream.WriteDword(self.getMember("height"))
 		if self.getMember("width") != 0 and self.getMember("height") != 0:
 			backgroundStream.Serialize(self.getMember("data"), False)
-		stream.Serialize(backgroundStream)
+		backgroundStream.Serialize(backgroundStream)
 
 	def WriteGGG(self):
 		stri="@background "+self.getMember("name")+"{\n"

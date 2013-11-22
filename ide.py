@@ -1242,7 +1242,7 @@ class MainWindow(QtGui.QMainWindow):
 	def handleOpenAction(self):
 		projectPath = QFileDialog.getOpenFileName(self,"Open", "", "Game Files (*.gmk *.gm81 *.gb? *.gm6 *.egm *.gmx)")
 		if projectPath and projectPath!="":
-			self.projectPath=projectPath
+			self.projectPath=str(projectPath)
 			CliClass.print_notice("opening file "+self.projectPath)
 			self.openProject(self.projectPath)
 
@@ -1276,7 +1276,7 @@ class MainWindow(QtGui.QMainWindow):
 			return
 		projectPath = QFileDialog.getSaveFileName(self,"Save", "", "Game Files (*.gmk *.gm81 *.gb? *.gm6 *.egm *.gmx)")
 		if projectPath and projectPath!="":
-			self.projectPath=projectPath
+			self.projectPath=str(projectPath)
 			self.gmk.Backup(self.projectPath)
 			CliClass.print_notice("saving file "+self.projectPath)
 			self.gmk.Save(self.projectPath)
